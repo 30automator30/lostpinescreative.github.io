@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lost Pines Creative</title>
+    <meta name="description" content="Tools for people who take ownership of their own lives. Privacy-first, offline-capable apps for families.">
+    <style>
+        :root {
+            --bg: #0a0e17;
+            --surface: #111827;
+            --border: #1e293b;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --green: #4ade80;
+            --amber: #fbbf24;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero */
+        .hero {
+            text-align: center;
+            padding: 80px 0 60px;
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        /* Thesis */
+        .thesis {
+            text-align: center;
+            padding: 40px 0 60px;
+            border-top: 1px solid var(--border);
+        }
+
+        .thesis blockquote {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Products Grid */
+        .products {
+            padding: 40px 0;
+        }
+
+        .products h2 {
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 32px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 640px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .product-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            transition: border-color 0.2s;
+        }
+
+        .product-card:hover {
+            border-color: var(--accent);
+        }
+
+        .product-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+        }
+
+        .product-card .stage {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .stage-active {
+            background: rgba(74, 222, 128, 0.15);
+            color: var(--green);
+        }
+
+        .stage-upcoming {
+            background: rgba(251, 191, 36, 0.15);
+            color: var(--amber);
+        }
+
+        .stage-concept {
+            background: rgba(148, 163, 184, 0.15);
+            color: var(--text-muted);
+        }
+
+        .product-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 16px;
+        }
+
+        .product-card .tagline {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .product-card a {
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .product-card a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* Values */
+        .values {
+            padding: 60px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .values h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 32px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 24px;
+            text-align: center;
+        }
+
+        @media (max-width: 640px) {
+            .values-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .value h3 {
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        .value p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Lost Pines <span>Creative</span></h1>
+            <p>Tools for people who take ownership of their own lives.</p>
+        </section>
+
+        <section class="thesis">
+            <blockquote>
+                Every app we build starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your children's education — shouldn't depend on systems you don't control.
+            </blockquote>
+        </section>
+
+        <section class="products">
+            <h2>What we're building</h2>
+            <div class="product-grid">
+                <div class="product-card">
+                    <h3>NomadCore</h3>
+                    <span class="stage stage-active">Pre-Launch</span>
+                    <p>Family emergency preparedness powered by offline AI. Emergency plans, supply tracking, offline maps, and a knowledge base of 1,320 procedures — all without needing signal.</p>
+                    <div class="tagline">"Your family's plan, in your pocket."</div>
+                    <br>
+                    <a href="https://www.nomad-core.com">nomad-core.com</a>
+                </div>
+
+                <div class="product-card">
+                    <h3>Remember Who</h3>
+                    <span class="stage stage-active">Pre-Launch</span>
+                    <p>A privacy-first personal CRM that helps you remember everyone you meet. On-device AI transcription, encrypted storage, geo-reminders — your contacts never leave your phone.</p>
+                    <div class="tagline">"Your relationships. Your data. Your device."</div>
+                    <br>
+                    <a href="https://www.rememberwho.app">rememberwho.app</a>
+                </div>
+
+                <div class="product-card">
+                    <h3>Evident House</h3>
+                    <span class="stage stage-upcoming">Early Development</span>
+                    <p>Document your belongings with cryptographic proof. When disaster strikes and you need to prove what you owned, Evident House provides evidence your insurer can't dispute.</p>
+                    <div class="tagline">"Your insurance proof, owned by you."</div>
+                </div>
+
+                <div class="product-card">
+                    <h3>Sovereign School</h3>
+                    <span class="stage stage-concept">Concept</span>
+                    <p>A multi-agent AI homeschool platform that gives parents a coordinated cabinet of educators — superintendent, principal, teachers — while keeping the parent as the ultimate authority.</p>
+                    <div class="tagline">"Your children's education, guided by AI, governed by you."</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="values">
+            <h2>What every product shares</h2>
+            <div class="values-grid">
+                <div class="value">
+                    <h3>Offline-First</h3>
+                    <p>Works without internet. Your tools shouldn't fail when you need them most.</p>
+                </div>
+                <div class="value">
+                    <h3>Privacy-First</h3>
+                    <p>Data stays on your device. Encrypted. No tracking, no ads, no data sales.</p>
+                </div>
+                <div class="value">
+                    <h3>User-Sovereign</h3>
+                    <p>You own your data. Export anytime. No lock-in. No subscriptions you can't cancel.</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Lost Pines Creative LLC</p>
+        </footer>
+    </div>
+
+</body>
+</html>
