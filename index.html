@@ -7,15 +7,17 @@
     <meta name="description" content="Tools for people who take ownership of their own lives. Privacy-first, offline-capable apps for families.">
     <style>
         :root {
-            --bg: #0a0e17;
-            --surface: #111827;
-            --border: #1e293b;
-            --text: #e2e8f0;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --accent-hover: #7dd3fc;
+            --bg: #0b1210;
+            --surface: #111f1b;
+            --border: #1a2f28;
+            --text: #e2e8e6;
+            --text-muted: #94a3a0;
+            --accent: #4a9e7e;
+            --accent-hover: #5fb896;
+            --accent-glow: rgba(74, 158, 126, 0.15);
             --green: #4ade80;
             --amber: #fbbf24;
+            --warm: #d4956a;
         }
 
         * {
@@ -41,13 +43,14 @@
         .hero {
             text-align: center;
             padding: 80px 0 60px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(74, 158, 126, 0.08) 0%, transparent 70%);
         }
 
         .hero .logo {
-            width: 120px;
+            width: 130px;
             height: auto;
             margin-bottom: 24px;
-            filter: brightness(0) invert(1);
+            filter: brightness(0) invert(0.85) sepia(0.3) saturate(2) hue-rotate(110deg);
         }
 
         .hero h1 {
@@ -82,6 +85,8 @@
             max-width: 600px;
             margin: 0 auto;
             padding: 0 20px;
+            border-left: 3px solid var(--accent);
+            text-align: left;
         }
 
         /* Products Grid */
@@ -110,6 +115,13 @@
             .hero h1 {
                 font-size: 1.8rem;
             }
+            .founder-content {
+                flex-direction: column;
+                text-align: center;
+            }
+            .founder-credentials {
+                align-items: center;
+            }
         }
 
         .product-card {
@@ -117,11 +129,12 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 28px;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
 
         .product-card:hover {
             border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
         }
 
         .product-card h3 {
@@ -207,11 +220,88 @@
         .value h3 {
             font-size: 1rem;
             margin-bottom: 6px;
+            color: var(--accent);
         }
 
         .value p {
             font-size: 0.85rem;
             color: var(--text-muted);
+        }
+
+        /* Founder */
+        .founder {
+            padding: 60px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .founder h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 32px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .founder-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 36px;
+        }
+
+        .founder-content {
+            display: flex;
+            gap: 32px;
+            align-items: flex-start;
+        }
+
+        .founder-icon {
+            width: 64px;
+            height: 64px;
+            min-width: 64px;
+            border-radius: 50%;
+            background: var(--accent-glow);
+            border: 2px solid var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .founder-text h3 {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+
+        .founder-text .role {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .founder-text p {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .founder-credentials {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .credential {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            background: rgba(212, 149, 106, 0.12);
+            color: var(--warm);
+            border: 1px solid rgba(212, 149, 106, 0.2);
         }
 
         /* Footer */
@@ -226,6 +316,11 @@
         footer a {
             color: var(--accent);
             text-decoration: none;
+        }
+
+        footer .location {
+            margin-top: 4px;
+            font-size: 0.8rem;
         }
     </style>
 </head>
@@ -299,8 +394,29 @@
             </div>
         </section>
 
+        <section class="founder">
+            <h2>Who's building this</h2>
+            <div class="founder-card">
+                <div class="founder-content">
+                    <div class="founder-icon">DD</div>
+                    <div class="founder-text">
+                        <h3>Daniel De Smit</h3>
+                        <div class="role">Founder & Engineer</div>
+                        <p>15+ years designing FDA-regulated medical devices — from portable oxygen concentrators to cancer detection systems to microwave ablation tools. Products acquired by Siemens Healthineers and ResMed. Now building the same quality of engineering into tools that keep families safe and in control of their own data.</p>
+                        <div class="founder-credentials">
+                            <span class="credential">Medical Device Engineering</span>
+                            <span class="credential">FDA / CE Compliance</span>
+                            <span class="credential">Product Development</span>
+                            <span class="credential">Quality Systems</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <footer>
             <p>&copy; 2026 Lost Pines Creative LLC</p>
+            <p class="location">Bastrop, Texas</p>
         </footer>
     </div>
 
