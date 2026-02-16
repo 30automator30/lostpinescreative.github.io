@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lost Pines Creative</title>
-    <meta name="description" content="Tools for people who take ownership of their own lives. Privacy-first, offline-capable apps for families.">
+    <meta name="description" content="Software, design, and handcraft — for people who take ownership of their own lives.">
     <style>
         :root {
             --bg: #0b1210;
@@ -190,6 +190,20 @@
             text-decoration: underline;
         }
 
+        .category-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .product-grid + .category-label {
+            margin-top: 40px;
+        }
+
         /* Values */
         .values {
             padding: 60px 0;
@@ -335,12 +349,14 @@
 
         <section class="thesis">
             <blockquote>
-                Every app we build starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your children's education — shouldn't depend on systems you don't control.
+                Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
             </blockquote>
         </section>
 
         <section class="products">
             <h2>What we're building</h2>
+
+            <div class="category-label">Software</div>
             <div class="product-grid">
                 <div class="product-card">
                     <h3>NomadCore</h3>
@@ -361,15 +377,6 @@
                 </div>
 
                 <div class="product-card">
-                    <h3>Blue Plumeria</h3>
-                    <span class="stage stage-active">Pre-Launch</span>
-                    <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
-                    <div class="tagline">"Handcrafted. Small-batch. Made with intention."</div>
-                    <br>
-                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection</a>
-                </div>
-
-                <div class="product-card">
                     <h3>Evident House</h3>
                     <span class="stage stage-upcoming">Early Development</span>
                     <p>Document your belongings with cryptographic proof. When disaster strikes and you need to prove what you owned, Evident House provides evidence your insurer can't dispute.</p>
@@ -381,6 +388,25 @@
                     <span class="stage stage-concept">Concept</span>
                     <p>A multi-agent AI homeschool platform that gives parents a coordinated cabinet of educators — superintendent, principal, teachers — while keeping the parent as the ultimate authority.</p>
                     <div class="tagline">"Your children's education, guided by AI, governed by you."</div>
+                </div>
+            </div>
+
+            <div class="category-label">Design & Craft</div>
+            <div class="product-grid">
+                <div class="product-card">
+                    <h3>DeSmit Designs</h3>
+                    <span class="stage stage-active">Active</span>
+                    <p>Engineering-driven design services — 3D printing, CAD modeling, and laser cutting. From custom prototypes to finished products, built with the same precision as medical-grade hardware.</p>
+                    <div class="tagline">"Driving innovation with engineering excellence."</div>
+                </div>
+
+                <div class="product-card">
+                    <h3>Blue Plumeria</h3>
+                    <span class="stage stage-active">Pre-Launch</span>
+                    <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
+                    <div class="tagline">"Handcrafted. Small-batch. Made with intention."</div>
+                    <br>
+                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection</a>
                 </div>
             </div>
         </section>
