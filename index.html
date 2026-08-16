@@ -706,30 +706,60 @@
     <script>
         // Progressive enhancement only — the page above is complete without it.
         (function () {
-            var items = document.querySelectorAll('.reveal');
+            var items = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
             if (!items.length) return;
 
-            function showAll() {
-                for (var i = 0; i < items.length; i++) {
-                    items[i].classList.add('is-visible');
-                }
-            }
+            function show(el) { el.classList.add('is-visible'); }
 
             // Reduced motion: the CSS never hid anything, so there is nothing to do.
             // No IntersectionObserver: reveal everything immediately rather than
             // leaving content stranded at opacity 0.
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            if (!('IntersectionObserver' in window)) return showAll();
+            if (!('IntersectionObserver' in window)) return items.forEach(show);
+
+            // Geometric backstop. IntersectionObserver can skip elements that a
+            // programmatic jump scrolls straight past — scroll restoration on
+            // back/forward, find-in-page, an anchor link — and once skipped they
+            // never recover. Content stranded invisible is the worst failure this
+            // page can have, so anything at or above the fold is revealed here
+            // regardless of whether the observer ever fired for it.
+            function sweep() {
+                var fold = window.innerHeight * 0.92;
+                var remaining = false;
+                items.forEach(function (el) {
+                    if (el.classList.contains('is-visible')) return;
+                    if (el.getBoundingClientRect().top < fold) show(el);
+                    else remaining = true;
+                });
+                return remaining;
+            }
+
+            var ticking = false;
+            function onScroll() {
+                if (ticking) return;
+                ticking = true;
+                requestAnimationFrame(function () {
+                    ticking = false;
+                    if (!sweep()) {
+                        window.removeEventListener('scroll', onScroll);
+                        window.removeEventListener('resize', onScroll);
+                    }
+                });
+            }
 
             var observer = new IntersectionObserver(function (entries) {
                 entries.forEach(function (entry) {
                     if (!entry.isIntersecting) return;
-                    entry.target.classList.add('is-visible');
+                    show(entry.target);
                     observer.unobserve(entry.target);
                 });
             }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
 
-            for (var i = 0; i < items.length; i++) observer.observe(items[i]);
+            items.forEach(function (el) { observer.observe(el); });
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            window.addEventListener('resize', onScroll, { passive: true });
+            setTimeout(sweep, 2500);
         })();
 
         if ('serviceWorker' in navigator) {
