@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v2';
+const VERSION = 'v3';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -28,6 +28,12 @@ const PRECACHE_URLS = [
   '/logo.png',
   '/lostpines.png',
   '/headshot.jpg',
+  '/work-led-sign.webp',
+  '/work-mandala.webp',
+  '/work-cad.webp',
+  '/work-feeder.webp',
+  '/work-dragon.webp',
+  '/work-texas.webp',
   '/icon-192.png',
   '/icon-512.png',
   '/icon-maskable-512.png',

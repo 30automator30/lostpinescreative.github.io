@@ -126,6 +126,8 @@
             .js .stagger > *:nth-child(2) { --reveal-delay: 90ms; }
             .js .stagger > *:nth-child(3) { --reveal-delay: 180ms; }
             .js .stagger > *:nth-child(4) { --reveal-delay: 270ms; }
+            .js .stagger > *:nth-child(5) { --reveal-delay: 360ms; }
+            .js .stagger > *:nth-child(6) { --reveal-delay: 450ms; }
 
             /* The hero is above the fold — it plays on load, not on scroll. */
             .js .hero .logo,
@@ -403,6 +405,89 @@
             .js .survey-map.is-visible .survey-node:nth-child(3) { transition-delay: 0.40s; }
             .js .survey-map.is-visible .survey-node:nth-child(4) { transition-delay: 0.65s; }
             .js .survey-map.is-visible .survey-node:nth-child(5) { transition-delay: 0.90s; }
+        }
+
+        /* DeSmit Designs work gallery */
+        .work-intro {
+            margin: 36px 0 20px;
+        }
+
+        .work-intro h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .work-intro p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .work-intro a {
+            color: var(--accent);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .work-intro a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .work-gallery {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .work-item {
+            position: relative;
+            margin: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            aspect-ratio: 1 / 1;
+        }
+
+        .work-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s var(--ease);
+        }
+
+        .work-item figcaption {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 26px 12px 10px;
+            font-size: 0.8rem;
+            color: var(--text);
+            background: linear-gradient(to top, rgba(11, 18, 16, 0.9), transparent);
+        }
+
+        .work-item:hover {
+            border-color: var(--accent);
+        }
+
+        .work-item:hover img {
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 640px) {
+            .work-gallery {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .work-item:hover img {
+                transform: none;
+            }
         }
 
         /* Values */
@@ -763,6 +848,37 @@
                     <br>
                     <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection</a>
                 </div>
+            </div>
+
+            <div class="work-intro reveal">
+                <h3>DeSmit Designs — selected work</h3>
+                <p>A sample of recent commissions across 3D printing, CAD modeling, and laser work. <a href="mailto:desmitdesignz@gmail.com?subject=Design%20%26%20fabrication%20inquiry">Start a project &rarr;</a></p>
+            </div>
+            <div class="work-gallery stagger">
+                <figure class="work-item reveal">
+                    <img src="/work-led-sign.webp" alt="Backlit acrylic LED gaming sign made by DeSmit Designs" width="560" height="560" loading="lazy">
+                    <figcaption>Custom LED signage</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-mandala.webp" alt="Framed multi-layer mandala wall art, laser cut" width="560" height="560" loading="lazy">
+                    <figcaption>Layered laser art</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-cad.webp" alt="CAD model of a mechanical assembly" width="560" height="560" loading="lazy">
+                    <figcaption>CAD modeling</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-feeder.webp" alt="3D-printed hummingbird feeder" width="560" height="560" loading="lazy">
+                    <figcaption>Functional product design</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-dragon.webp" alt="Articulated 3D-printed dragon" width="560" height="560" loading="lazy">
+                    <figcaption>Complex 3D prints</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-texas.webp" alt="3D-printed topographic relief map of Texas" width="560" height="560" loading="lazy">
+                    <figcaption>Custom modeling</figcaption>
+                </figure>
             </div>
         </section>
 
