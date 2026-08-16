@@ -717,12 +717,12 @@
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             if (!('IntersectionObserver' in window)) return items.forEach(show);
 
-            // Geometric backstop. IntersectionObserver can skip elements that a
-            // programmatic jump scrolls straight past — scroll restoration on
-            // back/forward, find-in-page, an anchor link — and once skipped they
-            // never recover. Content stranded invisible is the worst failure this
-            // page can have, so anything at or above the fold is revealed here
-            // regardless of whether the observer ever fired for it.
+            // Geometric backstop — defense in depth, not a fix for a confirmed bug.
+            // Content stranded at opacity 0 is the worst failure this page can have,
+            // so reveal anything at or above the fold regardless of whether the
+            // observer ever fired for it. Cheap insurance against jump-scrolls
+            // (scroll restoration, find-in-page, anchor links) and against callbacks
+            // that arrive late on a throttled or backgrounded tab.
             function sweep() {
                 var fold = window.innerHeight * 0.92;
                 var remaining = false;
