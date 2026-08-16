@@ -123,10 +123,12 @@
             }
             .founder-content {
                 flex-direction: column;
+                align-items: center;
                 text-align: center;
             }
             .founder-credentials {
                 align-items: center;
+                justify-content: center;
             }
         }
 
@@ -276,18 +278,21 @@
         }
 
         .founder-icon {
-            width: 64px;
-            height: 64px;
-            min-width: 64px;
+            width: 96px;
+            height: 96px;
+            min-width: 96px;
             border-radius: 50%;
             background: var(--accent-glow);
             border: 2px solid var(--accent);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            color: var(--accent);
-            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .founder-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 30%;
+            display: block;
         }
 
         .founder-text h3 {
@@ -442,7 +447,9 @@
             <h2>Who's building this</h2>
             <div class="founder-card">
                 <div class="founder-content">
-                    <div class="founder-icon">DD</div>
+                    <div class="founder-icon">
+                        <img src="/headshot.jpg" alt="Daniel De Smit, Founder & Engineer at Lost Pines Creative" width="96" height="96" loading="lazy">
+                    </div>
                     <div class="founder-text">
                         <h3>Daniel De Smit</h3>
                         <div class="role">Founder & Engineer</div>
