@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v3';
+const VERSION = 'v4';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -34,6 +34,8 @@ const PRECACHE_URLS = [
   '/work-feeder.webp',
   '/work-dragon.webp',
   '/work-texas.webp',
+  '/nomadcore-screen.webp',
+  '/rememberwho-screen.webp',
   '/icon-192.png',
   '/icon-512.png',
   '/icon-maskable-512.png',
