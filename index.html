@@ -18,6 +18,10 @@
     <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <meta name="apple-mobile-web-app-title" content="Lost Pines">
+
+    <!-- Marks the document as scripted BEFORE first paint, so motion styles never
+         apply to a page that can't run them. No JS = no hidden content. -->
+    <script>document.documentElement.className += ' js';</script>
     <style>
         :root {
             --bg: #0b1210;
@@ -31,6 +35,11 @@
             --green: #4ade80;
             --amber: #fbbf24;
             --warm: #d4956a;
+
+            /* Motion */
+            --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --tick: rgba(74, 158, 126, 0.32);
         }
 
         * {
@@ -59,11 +68,89 @@
             background: radial-gradient(ellipse at 50% 0%, rgba(74, 158, 126, 0.08) 0%, transparent 70%);
         }
 
+        /* The mark ships pre-tinted at 2x. The old brightness/invert/hue-rotate
+           filter chain guessed at the brand colour and broke on any logo edit. */
         .hero .logo {
             width: 130px;
             height: auto;
             margin-bottom: 24px;
-            filter: brightness(0) invert(0.85) sepia(0.3) saturate(2) hue-rotate(110deg);
+        }
+
+        /* Survey rule — the section divider as a graduated measuring line.
+           Three layers: the rule, major ticks every 200px, minor every 40px.
+           Masked at both ends so it reads as an instrument, not a border. */
+        .survey-rule {
+            position: relative;
+            border-top: none;
+        }
+
+        .survey-rule::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 10px;
+            pointer-events: none;
+            background-image:
+                linear-gradient(var(--border), var(--border)),
+                repeating-linear-gradient(to right, var(--tick) 0 1px, transparent 1px 200px),
+                repeating-linear-gradient(to right, var(--tick) 0 1px, transparent 1px 40px);
+            background-size: 100% 1px, 100% 10px, 100% 5px;
+            background-repeat: no-repeat;
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+        }
+
+        /* ---- Motion ----------------------------------------------------------
+           Every rule below is gated on BOTH .js and no-preference. A page with
+           JS off, or a visitor who asked for less motion, gets the static site
+           in full — never a degraded or half-hidden one. */
+        @media (prefers-reduced-motion: no-preference) {
+            .js .reveal {
+                opacity: 0;
+                transform: translateY(14px);
+                transition:
+                    opacity 0.7s var(--ease-out),
+                    transform 0.7s var(--ease-out);
+                transition-delay: var(--reveal-delay, 0ms);
+            }
+
+            .js .reveal.is-visible {
+                opacity: 1;
+                transform: none;
+            }
+
+            /* Grid children share a trigger point, so the delay is what actually
+               reads as a stagger. */
+            .js .stagger > *:nth-child(2) { --reveal-delay: 90ms; }
+            .js .stagger > *:nth-child(3) { --reveal-delay: 180ms; }
+            .js .stagger > *:nth-child(4) { --reveal-delay: 270ms; }
+
+            /* The hero is above the fold — it plays on load, not on scroll. */
+            .js .hero .logo,
+            .js .hero h1,
+            .js .hero p {
+                opacity: 0;
+                animation: rise 0.9s var(--ease-out) forwards;
+            }
+
+            .js .hero .logo { animation-delay: 0.05s; }
+            .js .hero h1    { animation-delay: 0.20s; }
+            .js .hero p     { animation-delay: 0.34s; }
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* Keyboard users get the same affordances the mouse gets. */
+        a:focus-visible,
+        .contact-card:focus-visible {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 3px;
+            border-radius: 3px;
         }
 
         .hero h1 {
@@ -88,7 +175,6 @@
         .thesis {
             text-align: center;
             padding: 40px 0 60px;
-            border-top: 1px solid var(--border);
         }
 
         .thesis blockquote {
@@ -144,12 +230,24 @@
             border: 1px solid var(--border);
             border-radius: 12px;
             padding: 28px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition:
+                border-color 0.35s var(--ease),
+                box-shadow 0.35s var(--ease),
+                transform 0.35s var(--ease);
         }
 
         .product-card:hover {
             border-color: var(--accent);
-            box-shadow: 0 0 20px var(--accent-glow);
+            transform: translateY(-3px);
+            box-shadow:
+                0 14px 34px -14px rgba(0, 0, 0, 0.65),
+                0 0 26px var(--accent-glow);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .product-card:hover {
+                transform: none;
+            }
         }
 
         .product-card h3 {
@@ -260,7 +358,6 @@
         /* Founder */
         .founder {
             padding: 60px 0;
-            border-top: 1px solid var(--border);
         }
 
         .founder h2 {
@@ -336,11 +433,108 @@
             border: 1px solid rgba(212, 149, 106, 0.2);
         }
 
+        /* Contact */
+        .contact {
+            padding: 60px 0;
+        }
+
+        .contact h2 {
+            text-align: center;
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .contact-intro {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            max-width: 520px;
+            margin: 0 auto 32px;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .contact-card {
+            display: block;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 28px;
+            text-decoration: none;
+            color: inherit;
+            transition:
+                border-color 0.35s var(--ease),
+                box-shadow 0.35s var(--ease),
+                transform 0.35s var(--ease);
+        }
+
+        .contact-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow:
+                0 14px 34px -14px rgba(0, 0, 0, 0.65),
+                0 0 26px var(--accent-glow);
+        }
+
+        .contact-card h3 {
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+
+        .contact-card p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 14px;
+        }
+
+        .contact-action {
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+
+        .contact-card:hover .contact-action {
+            color: var(--accent-hover);
+        }
+
+        .contact-direct {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .contact-direct a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        .contact-direct a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .contact-card:hover {
+                transform: none;
+            }
+        }
+
         /* Footer */
         footer {
             text-align: center;
             padding: 40px 0;
-            border-top: 1px solid var(--border);
             color: var(--text-muted);
             font-size: 0.85rem;
         }
@@ -354,19 +548,26 @@
             margin-top: 4px;
             font-size: 0.8rem;
         }
+
+        .offline-note {
+            margin-top: 14px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.65;
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <section class="hero">
-            <img src="lostpines.png" alt="Lost Pines Creative logo" class="logo">
+            <img src="/logo.png" alt="Lost Pines Creative logo" class="logo" width="130" height="101">
             <h1>Lost Pines <span>Creative</span></h1>
             <p>Tools for people who take ownership of their own lives.</p>
         </section>
 
-        <section class="thesis">
-            <blockquote>
+        <section class="thesis survey-rule">
+            <blockquote class="reveal">
                 Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
             </blockquote>
         </section>
@@ -374,9 +575,9 @@
         <section class="products">
             <h2>What we're building</h2>
 
-            <div class="category-label">Software</div>
-            <div class="product-grid">
-                <div class="product-card">
+            <div class="category-label reveal">Software</div>
+            <div class="product-grid stagger">
+                <div class="product-card reveal">
                     <h3>NomadCore</h3>
                     <span class="stage stage-active">Live on iOS & Android</span>
                     <p>Family emergency preparedness powered by offline AI. Emergency plans, supply tracking, offline maps, and a knowledge base of 1,320 procedures — all without needing signal.</p>
@@ -389,7 +590,7 @@
                     <a href="https://play.google.com/store/apps/details?id=com.nomadcoreapp.nomadcore">Google Play</a>
                 </div>
 
-                <div class="product-card">
+                <div class="product-card reveal">
                     <h3>Remember Who</h3>
                     <span class="stage stage-active">Pre-Launch</span>
                     <p>A privacy-first personal CRM that helps you remember everyone you meet. On-device AI transcription, encrypted storage, geo-reminders — your contacts never leave your phone.</p>
@@ -398,14 +599,14 @@
                     <a href="https://www.rememberwho.app">rememberwho.app</a>
                 </div>
 
-                <div class="product-card">
+                <div class="product-card reveal">
                     <h3>Evident House</h3>
                     <span class="stage stage-upcoming">Early Development</span>
                     <p>Document your belongings with cryptographic proof. When disaster strikes and you need to prove what you owned, Evident House provides evidence your insurer can't dispute.</p>
                     <div class="tagline">"Your insurance proof, owned by you."</div>
                 </div>
 
-                <div class="product-card">
+                <div class="product-card reveal">
                     <h3>Sovereign School</h3>
                     <span class="stage stage-concept">Concept</span>
                     <p>A multi-agent AI homeschool platform that gives parents a coordinated cabinet of educators — superintendent, principal, teachers — while keeping the parent as the ultimate authority.</p>
@@ -413,24 +614,24 @@
                 </div>
             </div>
 
-            <div class="values-grid" style="margin-top: 32px; margin-bottom: 40px;">
-                <div class="value">
+            <div class="values-grid stagger" style="margin-top: 32px; margin-bottom: 40px;">
+                <div class="value reveal">
                     <h3>Offline-First</h3>
                     <p>Works without internet. Your tools shouldn't fail when you need them most.</p>
                 </div>
-                <div class="value">
+                <div class="value reveal">
                     <h3>Privacy-First</h3>
                     <p>Data stays on your device. Encrypted. No tracking, no ads, no data sales.</p>
                 </div>
-                <div class="value">
+                <div class="value reveal">
                     <h3>User-Sovereign</h3>
                     <p>You own your data. Export anytime. No lock-in. No subscriptions you can't cancel.</p>
                 </div>
             </div>
 
-            <div class="category-label">Design & Craft</div>
-            <div class="product-grid">
-                <div class="product-card">
+            <div class="category-label reveal">Design &amp; Craft</div>
+            <div class="product-grid stagger">
+                <div class="product-card reveal">
                     <h3>DeSmit Designs</h3>
                     <span class="stage stage-active">Active</span>
                     <p>Engineering-driven design services — 3D printing, CAD modeling, and laser cutting. From custom prototypes to finished products, built with the same precision as medical-grade hardware.</p>
@@ -439,7 +640,7 @@
                     <a href="https://www.facebook.com/profile.php?id=61571339641377">Facebook</a>
                 </div>
 
-                <div class="product-card">
+                <div class="product-card reveal">
                     <h3>Blue Plumeria</h3>
                     <span class="stage stage-active">Pre-Launch</span>
                     <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
@@ -450,9 +651,9 @@
             </div>
         </section>
 
-        <section class="founder">
+        <section class="founder survey-rule">
             <h2>Who's building this</h2>
-            <div class="founder-card">
+            <div class="founder-card reveal">
                 <div class="founder-content">
                     <div class="founder-icon">
                         <img src="/headshot.jpg" alt="Daniel De Smit, Founder & Engineer at Lost Pines Creative" width="96" height="96" loading="lazy">
@@ -472,7 +673,25 @@
             </div>
         </section>
 
-        <footer>
+        <section class="contact survey-rule">
+            <h2 class="reveal">Get in touch</h2>
+            <p class="contact-intro reveal">Every project starts with a conversation. Tell me what you're trying to build.</p>
+            <div class="contact-grid stagger">
+                <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Design%20%26%20fabrication%20inquiry">
+                    <h3>Design &amp; fabrication</h3>
+                    <p>3D printing, CAD modeling, and laser cutting — prototype through finished part.</p>
+                    <span class="contact-action">Start a project &rarr;</span>
+                </a>
+                <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Lost%20Pines%20Creative%20inquiry">
+                    <h3>Everything else</h3>
+                    <p>Questions about the apps, partnerships, press, or investment.</p>
+                    <span class="contact-action">Say hello &rarr;</span>
+                </a>
+            </div>
+            <p class="contact-direct reveal">Or write directly &mdash; <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+        </section>
+
+        <footer class="survey-rule">
             <p><a href="https://lostpinescreative.com/">&copy; 2026 Lost Pines Creative LLC</a></p>
             <p class="location">Bastrop, Texas</p>
             <p style="margin-top: 8px;">
@@ -480,11 +699,39 @@
                 &nbsp;&middot;&nbsp;
                 <a href="https://www.linkedin.com/company/lost-pines-creative-llc/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
             </p>
+            <p class="offline-note">This page works offline &mdash; try it with your wifi off.</p>
         </footer>
     </div>
 
     <script>
         // Progressive enhancement only — the page above is complete without it.
+        (function () {
+            var items = document.querySelectorAll('.reveal');
+            if (!items.length) return;
+
+            function showAll() {
+                for (var i = 0; i < items.length; i++) {
+                    items[i].classList.add('is-visible');
+                }
+            }
+
+            // Reduced motion: the CSS never hid anything, so there is nothing to do.
+            // No IntersectionObserver: reveal everything immediately rather than
+            // leaving content stranded at opacity 0.
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (!('IntersectionObserver' in window)) return showAll();
+
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) return;
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                });
+            }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+
+            for (var i = 0; i < items.length; i++) observer.observe(items[i]);
+        })();
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
                 navigator.serviceWorker.register('/sw.js').catch(function () {});
