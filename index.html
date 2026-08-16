@@ -11,6 +11,13 @@
     <meta property="og:url" content="https://lostpinescreative.com">
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Lost Pines Creative">
+
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0b1210">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-title" content="Lost Pines">
     <style>
         :root {
             --bg: #0b1210;
@@ -476,5 +483,13 @@
         </footer>
     </div>
 
+    <script>
+        // Progressive enhancement only — the page above is complete without it.
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js').catch(function () {});
+            });
+        }
+    </script>
 </body>
 </html>
