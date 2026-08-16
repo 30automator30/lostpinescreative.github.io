@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lost Pines Creative</title>
-    <meta name="description" content="Software, design, and handcraft — for people who take ownership of their own lives.">
-    <meta property="og:title" content="Lost Pines Creative">
-    <meta property="og:description" content="Software, design, and handcraft — for people who take ownership of their own lives.">
+    <meta name="description" content="Product engineering and technical leadership — offline-first, secure, cross-platform software, shipped. Consulting and fractional-CTO engagements through Lost Pines Creative.">
+    <meta property="og:title" content="Lost Pines Creative — Product Engineering & Technical Leadership">
+    <meta property="og:description" content="Offline-first, secure, cross-platform software, shipped. Consulting and fractional-CTO engagements.">
     <meta property="og:image" content="https://lostpinescreative.com/lostpines.png">
     <meta property="og:url" content="https://lostpinescreative.com">
     <meta property="og:type" content="website">
@@ -193,8 +193,56 @@
         .hero p {
             font-size: 1.2rem;
             color: var(--text-muted);
-            max-width: 540px;
+            max-width: 560px;
             margin: 0 auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 11px 22px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition:
+                transform 0.25s var(--ease),
+                background 0.25s var(--ease),
+                border-color 0.25s var(--ease),
+                box-shadow 0.25s var(--ease);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #071410;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 26px -10px var(--accent);
+        }
+
+        .btn-ghost {
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-ghost:hover {
+            border-color: var(--accent);
+            color: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .btn:hover { transform: none; }
         }
 
         /* Thesis */
@@ -536,42 +584,146 @@
             }
         }
 
-        /* Values */
-        .values {
-            padding: 60px 0;
+        /* Systems — capability cards whose inline SVG diagrams animate to prove
+           each claim. Animations loop only while a card is in view (JS toggles
+           .in-view) and never run under reduced motion. The base SVG state is a
+           legible still, so no-JS / offscreen / reduced-motion all show a clear
+           static diagram. */
+        .systems {
+            padding: 64px 0;
             border-top: 1px solid var(--border);
         }
 
-        .values h2 {
+        .systems h2 {
             text-align: center;
-            font-size: 1.3rem;
-            margin-bottom: 32px;
-            color: var(--text-muted);
-            font-weight: 400;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            margin-bottom: 10px;
         }
 
-        .values-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 24px;
+        .systems-lead {
             text-align: center;
+            max-width: 640px;
+            margin: 0 auto 40px;
+            color: var(--text-muted);
+        }
+
+        .systems-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
         }
 
         @media (max-width: 640px) {
-            .values-grid {
-                grid-template-columns: 1fr;
-            }
+            .systems-grid { grid-template-columns: 1fr; }
         }
 
-        .value h3 {
-            font-size: 1rem;
-            margin-bottom: 6px;
+        .sys-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 22px 24px 24px;
+            transition:
+                border-color 0.35s var(--ease),
+                box-shadow 0.35s var(--ease),
+                transform 0.35s var(--ease);
+        }
+
+        .sys-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow:
+                0 14px 34px -14px rgba(0, 0, 0, 0.65),
+                0 0 26px var(--accent-glow);
+        }
+
+        .sys-fig {
+            height: 132px;
+            margin-bottom: 16px;
+            border-radius: 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .sys-fig svg { display: block; width: 100%; height: 100%; }
+
+        .sys-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+        .sys-card > p { font-size: 0.9rem; color: var(--text-muted); }
+
+        .sys-proof {
+            display: inline-block;
+            margin-top: 12px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
             color: var(--accent);
+            font-family: ui-monospace, 'Cascadia Code', monospace;
         }
 
-        .value p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
+        /* Diagram element vocabulary */
+        .sys-svg .stroke  { fill: none; stroke: var(--border); stroke-width: 2; }
+        .sys-svg .line    { fill: none; stroke: var(--text-muted); stroke-width: 2; stroke-linecap: round; }
+        .sys-svg .hot     { fill: none; stroke: var(--accent-hover); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+        .sys-svg .dot     { fill: var(--accent-hover); }
+        .sys-svg .muted   { fill: var(--text-muted); }
+        .sys-svg .chip    { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+        .sys-svg .lbl     { fill: var(--text-muted); font-family: ui-monospace, monospace; font-size: 12px; text-anchor: middle; }
+        .sys-svg .pivot   { transform-box: fill-box; transform-origin: center; }
+
+        @media (prefers-reduced-motion: no-preference) {
+            .in-view .d1-pulse { animation: sys-pulse 1.6s var(--ease) infinite; }
+            .in-view .d1-cut   { animation: sys-cut 3.2s var(--ease) infinite; }
+
+            .in-view .d2-arrow { animation: sys-bounce 2.6s var(--ease) infinite; }
+            .in-view .d2-shk   { animation: sys-lock 2.6s var(--ease) infinite; }
+
+            .in-view .d3-line  { animation: sys-draw 2.8s var(--ease) infinite; }
+            .in-view .d3-chip  { animation: sys-flash 2.8s var(--ease) infinite; }
+            .in-view .d3-2     { animation-delay: 0.22s; }
+            .in-view .d3-3     { animation-delay: 0.44s; }
+
+            .in-view .d4-node  { animation: sys-pass 3.4s var(--ease) infinite; }
+            .in-view .d4-2     { animation-delay: 0.5s; }
+            .in-view .d4-3     { animation-delay: 1.0s; }
+            .in-view .d4-4     { animation-delay: 1.5s; }
+            .in-view .d4-check { animation: sys-check 3.4s var(--ease) infinite; }
+        }
+
+        @keyframes sys-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50%      { transform: scale(1.55); opacity: 0.45; }
+        }
+        @keyframes sys-cut {
+            0%, 18%  { stroke-dashoffset: 30; }
+            38%, 82% { stroke-dashoffset: 0; }
+            100%     { stroke-dashoffset: 30; }
+        }
+        @keyframes sys-bounce {
+            0%, 100% { transform: translateX(0); opacity: 0.45; }
+            38%      { transform: translateX(-30px); opacity: 1; }
+            52%      { transform: translateX(-16px); opacity: 1; }
+        }
+        @keyframes sys-lock {
+            0%, 32%, 100% { transform: translateY(0); }
+            46%           { transform: translateY(-2px); }
+        }
+        @keyframes sys-draw {
+            0%       { stroke-dashoffset: 62; }
+            45%, 100% { stroke-dashoffset: 0; }
+        }
+        @keyframes sys-flash {
+            0%, 30%  { fill: var(--surface); stroke: var(--border); }
+            55%, 100% { fill: rgba(95, 184, 150, 0.18); stroke: var(--accent-hover); }
+        }
+        @keyframes sys-pass {
+            0%, 16%  { fill: var(--surface); stroke: var(--border); }
+            34%, 100% { fill: rgba(95, 184, 150, 0.18); stroke: var(--accent-hover); }
+        }
+        @keyframes sys-check {
+            0%, 68%   { stroke-dashoffset: 22; opacity: 0; }
+            84%, 100% { stroke-dashoffset: 0; opacity: 1; }
         }
 
         /* Founder */
@@ -785,7 +937,11 @@
                 <g class="hero-mark-spin"><path class="hero-mark-ink" d="m 151,247.36067 c -1.375,-0.20184 -5.79549,-0.85358 -9.82331,-1.44833 C 131.62132,244.5014 122.80849,241.43973 110.5,235.25493 97.843451,228.89524 90.781372,223.57228 79.440549,211.84426 59.20434,190.91714 48.7175,164.90822 48.658417,135.5 48.631482,122.093 50.676529,109.57091 54.599028,99.124877 58.2701,89.348418 64.070648,78 65.396644,78 c 0.637089,0 2.152697,0.696473 3.368019,1.547717 l 2.209675,1.547717 -3.8683,7.702283 c -4.886027,9.72871 -9.878742,27.037943 -10.724668,37.181333 -0.602266,7.22168 -0.496071,7.8892 1.418064,8.91361 C 58.93743,135.5017 61.211296,136 62.852471,136 66.42678,136 69,136.88194 69,138.10699 69,138.59814 66.5801,139 63.622445,139 c -7.227892,0 -7.973699,1.04149 -6.655362,9.29395 1.452575,9.09275 5.591247,23.05306 9.032271,30.46708 4.780928,10.30098 14.677865,23.759 23.549146,32.02253 15.80466,14.72191 33.42834,23.51659 55.20697,27.54971 9.85486,1.825 11.43042,1.90284 12.66147,0.62555 0.85172,-0.88372 1.86017,-5.77488 2.55805,-12.40709 1.75593,-16.68715 3.08345,-16.56855 5.08571,0.45437 0.67887,5.77165 1.6922,11.0795 2.25185,11.79523 2.22224,2.84202 25.57631,-2.30997 39.01209,-8.60619 20.88473,-9.78691 36.10297,-23.66127 48.16737,-43.91386 4.35495,-7.31067 10.0865,-24.0541 12.03664,-35.16227 5.57554,-31.75892 -6.02892,-66.068617 -30.16715,-89.192044 -20.49077,-19.629313 -46.02567,-30.001439 -73.84666,-29.996081 -28.39522,0.0055 -53.4031,9.81655 -75.276003,29.532243 -5.27211,4.752151 -7.632245,5.2812 -8.8938,1.993641 C 76.807174,59.449163 95.330254,44.776905 112.41126,36.472682 128.40819,28.6955 139.31032,26.08078 159,25.299043 c 11.26703,-0.447334 15.31946,-0.18056 24.5,1.612848 23.98849,4.686123 45.56921,16.648191 62.29819,34.531529 8.14399,8.705946 13.45461,16.704243 19.20626,28.926419 C 273.0755,107.52072 274.5,114.36606 274.5,136 c 0,17.30076 -0.18335,19.14326 -2.8285,28.42317 -3.25494,11.41929 -11.41289,28.31439 -17.95668,37.1883 -17.81651,24.16059 -45.91251,41.15747 -74.15318,44.8595 -10.77839,1.41293 -22.50797,1.7783 -28.56164,0.8897 z M 160.56069,194.75 c -0.54604,-3.34877 -3.13095,-24.4991 -4.61365,-37.75 -0.46156,-4.125 -0.86347,-11.3475 -0.89312,-16.05 -0.0307,-4.87073 -0.53276,-9.02884 -1.16667,-9.66275 -0.817,-0.817 -2.85378,-0.45742 -7.6633,1.35288 C 139.80373,135.05669 127,137.00055 127,135.5587 c 0,-0.40179 2.59892,-3.2894 5.77537,-6.41691 10.1879,-10.03096 20.13889,-26.9672 14.47463,-24.63533 -6.65914,2.74145 -6.70157,1.77897 -0.35043,-7.95 4.58957,-7.030517 9.80896,-19.42066 8.28486,-19.667151 -0.37644,-0.06088 -1.65056,-0.03475 -2.83139,0.05806 l -2.14696,0.168754 2.48026,-6.808063 c 1.36414,-3.744435 3.49287,-10.608098 4.73052,-15.252584 1.23765,-4.644487 2.70635,-8.596549 3.26379,-8.782361 0.55743,-0.185812 3.11003,5.864223 5.67244,13.444521 2.5624,7.580299 4.95104,14.636169 5.30808,15.679713 0.56135,1.640711 0.29002,1.807212 -2.00601,1.230948 C 167.73318,76.145912 167,76.346638 167,77.355221 c 0,3.258608 3.38708,10.503689 8.50966,18.202444 C 178.52934,100.09598 181,104.07709 181,104.40457 181,104.73206 179.425,105 177.5,105 c -1.925,0 -3.5,0.47032 -3.5,1.04516 0,2.32948 10.80104,16.83356 17.15939,23.04233 3.73437,3.64652 6.5012,6.91859 6.14852,7.27127 -1.07683,1.07683 -7.72291,0.71952 -15.96994,-0.85859 -4.31088,-0.8249 -8.12899,-1.4999 -8.48468,-1.5 -0.71368,-1.9e-4 -2.03623,9.23815 -4.36633,30.49983 -1.56257,14.2582 -4.22006,31.25913 -5.11178,32.70197 -1.06659,1.72578 -2.30989,0.64262 -2.81449,-2.45197 z M 22.578168,140.12937 c -6.422739,-1.03071 -5.327581,-2.71826 2.649578,-4.0828 C 34.961001,134.38164 37.5,134.78579 37.5,138 c 0,2.34796 -0.334497,2.50787 -5.5,2.62937 -3.025,0.0712 -7.264824,-0.15385 -9.421832,-0.5 z M 286.40128,139.60335 C 285.27273,136.66238 286.76219,135 290.5258,135 c 3.17286,0 10.17218,1.28447 14.4742,2.65621 2.88109,0.91866 -1.14947,2.09226 -9.74173,2.83656 -7.06682,0.61215 -8.32943,0.48536 -8.85699,-0.88942 z M 71.5,138 c -0.368524,-0.59628 0.842621,-1 3,-1 2.157379,0 3.368524,0.40372 3,1 -0.339919,0.55 -1.689919,1 -3,1 -1.310081,0 -2.660081,-0.45 -3,-1 z"/></g>
             </svg>
             <h1>Lost Pines <span>Creative</span></h1>
-            <p>Tools for people who take ownership of their own lives.</p>
+            <p>Product engineering &amp; technical leadership — from first principles to shipped.</p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="#contact">Work with me</a>
+                <a class="btn btn-ghost" href="#work">See the work</a>
+            </div>
         </section>
 
         <section class="thesis survey-rule">
@@ -794,7 +950,94 @@
             </blockquote>
         </section>
 
-        <section class="products">
+        <section class="systems">
+            <h2 class="reveal">What I bring</h2>
+            <p class="systems-lead reveal">Fifteen years building regulated hardware and software, now applied as an engineering practice — architecture, delivery, and the judgment to ship. Every capability below is proven in shipped product.</p>
+            <div class="systems-grid stagger">
+
+                <div class="sys-card reveal" data-loop>
+                    <div class="sys-fig">
+                        <svg class="sys-svg" viewBox="0 0 240 132" role="img" aria-label="Offline-first: the network drops but the app keeps running.">
+                            <path class="stroke" d="M104 46 a24 24 0 0 1 32 0" />
+                            <path class="stroke" d="M110 53 a15 15 0 0 1 20 0" />
+                            <path class="stroke" d="M116 60 a7 7 0 0 1 8 0" />
+                            <circle class="muted" cx="120" cy="66" r="2.5" />
+                            <line class="hot d1-cut" x1="100" y1="70" x2="142" y2="34" stroke-dasharray="30" />
+                            <rect class="stroke" x="84" y="80" width="72" height="40" rx="8" />
+                            <polyline class="hot" points="92,100 106,100 112,88 120,110 126,100 148,100" />
+                            <circle class="dot d1-pulse pivot" cx="120" cy="100" r="4.5" />
+                        </svg>
+                    </div>
+                    <h3>Offline-first systems</h3>
+                    <p>Software that keeps working when the network doesn't — local-first data, on-device intelligence, graceful failure.</p>
+                    <span class="sys-proof">1,320 offline procedures in NomadCore</span>
+                </div>
+
+                <div class="sys-card reveal" data-loop>
+                    <div class="sys-fig">
+                        <svg class="sys-svg" viewBox="0 0 240 132" role="img" aria-label="Security by architecture: data stays on the device; outside access is rejected.">
+                            <rect class="stroke" x="82" y="40" width="76" height="60" rx="10" />
+                            <path class="hot d2-shk pivot" d="M112 56 v-5 a8 8 0 0 1 16 0 v5" />
+                            <rect class="dot" x="110" y="56" width="20" height="16" rx="3" />
+                            <circle class="muted" cx="100" cy="88" r="3" />
+                            <circle class="muted" cx="120" cy="88" r="3" />
+                            <circle class="muted" cx="140" cy="88" r="3" />
+                            <g class="d2-arrow pivot">
+                                <line class="line" x1="214" y1="70" x2="178" y2="70" />
+                                <path class="line" d="M184 64 l-8 6 l8 6" />
+                            </g>
+                        </svg>
+                    </div>
+                    <h3>Security by architecture</h3>
+                    <p>Encryption and privacy designed in, not bolted on. Data stays where it belongs — on the user's device.</p>
+                    <span class="sys-proof">AES-256 · on-device · zero-knowledge</span>
+                </div>
+
+                <div class="sys-card reveal" data-loop>
+                    <div class="sys-fig">
+                        <svg class="sys-svg" viewBox="0 0 240 132" role="img" aria-label="One codebase shipping to iOS, Android, and web.">
+                            <rect class="chip" x="102" y="26" width="36" height="28" rx="6" />
+                            <text class="lbl" x="120" y="44">{ }</text>
+                            <path class="hot d3-line" d="M120 56 L58 96" stroke-dasharray="80" />
+                            <path class="hot d3-line d3-2" d="M120 56 L120 96" stroke-dasharray="80" />
+                            <path class="hot d3-line d3-3" d="M120 56 L182 96" stroke-dasharray="80" />
+                            <rect class="chip d3-chip" x="34" y="98" width="48" height="24" rx="6" />
+                            <text class="lbl" x="58" y="114">iOS</text>
+                            <rect class="chip d3-chip d3-2" x="94" y="98" width="52" height="24" rx="6" />
+                            <text class="lbl" x="120" y="114">Android</text>
+                            <rect class="chip d3-chip d3-3" x="158" y="98" width="48" height="24" rx="6" />
+                            <text class="lbl" x="182" y="114">Web</text>
+                        </svg>
+                    </div>
+                    <h3>Ship on every platform</h3>
+                    <p>One codebase to iOS, Android, and the web — fewer moving parts, faster iteration, one team.</p>
+                    <span class="sys-proof">React Native / Expo across the portfolio</span>
+                </div>
+
+                <div class="sys-card reveal" data-loop>
+                    <div class="sys-fig">
+                        <svg class="sys-svg" viewBox="0 0 240 132" role="img" aria-label="A quality pipeline: spec, build, test, ship — each checkpoint passing in turn.">
+                            <line class="line" x1="40" y1="58" x2="200" y2="58" />
+                            <circle class="chip d4-node" cx="48" cy="58" r="10" />
+                            <text class="lbl" x="48" y="86">SPEC</text>
+                            <circle class="chip d4-node d4-2" cx="104" cy="58" r="10" />
+                            <text class="lbl" x="104" y="86">BUILD</text>
+                            <circle class="chip d4-node d4-3" cx="160" cy="58" r="10" />
+                            <text class="lbl" x="160" y="86">TEST</text>
+                            <circle class="chip d4-node d4-4" cx="200" cy="58" r="12" />
+                            <path class="hot d4-check pivot" d="M193 58 l5 6 l9 -12" stroke-dasharray="22" />
+                            <text class="lbl" x="200" y="88">SHIP</text>
+                        </svg>
+                    </div>
+                    <h3>Regulated-grade rigor</h3>
+                    <p>FDA/CE-caliber quality systems applied to software: real process, real tests, real release gates.</p>
+                    <span class="sys-proof">15 years in medical devices</span>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="products" id="work">
             <h2>What we're building</h2>
 
             <div class="category-label reveal">Software</div>
@@ -869,22 +1112,7 @@
                 </div>
             </div>
 
-            <div class="values-grid stagger" style="margin-top: 32px; margin-bottom: 40px;">
-                <div class="value reveal">
-                    <h3>Offline-First</h3>
-                    <p>Works without internet. Your tools shouldn't fail when you need them most.</p>
-                </div>
-                <div class="value reveal">
-                    <h3>Privacy-First</h3>
-                    <p>Data stays on your device. Encrypted. No tracking, no ads, no data sales.</p>
-                </div>
-                <div class="value reveal">
-                    <h3>User-Sovereign</h3>
-                    <p>You own your data. Export anytime. No lock-in. No subscriptions you can't cancel.</p>
-                </div>
-            </div>
-
-            <div class="category-label reveal">Design &amp; Craft</div>
+            <div class="category-label reveal" style="margin-top: 40px;">Design &amp; Craft</div>
             <div class="product-grid stagger">
                 <div class="product-card reveal">
                     <h3>DeSmit Designs</h3>
@@ -959,19 +1187,19 @@
             </div>
         </section>
 
-        <section class="contact survey-rule">
-            <h2 class="reveal">Get in touch</h2>
-            <p class="contact-intro reveal">Every project starts with a conversation. Tell me what you're trying to build.</p>
+        <section class="contact survey-rule" id="contact">
+            <h2 class="reveal">Work with me</h2>
+            <p class="contact-intro reveal">Available for consulting and technical-leadership engagements through Lost Pines Creative — and open to the right senior role. Tell me what you're building.</p>
             <div class="contact-grid stagger">
+                <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Consulting%20%2F%20technical%20leadership%20inquiry">
+                    <h3>Consulting &amp; technical leadership</h3>
+                    <p>Fractional CTO, technical due diligence, and 0&rarr;1 product engineering — from architecture to shipped.</p>
+                    <span class="contact-action">Start a conversation &rarr;</span>
+                </a>
                 <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Design%20%26%20fabrication%20inquiry">
                     <h3>Design &amp; fabrication</h3>
-                    <p>3D printing, CAD modeling, and laser cutting — prototype through finished part.</p>
+                    <p>3D printing, CAD modeling, and laser cutting through DeSmit Designs — prototype through finished part.</p>
                     <span class="contact-action">Start a project &rarr;</span>
-                </a>
-                <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Lost%20Pines%20Creative%20inquiry">
-                    <h3>Everything else</h3>
-                    <p>Questions about the apps, partnerships, press, or investment.</p>
-                    <span class="contact-action">Say hello &rarr;</span>
                 </a>
             </div>
             <p class="contact-direct reveal">Or write directly &mdash; <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
@@ -1046,6 +1274,22 @@
             window.addEventListener('scroll', onScroll, { passive: true });
             window.addEventListener('resize', onScroll, { passive: true });
             setTimeout(sweep, 2500);
+        })();
+
+        // Loop the capability diagrams only while their card is on screen — the
+        // CSS animations are gated on .in-view, so offscreen cards cost nothing.
+        (function () {
+            var loops = document.querySelectorAll('[data-loop]');
+            if (!loops.length || !('IntersectionObserver' in window)) return;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            var io = new IntersectionObserver(function (entries) {
+                entries.forEach(function (e) {
+                    e.target.classList.toggle('in-view', e.isIntersecting);
+                });
+            }, { threshold: 0.35 });
+
+            loops.forEach(function (el) { io.observe(el); });
         })();
 
         if ('serviceWorker' in navigator) {
