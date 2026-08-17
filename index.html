@@ -245,21 +245,15 @@
             .btn:hover { transform: none; }
         }
 
-        /* Thesis */
-        .thesis {
-            text-align: center;
-            padding: 40px 0 60px;
-        }
-
-        .thesis blockquote {
+        /* Belief statement — the software thesis, shown under the Software heading */
+        .belief {
             font-size: 1.1rem;
             font-style: italic;
             color: var(--text-muted);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 0 20px;
+            max-width: 620px;
+            margin: 4px 0 28px;
+            padding: 4px 0 4px 18px;
             border-left: 3px solid var(--accent);
-            text-align: left;
         }
 
         /* Products Grid */
@@ -614,7 +608,6 @@
            static diagram. */
         .systems {
             padding: 64px 0;
-            border-top: 1px solid var(--border);
         }
 
         .systems h2 {
@@ -985,13 +978,7 @@
             </div>
         </section>
 
-        <section class="thesis survey-rule">
-            <blockquote class="reveal">
-                Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
-            </blockquote>
-        </section>
-
-        <section class="systems">
+        <section class="systems survey-rule">
             <h2 class="reveal">What I bring</h2>
             <p class="systems-lead reveal">Fifteen years building regulated hardware and software, now applied as an engineering practice — architecture, delivery, and the judgment to ship. Every capability below is proven in shipped product.</p>
             <div class="systems-grid stagger">
@@ -1082,6 +1069,10 @@
             <h2>What we're building</h2>
 
             <div class="category-label reveal">Software</div>
+
+            <blockquote class="belief reveal">
+                Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
+            </blockquote>
 
             <figure class="survey-map reveal" aria-hidden="true">
                 <svg viewBox="0 0 760 132" role="presentation">
