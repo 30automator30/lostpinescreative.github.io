@@ -340,6 +340,29 @@
             display: block;
         }
 
+        /* Photo variant fills the box edge-to-edge (device screenshots use the
+           default 'contain'; product photos look better covering). */
+        .card-media.photo {
+            display: block;
+        }
+
+        .card-media.photo img {
+            width: 100%;
+            height: 100%;
+            max-width: none;
+            max-height: none;
+            object-fit: cover;
+            transition: transform 0.4s var(--ease);
+        }
+
+        .product-card:hover .card-media.photo img {
+            transform: scale(1.04);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .product-card:hover .card-media.photo img { transform: none; }
+        }
+
         @media (prefers-reduced-motion: reduce) {
             .product-card:hover {
                 transform: none;
@@ -1115,6 +1138,9 @@
             <div class="category-label reveal" style="margin-top: 40px;">Design &amp; Craft</div>
             <div class="product-grid stagger">
                 <div class="product-card reveal">
+                    <div class="card-media photo">
+                        <img src="/work-led-sign.webp" alt="Backlit acrylic LED sign made by DeSmit Designs" width="560" height="560" loading="lazy">
+                    </div>
                     <h3>DeSmit Designs</h3>
                     <span class="stage stage-active">Active</span>
                     <p>Engineering-driven design services — 3D printing, CAD modeling, and laser cutting. From custom prototypes to finished products, built with the same precision as medical-grade hardware.</p>
@@ -1124,12 +1150,15 @@
                 </div>
 
                 <div class="product-card reveal">
+                    <div class="card-media photo">
+                        <img src="/blueplumeria-necklace.webp" alt="Handcrafted blue beaded necklace from Blue Plumeria, worn" width="600" height="334" loading="lazy">
+                    </div>
                     <h3>Blue Plumeria</h3>
-                    <span class="stage stage-prelaunch">Pre-Launch</span>
+                    <span class="stage stage-active">Open for Orders</span>
                     <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
                     <div class="tagline">"Handcrafted. Small-batch. Made with intention."</div>
                     <br>
-                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection</a>
+                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection &rarr;</a>
                 </div>
             </div>
 
