@@ -49,8 +49,10 @@
   @media (max-width:520px){ .grid{ max-width:400px; margin:0 auto; } }
   .demo{ display:flex; flex-direction:column; background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); text-decoration:none; color:inherit; transition:transform .18s, border-color .18s; }
   .demo:hover{ transform:translateY(-4px); border-color:var(--pine); }
-  .demo .cap{ height:120px; display:grid; place-items:center; position:relative; }
-  .demo .cap .em{ font-size:2.6rem; filter:drop-shadow(0 6px 12px rgba(0,0,0,.25)); }
+  .demo .cap{ height:150px; position:relative; overflow:hidden; }
+  .demo .cap img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .35s cubic-bezier(.16,1,.3,1); }
+  .demo:hover .cap img{ transform:scale(1.05); }
+  .demo .cap::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(21,17,10,0) 45%,rgba(21,17,10,.32)); }
   .demo.hvac .cap{ background:linear-gradient(140deg,#1f6fd6,#16509c); }
   .demo.salon .cap{ background:linear-gradient(140deg,#b06a82,#6b3a5b); }
   .demo.coffee .cap{ background:linear-gradient(140deg,#a9682c,#3a281c); }
@@ -89,7 +91,7 @@
 <div class="wrap">
   <div class="grid">
     <a class="demo hvac" href="hvac.html">
-      <div class="cap"><span class="em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M12 2v20M4 6l16 12M20 6L4 18M2 12h20"/></svg></span></div>
+      <div class="cap"><img src="img/thumb-hvac.webp" alt="HVAC technician servicing an outdoor AC unit" loading="lazy" width="640" height="300"></div>
       <div class="body">
         <span class="vertical">Trades · Home service</span>
         <h3>Cedar Creek Heating &amp; Air</h3>
@@ -99,7 +101,7 @@
       </div>
     </a>
     <a class="demo salon" href="salon.html">
-      <div class="cap"><span class="em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><circle cx="6" cy="7" r="2.3"/><circle cx="6" cy="17" r="2.3"/><path d="M8 8.5L20 16M8 15.5L20 8"/></svg></span></div>
+      <div class="cap"><img src="img/thumb-salon.webp" alt="Warm editorial salon interior" loading="lazy" width="640" height="300"></div>
       <div class="body">
         <span class="vertical">Salon · Med-spa</span>
         <h3>Willow &amp; Oak Beauty</h3>
@@ -109,7 +111,7 @@
       </div>
     </a>
     <a class="demo coffee" href="coffee.html">
-      <div class="cap"><span class="em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M4 9h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1-1 1.2-1 2.2M12 3c0 1-1 1.2-1 2.2"/></svg></span></div>
+      <div class="cap"><img src="img/thumb-coffee.webp" alt="Barista pouring a latte at a coffee bar" loading="lazy" width="640" height="300"></div>
       <div class="body">
         <span class="vertical">Café · Retail</span>
         <h3>Pecan Street Coffee</h3>
@@ -119,7 +121,7 @@
       </div>
     </a>
     <a class="demo sno" href="sno.html">
-      <div class="cap"><span class="em"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M7.5 10h9l-1.5 10h-6z"/><path d="M7 10a5 5 0 0 1 10 0"/><path d="M10 5.5a2 2 0 0 1 4 0"/></svg></span></div>
+      <div class="cap"><img src="img/thumb-sno.webp" alt="Colorful shaved-ice cones held against a blue sky" loading="lazy" width="640" height="300"></div>
       <div class="body">
         <span class="vertical">Food · Treats</span>
         <h3>Pine Cone Sno Co.</h3>
