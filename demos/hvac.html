@@ -176,7 +176,7 @@
   .features { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; margin:6px 0 4px; }
   .feat { position:relative; background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); display:flex; flex-direction:column; transition:transform .18s; }
   .feat:hover { transform:translateY(-4px); }
-  .ph { position:relative; overflow:hidden; background:linear-gradient(135deg,var(--brand),var(--brand-deep)); display:grid; place-items:center; }
+  .ph { position:relative; overflow:hidden; background:linear-gradient(135deg,var(--brand),var(--brand-deep)); background-size:cover; background-position:center; display:grid; place-items:center; }
   .ph svg.wm { width:44%; height:44%; color:#fff; opacity:.16; }
   .feat .ph { height:150px; border-radius:16px 16px 0 0; }
   .feat .seal { position:absolute; left:50%; top:123px; transform:translateX(-50%); width:54px; height:54px; border-radius:50%; background:var(--surface); border:3px solid var(--heat); display:grid; place-items:center; color:var(--heat); box-shadow:var(--shadow); z-index:2; }
@@ -252,7 +252,7 @@
   <!-- feature cards (Blue-Ribbon style) -->
   <div class="features">
     <div class="feat">
-      <div class="ph" data-shot="Technician arriving at a Texas home, tool bag in hand, golden hour"><svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></svg></div>
+      <div class="ph" style="background-image:url(img/hvac-sameday.webp)" role="img" aria-label="Technician heading to a Bastrop home"></div>
       <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L4 14h6l-1 8 9-12h-6z"/></svg></div>
       <div class="body">
         <h3>Book same-day service</h3>
@@ -260,7 +260,7 @@
       </div>
     </div>
     <div class="feat">
-      <div class="ph" data-shot="Cedar Creek service van and uniformed crew in a driveway"><svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <div class="ph" style="background-image:url(img/hvac-van.webp)" role="img" aria-label="Cedar Creek service van in a driveway"></div>
       <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v4a6 6 0 0 1-12 0zM6 6H4v2a3 3 0 0 0 3 3M18 6h2v2a3 3 0 0 1-3 3"/></svg></div>
       <div class="body">
         <h3>Maintenance membership</h3>
@@ -268,7 +268,7 @@
       </div>
     </div>
     <div class="feat">
-      <div class="ph" data-shot="Happy homeowner family on the porch of a Texas ranch home"><svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></div>
+      <div class="ph" style="background-image:url(img/hvac-home.webp)" role="img" aria-label="A comfortable Texas ranch home"></div>
       <div class="seal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M9.5 14a2 2 0 0 0 2 1.5h1a1.8 1.8 0 0 0 .3-3.6l-2.6-.8A1.8 1.8 0 0 1 12.5 8.5h1a2 2 0 0 1 2 1.5"/></svg></div>
       <div class="body">
         <h3>Financing available</h3>
@@ -280,7 +280,7 @@
   <!-- AC service section (circular framed photo) -->
   <section class="band">
     <div class="svcsec">
-      <div class="ph art" data-shot="Portrait of a Cedar Creek technician servicing a condenser, shot square"><svg class="wm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" style="opacity:.2"><path d="M12 2v20M4 6l16 12M20 6L4 18M2 12h20"/></svg></div>
+      <div class="ph art" style="background-image:url(img/hvac-tech.webp)" role="img" aria-label="Technician servicing an AC condenser"></div>
       <div>
         <h2>AC service in Bastrop, TX</h2>
         <p class="lead">From a summer breakdown to a brand-new system, Cedar Creek keeps Central Texas homes comfortable. Straightforward pricing, licensed techs, and a system that answers every call — so you're never left waiting in the heat.</p>
