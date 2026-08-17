@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="owner-dashboard.css?v=1">
 <style>
   :root {
     --bg:#eef2f7; --surface:#ffffff; --panel:#f6f9fc; --ink:#0f1e2e; --muted:#5b6b7a;
@@ -368,7 +369,8 @@
   <!-- Owner dashboard -->
   <section class="band">
     <h2>What the owner sees</h2>
-    <p class="lead">The part your competition doesn't have: every call, booking, and dollar in one place. This is Cedar Creek's live view — the system working while they're on a roof.</p>
+    <p class="lead">The part your competition doesn't have: every call, booking, and dollar in one place. This is Cedar Creek's live view — the system working while they're on a roof. <b>This preview is just the surface.</b></p>
+    <p class="lead" style="margin-bottom:14px"><button class="btn btn-heat" onclick="openOwnerDash()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg> Open the full owner dashboard →</button></p>
     <div class="dash">
       <div class="dash-head"><b>Cedar Creek · This week</b><span>updated just now · powered by Groundwork</span></div>
       <div class="tiles">
@@ -685,5 +687,78 @@
 })();
 </script>
 <script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();return;}var b=document.getElementById("bookOverlay");if(b&&b.classList.contains("open")&&window.closeBook){window.closeBook();}}});</script>
+
+<!-- Owner dashboard: config + engine -->
+<script>
+window.OWNER_DASH_CONFIG = {
+  business: "Cedar Creek Heating & Air",
+  label: "Owner dashboard",
+  today: "Mon, Aug 17",
+  cur: "$",
+  terms: { team: "Technicians", member: "Technician", job: "Job", jobs: "Jobs", location: "Area" },
+  theme: {
+    bg:"var(--bg)", surface:"var(--surface)", panel:"var(--panel)", ink:"var(--ink)",
+    muted:"var(--muted)", line:"var(--line)", accent:"var(--brand)", "accent-2":"var(--heat)",
+    good:"var(--good)", font:"var(--display)"
+  },
+  kpis: [
+    { l:"Calls answered by AI", n:"37", d:"12%", up:true },
+    { l:"Jobs booked", n:"18", d:"5", up:true },
+    { l:"Revenue collected", n:"$12,480", d:"18%", up:true },
+    { l:"Avg ticket", n:"$693", d:"4%", up:true },
+    { l:"Booking rate", n:"82%", d:"6%", up:true },
+    { l:"Missed calls recovered", n:"9", d:"3", up:true }
+  ],
+  revenue: [["Mon",1.9],["Tue",2.4],["Wed",1.6],["Thu",2.8],["Fri",3.1],["Sat",2.2],["Sun",0.5]],
+  appointments: {
+    today: [
+      { t:"8–10a", c:"Marisa T.", s:"AC not cooling", area:"Bastrop 78602", who:"Diego R.", st:"done" },
+      { t:"10–12p", c:"Devin R.", s:"Seasonal tune-up", area:"Cedar Creek", who:"Diego R.", st:"enroute" },
+      { t:"12–2p", c:"The Alvarez Fam", s:"New system quote", area:"Elgin", who:"Priya N.", st:"progress" },
+      { t:"2–4p", c:"K. Nguyen", s:"AC repair", area:"Bastrop 78602", who:"Sam K.", st:"confirmed" },
+      { t:"4–6p", c:"R. Solis", s:"Thermostat install", area:"Smithville", who:"Wes B.", st:"confirmed" }
+    ],
+    tomorrow: [
+      { t:"8–10a", c:"J. Barrera", s:"Heat pump service", area:"Cedar Creek", who:"Diego R.", st:"confirmed" },
+      { t:"10–12p", c:"T. Okafor", s:"Duct inspection", area:"Bastrop 78602", who:"Priya N.", st:"confirmed" },
+      { t:"1–3p", c:"M. Whitfield", s:"AC repair", area:"Red Rock", who:"Sam K.", st:"confirmed" }
+    ]
+  },
+  team: [
+    { name:"Diego R.", role:"Lead technician", status:"On job", where:"Cedar Creek", jobs:4, util:80 },
+    { name:"Priya N.", role:"Technician", status:"En route", where:"Elgin", jobs:3, util:60 },
+    { name:"Sam K.", role:"Technician", status:"Available", where:"Shop", jobs:2, util:40 },
+    { name:"Wes B.", role:"Apprentice", status:"On job", where:"Smithville", jobs:3, util:60 }
+  ],
+  unassigned: [
+    { t:"2–4p", c:"L. Cho", s:"AC repair", area:"Bastrop 78602" },
+    { t:"4–6p", c:"D. Franklin", s:"New system quote", area:"Paige" }
+  ],
+  reports: [
+    { type:"bars", title:"Busiest days", note:"jobs booked", data:[["Mon",12],["Tue",15],["Wed",11],["Thu",18],["Fri",22],["Sat",16],["Sun",5]] },
+    { type:"hbars", title:"Top service areas", data:[["Bastrop 78602",38],["Cedar Creek",24],["Elgin / Paige",18],["Smithville",12],["Red Rock",8]] },
+    { type:"bars", title:"Calls by hour", note:"inbound", data:[["7a",2],["9a",5],["11a",7],["1p",6],["3p",8],["5p",5],["7p",3]] },
+    { type:"hbars", title:"Revenue by service", money:true, data:[["New installs",6800],["AC repair",3100],["Tune-ups",1580],["Heating",1000]] }
+  ],
+  payroll: {
+    period: "Aug 10–16, 2026", note: "Friday",
+    rows: [
+      { name:"Diego R.", role:"Lead technician", detail:"42 hrs × $34", gross:1428 },
+      { name:"Priya N.", role:"Technician", detail:"40 hrs × $29", gross:1160 },
+      { name:"Sam K.", role:"Technician", detail:"38 hrs × $28", gross:1064 },
+      { name:"Wes B.", role:"Apprentice", detail:"36 hrs × $19", gross:684 }
+    ]
+  },
+  analytics: [
+    { l:"Avg response time", n:"2.4 hrs" },
+    { l:"Close rate", n:"82%" },
+    { l:"Repeat customers", n:"54%" },
+    { l:"Review score", n:"4.9★" },
+    { l:"Jobs per tech / day", n:"3.1" },
+    { l:"Avg ticket", n:"$693" }
+  ]
+};
+</script>
+<script src="owner-dashboard.js?v=1"></script>
 </body>
 </html>

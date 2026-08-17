@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner-dashboard.css?v=1">
 
 <style>
   :root{
@@ -266,7 +267,8 @@
   <section class="band">
     <span class="label">Behind the chair</span>
     <h2 class="reveal">What the owner sees</h2>
-    <p class="sub reveal">Bookings, deposits, and no-shows — in one calm view. (Example week.)</p>
+    <p class="sub reveal">Bookings, deposits, and no-shows — in one calm view. This preview is only the surface.</p>
+    <div style="text-align:center;margin-bottom:26px" class="reveal"><button class="btn btn-fill" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
       <div class="dash-head"><b>Willow &amp; Oak · This week</b><span>sample data · Groundwork</span></div>
       <div class="tiles">
@@ -464,5 +466,78 @@
 })();
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){var b=document.getElementById("bookOverlay");if(b&&b.classList.contains("open")&&window.closeBook){window.closeBook();}}});
 </script>
+
+<!-- Owner dashboard: config + engine -->
+<script>
+window.OWNER_DASH_CONFIG = {
+  business: "Willow & Oak Beauty",
+  label: "Owner dashboard",
+  today: "Sat, Aug 15",
+  cur: "$",
+  terms: { team: "Stylists", member: "Stylist", job: "Appointment", jobs: "Appointments", location: "Chair" },
+  theme: {
+    bg:"var(--putty)", surface:"var(--card)", panel:"var(--sand)", ink:"var(--ink)",
+    muted:"var(--muted)", line:"var(--line)", accent:"var(--bronze)", "accent-2":"var(--mauve)",
+    good:"#3d9b6d", font:"var(--serif)"
+  },
+  kpis: [
+    { l:"Appointments booked", n:"64", d:"8", up:true },
+    { l:"Deposits collected", n:"$1,180", d:"22%", up:true },
+    { l:"Rebook rate", n:"68%", d:"5%", up:true },
+    { l:"Avg ticket", n:"$128", d:"6%", up:true },
+    { l:"Chair utilization", n:"79%", d:"9%", up:true },
+    { l:"New 5★ reviews", n:"11", d:"4", up:true }
+  ],
+  revenue: [["Tue",1.2],["Wed",1.5],["Thu",1.9],["Fri",2.6],["Sat",2.3]],
+  appointments: {
+    today: [
+      { t:"9:00a", c:"Kayla P.", s:"Balayage", area:"Chair 1", who:"Ashley", st:"done" },
+      { t:"10:30a", c:"Renee M.", s:"Extensions fill", area:"Chair 2", who:"Mia", st:"progress" },
+      { t:"12:00p", c:"Tanya G.", s:"Cut & style", area:"Chair 1", who:"Ashley", st:"confirmed" },
+      { t:"1:30p", c:"Dana R.", s:"Custom color", area:"Chair 3", who:"Jordan", st:"confirmed" },
+      { t:"3:00p", c:"Priya S.", s:"Brow lamination", area:"Brow room", who:"Jordan", st:"confirmed" }
+    ],
+    tomorrow: [
+      { t:"9:30a", c:"Mel C.", s:"Balayage", area:"Chair 1", who:"Ashley", st:"confirmed" },
+      { t:"11:00a", c:"Sofia D.", s:"Cut & style", area:"Chair 2", who:"Mia", st:"confirmed" },
+      { t:"2:00p", c:"Bri T.", s:"Extensions consult", area:"Chair 2", who:"Mia", st:"confirmed" }
+    ]
+  },
+  team: [
+    { name:"Ashley", role:"Color & balayage", status:"On job", where:"Chair 1", jobs:5, util:85 },
+    { name:"Mia", role:"Cuts & extensions", status:"On job", where:"Chair 2", jobs:4, util:70 },
+    { name:"Jordan", role:"Color & brows", status:"Available", where:"Chair 3", jobs:3, util:55 },
+    { name:"Tay", role:"Assistant", status:"Available", where:"Floor", jobs:6, util:50 }
+  ],
+  unassigned: [
+    { t:"4:00p", c:"New client · Amy L.", s:"Cut & style", area:"Any chair" },
+    { t:"5:30p", c:"Walk-in · Reese", s:"Brow tint", area:"Brow room" }
+  ],
+  reports: [
+    { type:"bars", title:"Busiest days", note:"appointments", data:[["Tue",9],["Wed",11],["Thu",14],["Fri",18],["Sat",16]] },
+    { type:"hbars", title:"Top services", data:[["Cut & style",26],["Balayage",22],["Custom color",18],["Brows & lash",14],["Extensions",10]] },
+    { type:"bars", title:"Bookings by channel", note:"this week", data:[["Online",42],["Phone",13],["Walk-in",9]] },
+    { type:"hbars", title:"Revenue by service", money:true, data:[["Balayage",4070],["Extensions",1980],["Cuts",1690],["Color",1500]] }
+  ],
+  payroll: {
+    period: "Aug 10–16, 2026", note: "Friday",
+    rows: [
+      { name:"Ashley", role:"Color & balayage", detail:"$3,180 sales × 45%", gross:1431 },
+      { name:"Mia", role:"Cuts & extensions", detail:"$2,460 sales × 45%", gross:1107 },
+      { name:"Jordan", role:"Color & brows", detail:"$1,540 sales × 40%", gross:616 },
+      { name:"Tay", role:"Assistant", detail:"38 hrs × $18", gross:684 }
+    ]
+  },
+  analytics: [
+    { l:"No-show rate", n:"3%" },
+    { l:"Rebook rate", n:"68%" },
+    { l:"Avg ticket", n:"$128" },
+    { l:"Retail attach", n:"31%" },
+    { l:"Review score", n:"5.0★" },
+    { l:"Chair utilization", n:"79%" }
+  ]
+};
+</script>
+<script src="owner-dashboard.js?v=1"></script>
 </body>
 </html>
