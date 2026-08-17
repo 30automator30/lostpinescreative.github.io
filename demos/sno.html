@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Pine Cone Sno Co. — Demo</title>
 <style>
   :root{
@@ -122,6 +128,9 @@
   .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; }
   :focus-visible{ outline:3px solid var(--aqua); outline-offset:2px; }
 </style>
+</head>
+<body>
+
 
 <div class="demo-ribbon"><b>DEMO</b> · a sample website &amp; order-ahead system built by <b>Groundwork</b> · Lost Pines Creative · this business is fictional</div>
 
@@ -218,7 +227,7 @@
 </footer>
 
 <button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Order ahead</button>
-<div class="chat" id="chat" role="dialog" aria-label="Order from Pine Cone Sno Co.">
+<div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Order from Pine Cone Sno Co.">
   <div class="top"><div class="av">🍧</div><div><b>Scoop · Pine Cone Sno</b><small>Order-ahead · replies instantly</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
   <div class="body" id="chatBody"></div>
   <div id="chatControls"></div>
@@ -270,3 +279,6 @@
   window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
 })();
 </script>
+<script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+</body>
+</html>

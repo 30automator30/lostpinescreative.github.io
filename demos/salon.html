@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Willow &amp; Oak Beauty — Demo</title>
 <style>
   :root{
@@ -128,6 +134,9 @@
   .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; font-style:italic; }
   :focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
 </style>
+</head>
+<body>
+
 
 <div class="demo-ribbon"><b>DEMO</b> · a sample website &amp; booking system by <b>Groundwork</b> · Lost Pines Creative · fictional business</div>
 
@@ -235,7 +244,7 @@
 </footer>
 
 <button class="fab" id="fab" onclick="openChat()">Book</button>
-<div class="chat" id="chat" role="dialog" aria-label="Book with Willow & Oak">
+<div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Book with Willow & Oak">
   <div class="top"><div class="av">I</div><div><b>Ivy</b><small>Booking · Willow &amp; Oak</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
   <div class="body" id="chatBody"></div>
   <div id="chatControls"></div>
@@ -293,3 +302,6 @@
   window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
 })();
 </script>
+<script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+</body>
+</html>

@@ -1,3 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
 <title>Cedar Creek Heating & Air — Demo</title>
 <style>
   :root {
@@ -138,6 +144,9 @@
   .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; }
   :focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 </style>
+</head>
+<body>
+
 
 <div class="demo-ribbon"><b>DEMO</b> <span>· a sample website &amp; connected system built by <b>Groundwork</b> · Lost Pines Creative · this business is fictional</span></div>
 
@@ -237,7 +246,7 @@
 
 <!-- AI receptionist -->
 <button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Chat with us</button>
-<div class="chat" id="chat" role="dialog" aria-label="Chat with Cedar Creek">
+<div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Chat with Cedar Creek">
   <div class="top">
     <div class="av">A</div>
     <div><b>Ava · Cedar Creek</b><small>Virtual assistant · replies instantly</small></div>
@@ -369,3 +378,6 @@
   window.openBooking=function(){ window.openChat(); };
 })();
 </script>
+<script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+</body>
+</html>
