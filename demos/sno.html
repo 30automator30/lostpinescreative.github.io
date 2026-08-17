@@ -169,7 +169,69 @@
     html.js .size:hover{ transform:translateY(-6px) scale(1.04); }
     html.js .fcard:hover img{ transform:scale(1.06); }
     html.js .fab{ animation:floaty2 3.2s ease-in-out infinite; }
+    html.js .evt{ transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
+    html.js .evt:hover{ transform:translateY(-6px) rotate(-1deg); }
   }
+
+  /* ---- book the truck ---- */
+  .evtypes{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:8px; }
+  .evt{ background:var(--card); border:2px solid var(--line); border-radius:16px; padding:18px 14px; text-align:center; box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; gap:8px; font-family:var(--round); font-weight:700; }
+  .evt svg{ width:30px; height:30px; color:var(--aqua); }
+  .evt small{ font-family:var(--sans); font-weight:600; font-size:.72rem; color:var(--muted); }
+  @media (max-width:720px){ .evtypes{ grid-template-columns:repeat(2,1fr); } }
+  .book-cta{ text-align:center; margin-top:24px; }
+
+  .book-overlay{ position:fixed; inset:0; z-index:60; background:rgba(9,42,48,.55); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; }
+  .book-overlay.open{ display:flex; }
+  .book{ width:460px; max-width:100%; max-height:calc(100vh - 40px); background:var(--card); border-radius:22px; box-shadow:0 30px 70px -24px rgba(11,111,126,.6); display:flex; flex-direction:column; overflow:hidden; }
+  .book-top{ background:linear-gradient(120deg,var(--aqua),var(--aqua-deep)); color:#fff; padding:16px 18px; display:flex; align-items:center; gap:11px; }
+  .book-top .av{ width:34px; height:34px; border-radius:50%; background:rgba(255,255,255,.25); display:grid; place-items:center; }
+  .book-top b{ font-family:var(--round); font-size:1.12rem; } .book-top small{ display:block; font-size:.72rem; opacity:.9; }
+  .book-top .x{ margin-left:auto; background:none; border:none; color:#fff; font-size:1.5rem; line-height:1; cursor:pointer; }
+  .steps{ display:flex; gap:6px; padding:14px 18px 0; }
+  .steps .s{ flex:1; height:5px; border-radius:999px; background:var(--line); transition:background .3s; }
+  .steps .s.on{ background:var(--coral); }
+  .book-body{ padding:16px 18px 20px; overflow-y:auto; }
+  .book-body h4{ font-family:var(--round); font-size:1.2rem; margin-bottom:4px; }
+  .book-body .hint{ color:var(--muted); font-size:.86rem; margin-bottom:14px; }
+  .err{ color:var(--coral); font-size:.82rem; font-weight:700; margin-top:10px; }
+
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cal-head b{ font-family:var(--round); font-size:1.02rem; }
+  .cal-nav{ background:var(--cream); border:1px solid var(--line); border-radius:10px; width:36px; height:36px; cursor:pointer; font-size:1.15rem; color:var(--ink); }
+  .cal-nav:disabled{ opacity:.32; cursor:default; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+  .cal-grid .dow{ text-align:center; font-size:.66rem; color:var(--muted); font-weight:700; padding:2px 0; }
+  .cal-grid .day{ aspect-ratio:1/1; border:1px solid var(--line); border-radius:10px; background:var(--cream); font:inherit; font-family:var(--round); font-weight:700; cursor:pointer; color:var(--ink); position:relative; }
+  .cal-grid .day:hover:not(:disabled){ border-color:var(--aqua); background:color-mix(in srgb,var(--aqua) 12%,var(--cream)); }
+  .cal-grid .day.sel{ background:var(--coral); color:#fff; border-color:var(--coral); }
+  .cal-grid .day:disabled{ opacity:.3; cursor:default; background:transparent; }
+  .cal-grid .day.booked{ opacity:.55; cursor:default; }
+  .cal-grid .day.booked::after{ content:""; position:absolute; left:50%; bottom:5px; transform:translateX(-50%); width:5px; height:5px; border-radius:50%; background:var(--coral); }
+  .legend{ display:flex; gap:16px; margin-top:12px; font-size:.74rem; color:var(--muted); }
+  .legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:middle; }
+
+  .slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+  .slot{ padding:13px 8px; border:2px solid var(--line); border-radius:12px; background:var(--cream); font-family:var(--round); font-weight:700; cursor:pointer; color:var(--ink); font-size:.92rem; }
+  .slot:hover:not(:disabled){ border-color:var(--aqua); }
+  .slot.sel{ background:var(--coral); color:#fff; border-color:var(--coral); }
+  .slot:disabled{ opacity:.35; cursor:default; text-decoration:line-through; }
+
+  .bform{ display:grid; gap:12px; }
+  .bform label{ font-size:.76rem; font-weight:700; color:var(--muted); display:block; margin-bottom:5px; }
+  .bform input, .bform select{ width:100%; border:1px solid var(--line); border-radius:12px; padding:11px 13px; font:inherit; background:var(--cream); color:var(--ink); }
+  .bform .two{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .book-foot{ display:flex; gap:10px; margin-top:18px; }
+  .book-foot .btn{ flex:1; justify-content:center; padding:13px; font-size:.98rem; }
+  .btn-ghost{ background:var(--cream); color:var(--aqua-deep); border:1px solid var(--line); }
+
+  .bsummary{ text-align:center; }
+  .bsummary .check{ width:64px; height:64px; border-radius:50%; background:var(--lime); color:#fff; display:grid; place-items:center; margin:4px auto 12px; }
+  .bsummary .check svg{ width:34px; height:34px; }
+  .bcard{ text-align:left; background:var(--cream); border:2px solid var(--aqua); border-radius:16px; padding:14px 16px; margin-top:12px; }
+  .bcard .kv{ display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px dashed var(--line); font-size:.9rem; }
+  .bcard .kv:last-child{ border-bottom:none; } .bcard .kv b{ text-align:right; }
 </style>
 </head>
 <body>
@@ -180,7 +242,10 @@
 <div class="wrap">
   <nav class="nav">
     <div class="logo"><span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M7.5 10h9l-1.5 10h-6z"/><path d="M7 10a5 5 0 0 1 10 0"/><path d="M10 5.5a2 2 0 0 1 4 0"/></svg></span><span><b>Pine Cone Sno Co.</b><small>Bastrop, Texas</small></span></div>
-    <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
+    <span style="display:flex;align-items:center;gap:14px">
+      <a href="#" onclick="openBook();return false" style="font-family:var(--round);font-weight:700;text-decoration:none;color:var(--aqua-deep)">Book the truck</a>
+      <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
+    </span>
   </nav>
 
   <section class="hero">
@@ -232,6 +297,18 @@
       <div class="size"><div class="nm">Big Pine</div><div class="pr">$5.50</div></div>
       <div class="size"><div class="nm">Lost Pines</div><div class="pr">$7</div></div>
     </div>
+  </section>
+
+  <section class="band" id="book">
+    <h2 class="reveal">Book the truck for your event</h2>
+    <p class="sub reveal">Birthdays, schools, church socials, company picnics — we roll the Pine Cone truck right to you. Pick a date and time and we'll do the rest.</p>
+    <div class="evtypes reveal">
+      <div class="evt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M6 20v-6a6 6 0 0 1 12 0v6"/><path d="M12 8V5"/><path d="M12 3.5a1.2 1.2 0 1 0 0 .01"/></svg>Birthdays<small>Backyard parties</small></div>
+      <div class="evt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5z"/><path d="M7 11v5c0 1 2 2 5 2s5-1 5-2v-5"/></svg>Schools &amp; sports<small>Team &amp; class treats</small></div>
+      <div class="evt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z"/></svg>Fundraisers<small>A share of every sale</small></div>
+      <div class="evt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>Corporate<small>Office &amp; client events</small></div>
+    </div>
+    <div class="book-cta"><button class="btn btn-coral" onclick="openBook()">Check available dates</button></div>
   </section>
 
   <section class="band">
@@ -289,6 +366,18 @@
     <div class="made">A <b>demo</b> by <b>Groundwork · Lost Pines Creative</b> — a sample of the website &amp; order-ahead system we build for local businesses. This shop is fictional.</div>
   </div>
 </footer>
+
+<div class="book-overlay" id="bookOverlay">
+  <div class="book" role="dialog" aria-modal="true" aria-label="Book the Pine Cone Sno truck">
+    <div class="book-top">
+      <span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1.15em;height:1.15em"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
+      <span><b>Book the truck</b><small>Pine Cone Sno Co. · event booking</small></span>
+      <button class="x" onclick="closeBook()" aria-label="Close">×</button>
+    </div>
+    <div class="steps" id="bookSteps"></div>
+    <div class="book-body" id="bookBody"></div>
+  </div>
+</div>
 
 <button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Order ahead</button>
 <div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Order from Pine Cone Sno Co.">
@@ -354,6 +443,119 @@
   window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
 })();
 </script>
-<script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+<script>
+(function(){
+  var overlay=document.getElementById('bookOverlay'), body=document.getElementById('bookBody'), stepsEl=document.getElementById('bookSteps');
+  var st={}, vY, vM;
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var SLOTS=['11:00 AM','12:30 PM','2:00 PM','3:30 PM','5:00 PM','6:30 PM'];
+  var minIdx, curIdx;
+
+  function setSteps(n){ stepsEl.innerHTML=''; for(var i=1;i<=4;i++){ var s=document.createElement('div'); s.className='s'+(i<=n?' on':''); stepsEl.appendChild(s); } }
+  function isBooked(y,m,d){ return ((d*3 + m*7) % 11)===0; }        /* deterministic sample bookings */
+  function slotTaken(d,i){ return ((d+i)%7)===3; }                  /* deterministic sample sold-out slots */
+  function fmtDate(o,opts){ return new Date(o.y,o.m,o.d).toLocaleDateString(undefined,opts); }
+  function foot(backFn,nextLabel,nextFn,nextDisabled){
+    var f=document.createElement('div'); f.className='book-foot';
+    var b=document.createElement('button'); b.className='btn btn-ghost'; b.type='button'; b.textContent='Back'; b.onclick=backFn;
+    var n=document.createElement('button'); n.className='btn btn-coral'; n.type='button'; n.textContent=nextLabel; n.onclick=nextFn; if(nextDisabled) n.disabled=true;
+    f.appendChild(b); f.appendChild(n); return f;
+  }
+
+  function renderCal(){
+    setSteps(1);
+    var now=new Date(); now.setHours(0,0,0,0);
+    minIdx=now.getFullYear()*12+now.getMonth(); curIdx=vY*12+vM;
+    var startDow=new Date(vY,vM,1).getDay();
+    var daysIn=new Date(vY,vM+1,0).getDate();
+    var h='<h4>Pick a date</h4><div class="hint">We book about three months out. Closed Mondays.</div>';
+    h+='<div class="cal-head"><button class="cal-nav" id="pM"'+(curIdx<=minIdx?' disabled':'')+' aria-label="Previous month">‹</button><b>'+MONTHS[vM]+' '+vY+'</b><button class="cal-nav" id="nM"'+(curIdx>=minIdx+3?' disabled':'')+' aria-label="Next month">›</button></div>';
+    h+='<div class="cal-grid">';
+    DOW.forEach(function(d){ h+='<div class="dow">'+d+'</div>'; });
+    for(var i=0;i<startDow;i++) h+='<div></div>';
+    for(var d=1;d<=daysIn;d++){
+      var dt=new Date(vY,vM,d); dt.setHours(0,0,0,0);
+      var past=dt<now, closed=dt.getDay()===1, booked=!past&&!closed&&isBooked(vY,vM,d);
+      var dis=past||closed||booked;
+      var sel=st.date&&st.date.y===vY&&st.date.m===vM&&st.date.d===d;
+      var title=booked?' title="Already booked"':closed?' title="Closed Mondays"':'';
+      h+='<button class="day'+(booked?' booked':'')+(sel?' sel':'')+'"'+(dis?' disabled':'')+title+' data-d="'+d+'">'+d+'</button>';
+    }
+    h+='</div><div class="legend"><span><i style="background:var(--coral)"></i>Selected</span><span><i style="background:var(--coral);opacity:.55"></i>Booked</span></div>';
+    body.innerHTML=h;
+    document.getElementById('pM').onclick=function(){ if(vM===0){vM=11;vY--;}else vM--; renderCal(); };
+    document.getElementById('nM').onclick=function(){ if(vM===11){vM=0;vY++;}else vM++; renderCal(); };
+    Array.prototype.forEach.call(body.querySelectorAll('.day:not(:disabled)'),function(b){ b.onclick=function(){ st.date={y:vY,m:vM,d:+b.getAttribute('data-d')}; renderSlots(); }; });
+  }
+
+  function renderSlots(){
+    setSteps(2);
+    var label=fmtDate(st.date,{weekday:'long',month:'long',day:'numeric'});
+    var h='<h4>Pick an arrival time</h4><div class="hint">'+label+' · we arrive ~20 min early to set up.</div><div class="slots">';
+    SLOTS.forEach(function(s,i){ var taken=slotTaken(st.date.d,i); h+='<button class="slot'+(st.time===s?' sel':'')+'"'+(taken?' disabled':'')+' data-s="'+s+'">'+s+'</button>'; });
+    h+='</div>';
+    body.innerHTML=h;
+    var f=foot(renderCal,'Continue',renderDetails,!st.time); body.appendChild(f);
+    var next=f.querySelector('.btn-coral');
+    Array.prototype.forEach.call(body.querySelectorAll('.slot:not(:disabled)'),function(b){ b.onclick=function(){ st.time=b.getAttribute('data-s'); Array.prototype.forEach.call(body.querySelectorAll('.slot'),function(x){x.classList.remove('sel');}); b.classList.add('sel'); next.disabled=false; }; });
+  }
+
+  function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+  function renderDetails(){
+    setSteps(3);
+    var h='<h4>Event details</h4><div class="hint">Just the basics — we’ll text you to confirm.</div>';
+    h+='<div class="bform">'
+      +'<div><label for="fType">Event type</label><select id="fType"><option>Birthday party</option><option>School / sports</option><option>Fundraiser</option><option>Church / community</option><option>Corporate / office</option><option>Other</option></select></div>'
+      +'<div class="two"><div><label for="fGuests">Guests (approx.)</label><input id="fGuests" inputmode="numeric" placeholder="e.g. 40"></div><div><label for="fName">Your name</label><input id="fName" placeholder="First &amp; last"></div></div>'
+      +'<div><label for="fPhone">Mobile number</label><input id="fPhone" inputmode="tel" placeholder="(512) 555-0134"></div>'
+      +'<div><label for="fAddr">Location / address</label><input id="fAddr" placeholder="Where should we park?"></div>'
+      +'</div><p class="err" id="fErr" hidden>Please add your name and mobile number so we can confirm.</p>';
+    body.innerHTML=h;
+    if(st.type) document.getElementById('fType').value=st.type;
+    if(st.guests) document.getElementById('fGuests').value=st.guests;
+    if(st.name) document.getElementById('fName').value=st.name;
+    if(st.phone) document.getElementById('fPhone').value=st.phone;
+    if(st.addr) document.getElementById('fAddr').value=st.addr;
+    var f=foot(renderSlots,'Review booking',function(){
+      st.type=val('fType'); st.guests=val('fGuests'); st.name=val('fName'); st.phone=val('fPhone'); st.addr=val('fAddr');
+      if(!st.name||!st.phone){ document.getElementById('fErr').hidden=false; (st.name?document.getElementById('fPhone'):document.getElementById('fName')).focus(); return; }
+      renderConfirm();
+    },false);
+    body.appendChild(f);
+  }
+
+  function summaryCard(){
+    return '<div class="bcard">'
+      +'<div class="kv"><span>Event</span><b>'+st.type+'</b></div>'
+      +'<div class="kv"><span>Date</span><b>'+fmtDate(st.date,{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'</b></div>'
+      +'<div class="kv"><span>Arrival</span><b>'+st.time+'</b></div>'
+      +'<div class="kv"><span>Guests</span><b>'+(st.guests||'—')+'</b></div>'
+      +'<div class="kv"><span>Location</span><b>'+(st.addr||'—')+'</b></div>'
+      +'<div class="kv"><span>Contact</span><b>'+st.name+' · '+st.phone+'</b></div>'
+      +'</div>';
+  }
+  function renderConfirm(){
+    setSteps(4);
+    body.innerHTML='<h4>Confirm your booking</h4><div class="hint">Looks good? We’ll hold this slot and text you to finalize.</div>'+summaryCard();
+    body.appendChild(foot(renderDetails,'Confirm booking',renderDone,false));
+  }
+  function renderDone(){
+    setSteps(4);
+    body.innerHTML='<div class="bsummary"><div class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>'
+      +'<h4>You’re on the calendar!</h4>'
+      +'<div class="hint">'+st.name.split(' ')[0]+', we’ve put a hold on '+fmtDate(st.date,{weekday:'short',month:'short',day:'numeric'})+' at '+st.time+'. Watch for a confirmation text at '+st.phone+'.</div>'
+      +summaryCard()+'</div>';
+    var f=document.createElement('div'); f.className='book-foot';
+    var b=document.createElement('button'); b.className='btn btn-coral'; b.type='button'; b.style.flex='1'; b.textContent='Done'; b.onclick=closeBook;
+    f.appendChild(b); body.appendChild(f);
+  }
+
+  window.openBook=function(){ var now=new Date(); vY=now.getFullYear(); vM=now.getMonth(); st={}; overlay.classList.add('open'); renderCal(); };
+  window.closeBook=function(){ overlay.classList.remove('open'); };
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) closeBook(); });
+})();
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();return;}var b=document.getElementById("bookOverlay");if(b&&b.classList.contains("open")&&window.closeBook){window.closeBook();}}});
+</script>
 </body>
 </html>
