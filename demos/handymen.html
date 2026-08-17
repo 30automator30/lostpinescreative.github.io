@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Handy Men & Sons — Groundwork Proposal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+
 <style>
   :root{
     --bone:#ece5d6; --paper:#f4efe4; --char:#17130e; --ink:#211b12;
@@ -13,7 +17,7 @@
     --line:#d8cfba; --line-soft:#e3dbc9; --card:#f7f2e7;
     --shadow:0 14px 34px -18px rgba(23,19,14,.5);
     --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --slab:"Rockwell","Roboto Slab","Zilla Slab","Bitter",Georgia,"Times New Roman",serif;
+    --slab:"Zilla Slab","Rockwell","Roboto Slab","Zilla Slab","Bitter",Georgia,"Times New Roman",serif;
     --mono:ui-monospace,"SFMono-Regular","Cascadia Code",Menlo,Consolas,monospace;
   }
   @media (prefers-color-scheme:dark){
@@ -220,7 +224,7 @@
 <div class="wrap">
   <nav class="nav">
     <div class="brand">
-      <span class="mk" aria-hidden="true">🔨</span>
+      <span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M15 7l3-3 3 3-3 3z"/><path d="M16.5 8.5L5 20l-1.5-1.5L15 7"/></svg></span>
       <span class="nm">Handy Men &amp; Sons<small>Bastrop · Est. in the Lost Pines</small></span>
     </div>
     <a class="call" href="#" onclick="return false">(512) 299-0009</a>
@@ -321,7 +325,7 @@
     <div class="head reveal"><div class="eyebrow">Never lose a job to a missed call</div><h2>On a job? The phone still works for you</h2><p>Every missed call gets an instant text back, so the customer books with you instead of scrolling to the next contractor.</p></div>
     <div class="sim">
       <div class="phone reveal">
-        <div class="status">📶 · 2:14 PM</div>
+        <div class="status"><svg viewBox="0 0 24 24" fill="currentColor" style="width:1em;height:1em;vertical-align:-0.14em"><rect x="3" y="13" width="3.4" height="7" rx="1"/><rect x="10.3" y="9" width="3.4" height="11" rx="1"/><rect x="17.6" y="4" width="3.4" height="16" rx="1"/></svg> · 2:14 PM</div>
         <div class="incoming"><div class="who">Incoming call…</div><div class="num">New customer · (512) 555-0143</div></div>
         <div class="missed" id="missedLine" style="display:none">✕ Missed call</div>
         <div id="smsThread"></div>
@@ -329,7 +333,7 @@
       <div class="txt reveal">
         <h3>Missed-call text-back</h3>
         <p>No AI needed for this one — just automation that never sleeps. Watch what a customer gets the moment you can't pick up:</p>
-        <button class="btn btn-pine" onclick="runMissedCall()">▶ Simulate a missed call</button>
+        <button class="btn btn-pine" onclick="runMissedCall()"><svg viewBox="0 0 24 24" fill="currentColor" style="width:.85em;height:.85em;vertical-align:-0.08em"><path d="M7 5l12 7-12 7z"/></svg> Simulate a missed call</button>
       </div>
     </div>
   </section>

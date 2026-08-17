@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <title>Pine Cone Sno Co. — Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+
 <style>
   :root{
     --cream:#fff7ea; --card:#ffffff; --ink:#12363d; --aqua:#12a9bd; --aqua-deep:#0b6f7e;
@@ -12,7 +16,7 @@
     --line:#d8ecef; --line-soft:#e9f4f6;
     --shadow:0 16px 40px -20px rgba(11,111,126,.5);
     --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    --round:"Arial Rounded MT Bold","Baloo 2","Nunito",var(--sans);
+    --round:"Baloo 2","Arial Rounded MT Bold","Baloo 2","Nunito",var(--sans);
   }
   @media (prefers-color-scheme:dark){
     :root:not([data-theme="light"]){
@@ -97,7 +101,7 @@
   .whatnow h2{ text-align:left; font-size:1.5rem; margin-bottom:12px; }
   .whatnow ul{ list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:9px 20px; }
   .whatnow li{ font-size:.94rem; padding-left:24px; position:relative; }
-  .whatnow li::before{ content:"🍧"; position:absolute; left:0; font-size:.85rem; }
+  .whatnow li::before{ content:"▸"; position:absolute; left:0; font-size:.85rem; }
   @media (max-width:600px){ .whatnow ul{ grid-template-columns:1fr; } }
 
   footer.site{ text-align:center; padding:40px 0 60px; color:var(--muted); font-size:.85rem; }
@@ -136,21 +140,21 @@
 
 <div class="wrap">
   <nav class="nav">
-    <div class="logo"><span class="mk" aria-hidden="true">🍧</span><span><b>Pine Cone Sno Co.</b><small>Bastrop, Texas</small></span></div>
+    <div class="logo"><span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M7.5 10h9l-1.5 10h-6z"/><path d="M7 10a5 5 0 0 1 10 0"/><path d="M10 5.5a2 2 0 0 1 4 0"/></svg></span><span><b>Pine Cone Sno Co.</b><small>Bastrop, Texas</small></span></div>
     <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
   </nav>
 
   <section class="hero">
     <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
     <div class="hero-inner">
-      <div class="eyebrow">Bastrop's coldest treat 🌴</div>
+      <div class="eyebrow">Bastrop's coldest treat</div>
       <h1>Shaved ice,<br>done paradise-style.</h1>
       <p>Fluffy shaved ice, 60+ flavors, and cream on top. Order ahead, skip the line, cool off in the Lost Pines.</p>
       <div class="row">
         <button class="btn btn-coral" onclick="openChat()">Order ahead</button>
         <a class="btn btn-white" href="#flavors">See flavors</a>
       </div>
-      <div class="pills"><span>🍓 60+ flavors</span><span>🥥 Cream top</span><span>🍬 Sour &amp; gummies</span><span>🌱 Dairy-free</span></div>
+      <div class="pills"><span>60+ flavors</span><span>Cream top</span><span>Sour &amp; gummies</span><span>Dairy-free</span></div>
     </div>
   </section>
 </div>
@@ -228,7 +232,7 @@
 
 <button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Order ahead</button>
 <div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Order from Pine Cone Sno Co.">
-  <div class="top"><div class="av">🍧</div><div><b>Scoop · Pine Cone Sno</b><small>Order-ahead · replies instantly</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
+  <div class="top"><div class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.14em"><path d="M7.5 10h9l-1.5 10h-6z"/><path d="M7 10a5 5 0 0 1 10 0"/><path d="M10 5.5a2 2 0 0 1 4 0"/></svg></div><div><b>Scoop · Pine Cone Sno</b><small>Order-ahead · replies instantly</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
   <div class="body" id="chatBody"></div>
   <div id="chatControls"></div>
 </div>
