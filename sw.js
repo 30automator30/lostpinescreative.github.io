@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v8';
+const VERSION = 'v9';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -23,8 +23,10 @@ const NETWORK_TIMEOUT_MS = 4000;
 const PRECACHE_URLS = [
   '/',
   '/index.html',
+  '/groundwork.html',
   '/terms.html',
   '/manifest.webmanifest',
+  '/mark.svg',
   '/lostpines.png',
   '/headshot.jpg',
   '/work-led-sign.webp',

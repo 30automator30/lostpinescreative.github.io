@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groundwork — AI &amp; Digital Setup for Small Business | Lost Pines Creative</title>
+    <meta name="description" content="Groundwork by Lost Pines Creative: AI tools and modern systems for local businesses — websites, payments, booking, and a receptionist that never misses a call. Set up once, run for you.">
+    <meta property="og:title" content="Groundwork — AI &amp; Digital Setup for Small Business">
+    <meta property="og:description" content="Websites, payments, booking, and an AI receptionist that never misses a call. Set up once, run for you. By Lost Pines Creative.">
+    <meta property="og:image" content="https://lostpinescreative.com/lostpines.png">
+    <meta property="og:url" content="https://lostpinescreative.com/groundwork.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Lost Pines Creative">
+
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0b1210">
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+    <link rel="icon" href="/favicon-16.png" sizes="16x16" type="image/png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <script>document.documentElement.className += ' js';</script>
+    <style>
+        :root {
+            --bg: #0b1210;
+            --surface: #111f1b;
+            --border: #1a2f28;
+            --text: #e2e8e6;
+            --text-muted: #94a3a0;
+            --accent: #4a9e7e;
+            --accent-hover: #5fb896;
+            --accent-glow: rgba(74, 158, 126, 0.15);
+            --green: #4ade80;
+            --amber: #fbbf24;
+            --warm: #d4956a;
+            --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --tick: rgba(74, 158, 126, 0.32);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+
+        a { color: var(--accent); }
+
+        /* Motion (gated: no JS / reduced motion = full static page) */
+        @media (prefers-reduced-motion: no-preference) {
+            .js .reveal {
+                opacity: 0;
+                transform: translateY(14px);
+                transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+                transition-delay: var(--reveal-delay, 0ms);
+            }
+            .js .reveal.is-visible { opacity: 1; transform: none; }
+            .js .stagger > *:nth-child(2) { --reveal-delay: 80ms; }
+            .js .stagger > *:nth-child(3) { --reveal-delay: 160ms; }
+            .js .stagger > *:nth-child(4) { --reveal-delay: 240ms; }
+            .js .stagger > *:nth-child(5) { --reveal-delay: 320ms; }
+            .js .stagger > *:nth-child(6) { --reveal-delay: 400ms; }
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 13px 26px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.25s var(--ease), background 0.25s var(--ease),
+                border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), color 0.25s var(--ease);
+        }
+        .btn-primary { background: var(--accent); color: #071410; }
+        .btn-primary:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: 0 10px 26px -10px var(--accent); }
+        .btn-ghost { border: 1px solid var(--border); color: var(--text); }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent-hover); transform: translateY(-2px); }
+        @media (prefers-reduced-motion: reduce) { .btn:hover { transform: none; } }
+
+        a:focus-visible, .btn:focus-visible {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        /* Survey rule divider */
+        .rule { position: relative; }
+        .rule::before {
+            content: ""; position: absolute; top: 0; left: 0; right: 0; height: 10px; pointer-events: none;
+            background-image:
+                linear-gradient(var(--border), var(--border)),
+                repeating-linear-gradient(to right, var(--tick) 0 1px, transparent 1px 200px),
+                repeating-linear-gradient(to right, var(--tick) 0 1px, transparent 1px 40px);
+            background-size: 100% 1px, 100% 10px, 100% 5px;
+            background-repeat: no-repeat;
+            -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+            mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent);
+        }
+
+        /* Top bar */
+        .topbar { display: flex; align-items: center; justify-content: space-between; padding: 20px 0; }
+        .topbar a.home { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 600; }
+        .topbar .home img { width: 34px; height: 34px; }
+        .topbar .home span { font-size: 0.95rem; }
+        .topbar .home b { color: var(--accent); font-weight: 600; }
+
+        /* Hero */
+        .hero { text-align: center; padding: 60px 0 56px; background: radial-gradient(ellipse at 50% 0%, rgba(74,158,126,0.10) 0%, transparent 70%); }
+        .eyebrow {
+            font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.14em;
+            color: var(--accent); font-family: ui-monospace, 'Cascadia Code', monospace; margin-bottom: 18px;
+        }
+        .hero h1 { font-size: 2.7rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 18px; }
+        .hero h1 span { color: var(--accent); }
+        .hero .sub { font-size: 1.2rem; color: var(--text-muted); max-width: 620px; margin: 0 auto 30px; }
+        .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .hero .micro { margin-top: 16px; font-size: 0.82rem; color: var(--text-muted); }
+
+        @media (max-width: 640px) { .hero h1 { font-size: 1.9rem; } }
+
+        /* Section scaffolding */
+        section { padding: 56px 0; }
+        .section-head { text-align: center; max-width: 640px; margin: 0 auto 40px; }
+        .section-head h2 { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.01em; margin-bottom: 10px; }
+        .section-head p { color: var(--text-muted); }
+
+        /* Outcomes */
+        .outcomes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .outcome {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px;
+            transition: border-color 0.35s var(--ease), transform 0.35s var(--ease);
+        }
+        .outcome:hover { border-color: var(--accent); transform: translateY(-3px); }
+        .outcome h3 { font-size: 1.05rem; margin-bottom: 6px; }
+        .outcome p { font-size: 0.9rem; color: var(--text-muted); }
+        .outcome .k { color: var(--accent); font-weight: 700; }
+        @media (max-width: 780px) { .outcomes { grid-template-columns: 1fr; } }
+        @media (prefers-reduced-motion: reduce) { .outcome:hover { transform: none; } }
+
+        /* Menu list */
+        .menu { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 32px; max-width: 760px; margin: 0 auto; }
+        .menu div { padding: 12px 0; border-bottom: 1px solid var(--border); }
+        .menu b { display: block; font-size: 0.98rem; }
+        .menu span { font-size: 0.85rem; color: var(--text-muted); }
+        @media (max-width: 640px) { .menu { grid-template-columns: 1fr; } }
+
+        /* How it works */
+        .how { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .how-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; }
+        .how-card .step { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-family: ui-monospace, monospace; }
+        .how-card h3 { font-size: 1.25rem; margin: 8px 0 10px; }
+        .how-card p { color: var(--text-muted); font-size: 0.95rem; }
+        @media (max-width: 640px) { .how { grid-template-columns: 1fr; } }
+
+        /* Packages */
+        .tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 14px; }
+        .tier {
+            background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px 24px;
+            display: flex; flex-direction: column;
+        }
+        .tier.mark { border-color: rgba(74,158,126,0.5); background: linear-gradient(160deg, var(--accent-glow), transparent 55%), var(--surface); }
+        .tier h3 { font-size: 1.15rem; margin-bottom: 4px; }
+        .tier .price { font-size: 1.4rem; font-weight: 700; color: var(--accent-hover); margin: 6px 0 4px; }
+        .tier .price small { font-size: 0.85rem; color: var(--text-muted); font-weight: 400; }
+        .tier .who { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px; }
+        .tier ul { list-style: none; font-size: 0.9rem; }
+        .tier li { padding: 5px 0 5px 20px; position: relative; color: var(--text); }
+        .tier li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); }
+        @media (max-width: 780px) { .tiers { grid-template-columns: 1fr; } }
+
+        .note { text-align: center; font-size: 0.82rem; color: var(--text-muted); max-width: 640px; margin: 0 auto; }
+
+        /* Proof */
+        .proof { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .proof-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 26px; }
+        .proof-card h3 { font-size: 1.1rem; margin-bottom: 6px; }
+        .proof-card p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 12px; }
+        .proof-card a { font-size: 0.9rem; text-decoration: none; }
+        .proof-card a:hover { color: var(--accent-hover); text-decoration: underline; }
+        @media (max-width: 640px) { .proof { grid-template-columns: 1fr; } }
+
+        /* FAQ */
+        .faq { max-width: 720px; margin: 0 auto; }
+        .faq details { border-bottom: 1px solid var(--border); padding: 16px 0; }
+        .faq summary { cursor: pointer; font-weight: 600; font-size: 1rem; list-style: none; display: flex; justify-content: space-between; gap: 12px; }
+        .faq summary::-webkit-details-marker { display: none; }
+        .faq summary::after { content: "+"; color: var(--accent); font-weight: 700; }
+        .faq details[open] summary::after { content: "–"; }
+        .faq p { color: var(--text-muted); font-size: 0.92rem; margin-top: 10px; }
+
+        /* CTA band */
+        .cta-band { text-align: center; }
+        .cta-band h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
+        .cta-band p { color: var(--text-muted); max-width: 560px; margin: 0 auto 26px; }
+
+        /* Footer */
+        footer { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
+        footer a { color: var(--accent); text-decoration: none; }
+        footer .loc { margin-top: 4px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="topbar">
+            <a class="home" href="/">
+                <img src="/mark.svg" alt="Lost Pines Creative" width="34" height="29">
+                <span>Lost Pines <b>Creative</b></span>
+            </a>
+            <a class="btn btn-ghost" href="#start" style="padding:9px 18px;font-size:0.9rem;">Book a free audit</a>
+        </div>
+
+        <section class="hero">
+            <div class="eyebrow">Groundwork · by Lost Pines Creative</div>
+            <h1>The tech that runs your business — <span>set up and handled.</span></h1>
+            <p class="sub">Websites, payments, booking, accounting, and AI that answers every call and drafts your quotes. Built once, run for you — so you can do the work, not the paperwork.</p>
+            <div class="hero-cta">
+                <a class="btn btn-primary" href="#start">Book a free digital audit</a>
+                <a class="btn btn-ghost" href="#packages">See what's included</a>
+            </div>
+            <p class="micro">Built for local trades &amp; home-service businesses · Bastrop &amp; Central Texas</p>
+        </section>
+
+        <section class="rule">
+            <div class="section-head reveal">
+                <h2>What you actually get</h2>
+                <p>Not "AI" or "software" — outcomes you can feel in the business by next month.</p>
+            </div>
+            <div class="outcomes stagger">
+                <div class="outcome reveal"><h3>Never miss a lead</h3><p>Every missed call gets an instant text back and an AI receptionist that answers, qualifies, and books — even while you're on a job.</p></div>
+                <div class="outcome reveal"><h3>Get paid faster</h3><p>Invoice on-site, take card or ACH, collect deposits before the truck rolls. Money in days, not weeks.</p></div>
+                <div class="outcome reveal"><h3>Get found</h3><p>A real website and a dialed-in Google profile so you show up when someone searches for what you do.</p></div>
+                <div class="outcome reveal"><h3>Look legit</h3><p>Professional site, quotes, and email — plus a steady stream of new 5-star reviews, requested automatically.</p></div>
+                <div class="outcome reveal"><h3>Get your evenings back</h3><p>Books, follow-ups, and paperwork handled by automation instead of you at 9pm.</p></div>
+                <div class="outcome reveal"><h3>One person to call</h3><p>When something breaks or you want something added, you have an actual engineer on the other end — not a ticket queue.</p></div>
+            </div>
+        </section>
+
+        <section class="rule">
+            <div class="section-head reveal">
+                <h2>What we set up</h2>
+                <p>Pick what you need. We select the right tools, wire them together, add the AI layer, and keep it all running.</p>
+            </div>
+            <div class="menu reveal">
+                <div><b>Website &amp; Google profile</b><span>Get found, look professional</span></div>
+                <div><b>Missed-call text-back &amp; AI receptionist</b><span>Never lose a job to voicemail</span></div>
+                <div><b>Payments</b><span>Cards, ACH, deposits, tap-to-pay</span></div>
+                <div><b>Invoicing &amp; AI-drafted quotes</b><span>Bill on-site, quote in minutes</span></div>
+                <div><b>Scheduling &amp; booking</b><span>Fill the calendar without phone tag</span></div>
+                <div><b>Accounting hookup</b><span>Books that aren't a shoebox</span></div>
+                <div><b>Reviews on autopilot</b><span>More 5-stars after every job</span></div>
+                <div><b>Email, domain &amp; automations</b><span>Own your identity; kill busywork</span></div>
+            </div>
+        </section>
+
+        <section class="rule">
+            <div class="section-head reveal">
+                <h2>How it works</h2>
+                <p>Two simple parts: build the foundation once, then keep it running and improving.</p>
+            </div>
+            <div class="how stagger">
+                <div class="how-card reveal">
+                    <div class="step">Step 1 · One-time</div>
+                    <h3>Setup</h3>
+                    <p>We start with a free audit, then build your digital foundation — the website, payments, booking, AI, and everything you picked — configured, tested, and handed over working. Your accounts, your ownership.</p>
+                </div>
+                <div class="how-card reveal">
+                    <div class="step">Step 2 · Monthly</div>
+                    <h3>Care plan</h3>
+                    <p>Then we run it: hosting, updates, monitoring, support, and monthly improvements — plus a simple report showing calls, leads, and jobs so you see exactly what it's doing for you.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="rule" id="packages">
+            <div class="section-head reveal">
+                <h2>Packages</h2>
+                <p>Straightforward tiers. Start where you are; move up when it pays for itself.</p>
+            </div>
+
+            <div class="tiers stagger">
+                <div class="tier reveal">
+                    <h3>Foundation</h3>
+                    <div class="price">from $1,500<small> setup</small></div>
+                    <div class="who">Just getting online</div>
+                    <ul>
+                        <li>Google Business Profile</li>
+                        <li>One-page website</li>
+                        <li>Payments &amp; invoicing</li>
+                        <li>Automatic review requests</li>
+                    </ul>
+                </div>
+                <div class="tier mark reveal">
+                    <h3>Growth</h3>
+                    <div class="price">from $3,500<small> setup</small></div>
+                    <div class="who">Ready to capture more work</div>
+                    <ul>
+                        <li>Everything in Foundation</li>
+                        <li>Multi-page site &amp; booking</li>
+                        <li>Missed-call text-back + AI receptionist</li>
+                        <li>Accounting sync &amp; core automations</li>
+                    </ul>
+                </div>
+                <div class="tier reveal">
+                    <h3>Full build</h3>
+                    <div class="price">from $6,000<small> setup</small></div>
+                    <div class="who">Wants it all handled</div>
+                    <ul>
+                        <li>Everything in Growth</li>
+                        <li>CRM / field-service setup</li>
+                        <li>Custom automations &amp; integrations</li>
+                        <li>Data migration &amp; staff training</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="tiers stagger">
+                <div class="tier reveal">
+                    <h3>Essential care</h3>
+                    <div class="price">from $99<small> / month</small></div>
+                    <div class="who">Keep it running</div>
+                    <ul>
+                        <li>Hosting, updates, backups</li>
+                        <li>Monitoring &amp; security</li>
+                        <li>Small monthly changes</li>
+                        <li>Monthly report</li>
+                    </ul>
+                </div>
+                <div class="tier mark reveal">
+                    <h3>Growth care</h3>
+                    <div class="price">from $300<small> / month</small></div>
+                    <div class="who">Keep it improving</div>
+                    <ul>
+                        <li>Everything in Essential</li>
+                        <li>AI receptionist &amp; lead handling</li>
+                        <li>Review automation</li>
+                        <li>Priority support &amp; quarterly upgrades</li>
+                    </ul>
+                </div>
+                <div class="tier reveal">
+                    <h3>Partner</h3>
+                    <div class="price">Let's talk</div>
+                    <div class="who">"Be our tech person"</div>
+                    <ul>
+                        <li>Everything in Growth care</li>
+                        <li>Ongoing automation &amp; integration</li>
+                        <li>Fractional digital-ops partner</li>
+                        <li>Priority SLA, first call for anything</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="note reveal">Third-party costs (payment processing, domains, software subscriptions) are billed to you at cost — never marked up. Every setup includes a care plan so it stays cared for.</p>
+        </section>
+
+        <section class="rule">
+            <div class="section-head reveal">
+                <h2>I built this for my own businesses first</h2>
+                <p>This isn't theory. The same systems I'd set up for you already run my own shops.</p>
+            </div>
+            <div class="proof stagger">
+                <div class="proof-card reveal">
+                    <h3>Blue Plumeria</h3>
+                    <p>A handcrafted-jewelry brand taken from nothing to a live online store — catalog, product photography, and payments, open for orders.</p>
+                    <a href="https://30automator30.github.io/BluePlumeria/index.html" target="_blank" rel="noopener noreferrer">Visit the store &rarr;</a>
+                </div>
+                <div class="proof-card reveal">
+                    <h3>DeSmit Designs</h3>
+                    <p>A design &amp; fabrication shop given a real web presence and a work gallery — from a single Facebook link to a site that brings in projects.</p>
+                    <a href="/#work">See the work &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+        <section class="rule">
+            <div class="section-head reveal">
+                <h2>Questions</h2>
+            </div>
+            <div class="faq reveal">
+                <details><summary>Do I need to be "techy" for this?</summary><p>No. That's the whole point — you run your business, I run the tech. Everything is set up for you and explained in plain language.</p></details>
+                <details><summary>Do I own my accounts and data?</summary><p>Yes, always. Your website, payment account, domain, and data are yours. I set them up and manage them; you're never locked in.</p></details>
+                <details><summary>What's the free digital audit?</summary><p>A short conversation and a written rundown of what's costing you jobs today and exactly what I'd fix first — no obligation, and it's yours to keep.</p></details>
+                <details><summary>Is the AI going to sound like a robot to my customers?</summary><p>No. The AI receptionist is set up to sound like your business, capture the job details, and hand real leads to you. It catches the calls you'd otherwise miss.</p></details>
+                <details><summary>What does it really cost?</summary><p>A one-time setup plus a monthly care plan — see the packages above. The audit gives you a firm number for your specific situation before you commit to anything.</p></details>
+            </div>
+        </section>
+
+        <section class="rule cta-band" id="start">
+            <h2 class="reveal">Let's find what's costing you jobs.</h2>
+            <p class="reveal">Book a free digital audit. I'll show you where the leaks are and what I'd set up first — no pressure, no jargon.</p>
+            <div class="reveal">
+                <a class="btn btn-primary" href="mailto:desmitdesignz@gmail.com?subject=Groundwork%20%E2%80%94%20free%20digital%20audit&amp;body=Hi%20Daniel%2C%20I'd%20like%20a%20free%20digital%20audit%20for%20my%20business.%0A%0ABusiness%20name%3A%0AWhat%20you%20do%3A%0ABiggest%20headache%20right%20now%3A">Book a free digital audit</a>
+            </div>
+            <p class="micro" style="margin-top:16px;color:var(--text-muted);font-size:0.82rem;">Or email <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+        </section>
+
+        <footer class="rule">
+            <p><a href="/">&copy; 2026 Lost Pines Creative LLC</a></p>
+            <p class="loc">Bastrop, Texas</p>
+            <p style="margin-top:8px;"><a href="/">Home</a> &nbsp;&middot;&nbsp; <a href="/terms.html">Terms of Service</a></p>
+        </footer>
+    </div>
+
+    <script>
+        (function () {
+            var items = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+            if (!items.length) return;
+            function show(el){ el.classList.add('is-visible'); }
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            if (!('IntersectionObserver' in window)) return items.forEach(show);
+            var io = new IntersectionObserver(function (es) {
+                es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+            }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+            items.forEach(function (el) { io.observe(el); });
+            // Geometric backstop so nothing can strand invisible on a jump-scroll.
+            setTimeout(function () {
+                var fold = window.innerHeight * 0.95;
+                items.forEach(function (el) {
+                    if (!el.classList.contains('is-visible') && el.getBoundingClientRect().top < fold) show(el);
+                });
+            }, 2500);
+        })();
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
+        }
+    </script>
+</body>
+</html>

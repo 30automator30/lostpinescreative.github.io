@@ -850,8 +850,8 @@
 
         .contact-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
         }
 
         .contact-card {
@@ -859,13 +859,31 @@
             background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 12px;
-            padding: 28px;
+            padding: 26px;
             text-decoration: none;
             color: inherit;
             transition:
                 border-color 0.35s var(--ease),
                 box-shadow 0.35s var(--ease),
                 transform 0.35s var(--ease);
+        }
+
+        /* Flagship service card — gently emphasized */
+        .contact-card.featured {
+            border-color: rgba(74, 158, 126, 0.5);
+            background:
+                linear-gradient(160deg, var(--accent-glow), transparent 60%),
+                var(--surface);
+        }
+
+        .contact-card .contact-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--accent);
+            font-family: ui-monospace, 'Cascadia Code', monospace;
+            margin-bottom: 10px;
         }
 
         .contact-card:hover {
@@ -913,7 +931,7 @@
             text-decoration: underline;
         }
 
-        @media (max-width: 640px) {
+        @media (max-width: 860px) {
             .contact-grid {
                 grid-template-columns: 1fr;
             }
@@ -1220,6 +1238,12 @@
             <h2 class="reveal">Work with me</h2>
             <p class="contact-intro reveal">Available for consulting and technical-leadership engagements through Lost Pines Creative — and open to the right senior role. Tell me what you're building.</p>
             <div class="contact-grid stagger">
+                <a class="contact-card featured reveal" href="/groundwork.html">
+                    <span class="contact-tag">Small business</span>
+                    <h3>Groundwork</h3>
+                    <p>AI tools and modern systems for local businesses — websites, payments, booking, and a receptionist that never misses a call. Set up and run for you.</p>
+                    <span class="contact-action">See how it works &rarr;</span>
+                </a>
                 <a class="contact-card reveal" href="mailto:desmitdesignz@gmail.com?subject=Consulting%20%2F%20technical%20leadership%20inquiry">
                     <h3>Consulting &amp; technical leadership</h3>
                     <p>Fractional CTO, technical due diligence, and 0&rarr;1 product engineering — from architecture to shipped.</p>
