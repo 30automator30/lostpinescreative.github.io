@@ -1,0 +1,272 @@
+<title>Pine Cone Sno Co. — Demo</title>
+<style>
+  :root{
+    --cream:#fff7ea; --card:#ffffff; --ink:#12363d; --aqua:#12a9bd; --aqua-deep:#0b6f7e;
+    --coral:#ff6f61; --sunny:#ffc53d; --grape:#7c5cd6; --lime:#4fc487; --muted:#5b7a80;
+    --line:#d8ecef; --line-soft:#e9f4f6;
+    --shadow:0 16px 40px -20px rgba(11,111,126,.5);
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --round:"Arial Rounded MT Bold","Baloo 2","Nunito",var(--sans);
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --cream:#07191c; --card:#0e2429; --ink:#e2f5f8; --aqua:#38c6d9; --aqua-deep:#7fe0ec;
+      --coral:#ff8a7e; --sunny:#ffd45f; --grape:#a68af0; --lime:#6ad69d; --muted:#8fb2b8;
+      --line:#163238; --line-soft:#122a2f;
+      --shadow:0 16px 40px -20px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"]{
+      --cream:#07191c; --card:#0e2429; --ink:#e2f5f8; --aqua:#38c6d9; --aqua-deep:#7fe0ec;
+      --coral:#ff8a7e; --sunny:#ffd45f; --grape:#a68af0; --lime:#6ad69d; --muted:#8fb2b8;
+      --line:#163238; --line-soft:#122a2f;
+      --shadow:0 16px 40px -20px rgba(0,0,0,.7);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--cream); color:var(--ink); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:var(--round); font-weight:700; line-height:1.02; letter-spacing:-.01em; }
+  a{ color:var(--aqua-deep); }
+  .wrap{ max-width:1020px; margin:0 auto; padding:0 22px; }
+  .reveal{ opacity:0; transform:translateY(16px) scale(.99); transition:.6s cubic-bezier(.16,1,.3,1); }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+
+  .demo-ribbon{ background:var(--ink); color:#eafcff; text-align:center; font-size:.74rem; letter-spacing:.02em; padding:8px 14px; }
+  .demo-ribbon b{ color:var(--sunny); }
+
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 0; }
+  .logo{ display:flex; align-items:center; gap:11px; }
+  .logo .mk{ width:44px; height:44px; border-radius:50%; background:var(--aqua); color:#fff; display:grid; place-items:center; font-size:1.4rem; box-shadow:var(--shadow); }
+  .logo b{ font-family:var(--round); font-size:1.3rem; } .logo small{ display:block; font-size:.62rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .nav .order{ font-family:var(--round); font-weight:700; text-decoration:none; color:#fff; background:var(--coral); padding:11px 22px; border-radius:999px; box-shadow:var(--shadow); }
+
+  .hero{ position:relative; overflow:hidden; border-radius:28px; margin-top:6px; color:#fff; text-align:center;
+    background:linear-gradient(135deg,#12a9bd 0%,#22c0cf 40%,#ffc53d 120%); box-shadow:var(--shadow); }
+  .hero .blob{ position:absolute; border-radius:50%; filter:blur(6px); opacity:.55; }
+  .hero .b1{ width:200px; height:200px; background:#ff6f61; top:-60px; left:-40px; }
+  .hero .b2{ width:160px; height:160px; background:#7c5cd6; bottom:-50px; right:10%; opacity:.4; }
+  .hero .b3{ width:120px; height:120px; background:#4fc487; top:20px; right:-30px; opacity:.5; }
+  .hero-inner{ position:relative; z-index:1; padding:64px 24px 70px; }
+  .hero .eyebrow{ font-family:var(--round); font-size:.8rem; letter-spacing:.2em; text-transform:uppercase; margin-bottom:16px; opacity:.95; }
+  .hero h1{ font-size:clamp(2.7rem,7vw,4.6rem); margin-bottom:16px; text-shadow:0 4px 18px rgba(9,60,70,.3); text-wrap:balance; }
+  .hero p{ font-size:1.2rem; max-width:40ch; margin:0 auto 26px; opacity:.97; }
+  .btn{ font-family:var(--round); font-weight:700; cursor:pointer; border:none; padding:15px 30px; border-radius:999px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:transform .15s; font-size:1.02rem; }
+  .btn:hover{ transform:translateY(-3px) scale(1.02); }
+  .btn-coral{ background:var(--coral); color:#fff; box-shadow:0 12px 26px -10px rgba(255,111,97,.7); }
+  .btn-white{ background:#fff; color:var(--aqua-deep); }
+  .hero .row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .hero .pills{ margin-top:22px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+  .hero .pills span{ background:rgba(255,255,255,.22); border:1px solid rgba(255,255,255,.35); padding:5px 13px; border-radius:999px; font-size:.8rem; font-weight:600; }
+
+  section.band{ padding:52px 0; }
+  .band h2{ text-align:center; font-size:2.2rem; margin-bottom:8px; }
+  .band .sub{ text-align:center; color:var(--muted); max-width:48ch; margin:0 auto 30px; }
+
+  .flavors{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .flavor{ border-radius:16px; padding:16px 14px; color:#fff; font-family:var(--round); font-weight:700; box-shadow:var(--shadow); position:relative; min-height:78px; display:flex; align-items:flex-end; }
+  .flavor small{ display:block; font-family:var(--sans); font-weight:600; font-size:.72rem; opacity:.9; margin-top:2px; }
+  @media (max-width:720px){ .flavors{ grid-template-columns:repeat(2,1fr); } }
+
+  .sizes{ display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
+  .size{ background:var(--card); border:2px solid var(--line); border-radius:18px; padding:18px 26px; text-align:center; box-shadow:var(--shadow); }
+  .size .nm{ font-family:var(--round); font-size:1.1rem; } .size .pr{ color:var(--coral); font-family:var(--round); font-size:1.3rem; margin-top:4px; }
+
+  .dash{ background:var(--card); border:1px solid var(--line); border-radius:20px; box-shadow:var(--shadow); overflow:hidden; max-width:760px; margin:0 auto; }
+  .dash-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line-soft); background:color-mix(in srgb,var(--aqua) 10%,var(--card)); flex-wrap:wrap; }
+  .dash-head b{ font-family:var(--round); } .dash-head span{ font-size:.74rem; color:var(--muted); }
+  .tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line-soft); }
+  .tile{ background:var(--card); padding:16px; text-align:center; }
+  .tile .n{ font-family:var(--round); font-size:1.7rem; color:var(--aqua-deep); }
+  .tile .n.coral{ color:var(--coral); } .tile .n.grape{ color:var(--grape); }
+  .tile .l{ font-size:.72rem; color:var(--muted); margin-top:3px; }
+  @media (max-width:600px){ .tiles{ grid-template-columns:repeat(2,1fr); } }
+
+  .reviews{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .rev{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:var(--shadow); }
+  .rev .stars{ color:var(--sunny); letter-spacing:2px; margin-bottom:8px; }
+  .rev p{ font-size:.92rem; margin-bottom:10px; } .rev .who{ font-size:.78rem; color:var(--muted); font-weight:600; }
+  @media (max-width:700px){ .reviews{ grid-template-columns:1fr; } }
+
+  .whatnow{ max-width:760px; margin:0 auto; background:linear-gradient(135deg,var(--aqua-deep),var(--aqua)); color:#fff; border-radius:22px; padding:28px 30px; box-shadow:var(--shadow); }
+  .whatnow h2{ text-align:left; font-size:1.5rem; margin-bottom:12px; }
+  .whatnow ul{ list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:9px 20px; }
+  .whatnow li{ font-size:.94rem; padding-left:24px; position:relative; }
+  .whatnow li::before{ content:"🍧"; position:absolute; left:0; font-size:.85rem; }
+  @media (max-width:600px){ .whatnow ul{ grid-template-columns:1fr; } }
+
+  footer.site{ text-align:center; padding:40px 0 60px; color:var(--muted); font-size:.85rem; }
+  footer.site .made{ margin-top:10px; font-size:.78rem; } footer.site .made b{ color:var(--coral); }
+
+  .fab{ position:fixed; right:20px; bottom:20px; z-index:40; background:var(--coral); color:#fff; border:none; cursor:pointer; border-radius:999px; padding:14px 24px; font-family:var(--round); font-weight:700; box-shadow:var(--shadow); display:inline-flex; align-items:center; gap:9px; }
+  .fab .pip{ width:9px; height:9px; border-radius:50%; background:#fff; box-shadow:0 0 0 4px rgba(255,255,255,.35); }
+  .chat{ position:fixed; right:20px; bottom:20px; z-index:41; width:360px; max-width:calc(100vw - 32px); height:540px; max-height:calc(100vh - 40px); background:var(--card); border:1px solid var(--line); border-radius:22px; box-shadow:0 24px 60px -20px rgba(11,111,126,.55); display:none; flex-direction:column; overflow:hidden; }
+  .chat.open{ display:flex; }
+  .chat .top{ background:linear-gradient(120deg,var(--aqua),var(--aqua-deep)); color:#fff; padding:14px 16px; display:flex; align-items:center; gap:11px; }
+  .chat .top .av{ width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.25); display:grid; place-items:center; font-size:1.1rem; }
+  .chat .top b{ font-family:var(--round); font-size:1rem; } .chat .top small{ display:block; font-size:.72rem; opacity:.9; }
+  .chat .top .x{ margin-left:auto; background:none; border:none; color:#fff; font-size:1.3rem; cursor:pointer; }
+  .chat .body{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:9px; background:var(--cream); }
+  .msg{ max-width:82%; padding:10px 13px; border-radius:16px; font-size:.9rem; line-height:1.4; }
+  .msg.bot{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:5px; align-self:flex-start; }
+  .msg.me{ background:var(--coral); color:#fff; border-bottom-right-radius:5px; align-self:flex-end; }
+  .msg.card{ background:var(--card); border:2px solid var(--aqua); align-self:stretch; max-width:100%; }
+  .msg.card .h{ font-family:var(--round); color:var(--aqua-deep); margin-bottom:6px; }
+  .msg.card .kv{ font-size:.84rem; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed var(--line-soft); }
+  .msg.card .kv:last-child{ border-bottom:none; } .msg.card .kv.total b{ color:var(--coral); }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; padding:10px 12px; border-top:1px solid var(--line-soft); background:var(--card); }
+  .chip{ font:inherit; font-size:.82rem; font-weight:600; cursor:pointer; border:1px solid var(--aqua); color:var(--aqua-deep); background:transparent; padding:7px 13px; border-radius:999px; }
+  .chip:hover{ background:var(--aqua); color:#fff; }
+  .chat .field{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line-soft); background:var(--card); }
+  .chat .field input{ flex:1; border:1px solid var(--line); border-radius:999px; padding:9px 14px; font:inherit; background:var(--cream); color:var(--ink); }
+  .chat .field button{ border:none; background:var(--coral); color:#fff; border-radius:999px; padding:0 16px; font-family:var(--round); font-weight:700; cursor:pointer; }
+  .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; }
+  :focus-visible{ outline:3px solid var(--aqua); outline-offset:2px; }
+</style>
+
+<div class="demo-ribbon"><b>DEMO</b> · a sample website &amp; order-ahead system built by <b>Groundwork</b> · Lost Pines Creative · this business is fictional</div>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><span class="mk" aria-hidden="true">🍧</span><span><b>Pine Cone Sno Co.</b><small>Bastrop, Texas</small></span></div>
+    <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
+  </nav>
+
+  <section class="hero">
+    <span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>
+    <div class="hero-inner">
+      <div class="eyebrow">Bastrop's coldest treat 🌴</div>
+      <h1>Shaved ice,<br>done paradise-style.</h1>
+      <p>Fluffy shaved ice, 60+ flavors, and cream on top. Order ahead, skip the line, cool off in the Lost Pines.</p>
+      <div class="row">
+        <button class="btn btn-coral" onclick="openChat()">Order ahead</button>
+        <a class="btn btn-white" href="#flavors">See flavors</a>
+      </div>
+      <div class="pills"><span>🍓 60+ flavors</span><span>🥥 Cream top</span><span>🍬 Sour &amp; gummies</span><span>🌱 Dairy-free</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="band" id="flavors">
+    <h2 class="reveal">Fan-favorite flavors</h2>
+    <p class="sub reveal">Sixty-plus in the shop — here's what folks grab all summer.</p>
+    <div class="flavors reveal">
+      <div class="flavor" style="background:linear-gradient(150deg,#ff6f61,#ff9a52)">Tiger's Blood<small>Strawberry · coconut</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#12a9bd,#4fc487)">Blue Pines<small>Blue raspberry · lime</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#7c5cd6,#a678ff)">Grape Escape<small>Grape · bubble gum</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#ffc53d,#ff9a52)">Mango Tango<small>Mango · pineapple</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#ff6f9c,#ff6f61)">Watermelon Wave<small>Watermelon · sour</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#4fc487,#12a9bd)">Sour Pickle<small>Yep — a Texas thing</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#ffb03d,#ffc53d)">Peach Sunset<small>Peach · cream</small></div>
+      <div class="flavor" style="background:linear-gradient(150deg,#5aa9ff,#7c5cd6)">Cotton Cloud<small>Cotton candy</small></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 class="reveal">Sizes</h2>
+    <p class="sub reveal">Add cream, sour spray, or gummies to any size.</p>
+    <div class="sizes reveal">
+      <div class="size"><div class="nm">Piney</div><div class="pr">$4</div></div>
+      <div class="size"><div class="nm">Big Pine</div><div class="pr">$5.50</div></div>
+      <div class="size"><div class="nm">Lost Pines</div><div class="pr">$7</div></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 class="reveal">What the owner sees</h2>
+    <p class="sub reveal">Orders, tickets, and busy hours at a glance. (Example day.)</p>
+    <div class="dash reveal">
+      <div class="dash-head"><b>Pine Cone Sno · Today</b><span>sample data · powered by Groundwork</span></div>
+      <div class="tiles">
+        <div class="tile"><div class="n">142</div><div class="l">Order-ahead tickets</div></div>
+        <div class="tile"><div class="n coral">$6.30</div><div class="l">Avg ticket</div></div>
+        <div class="tile"><div class="n grape">7–9p</div><div class="l">Busiest hour</div></div>
+        <div class="tile"><div class="n">14</div><div class="l">New 5★ reviews</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 class="reveal">Cooled-off &amp; happy</h2>
+    <div class="reviews">
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Ordered from the splash pad, walked over, skipped the line. Kids obsessed. Tiger's Blood forever."</p><div class="who">— The Ramirez Fam</div></div>
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Found them on Google on a 100° day. Now it's our after-practice tradition."</p><div class="who">— Coach D.</div></div>
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Sour pickle sounds wild, tastes amazing. Fluffiest ice in Bastrop County."</p><div class="who">— Jenna K.</div></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="whatnow reveal">
+      <h2>What Groundwork would set up</h2>
+      <ul>
+        <li><b>This website</b> — flavors &amp; hours, easy to update.</li>
+        <li><b>Order-ahead &amp; pay</b> — skip-the-line pickup.</li>
+        <li><b>Google Business Profile</b> — get found on hot days.</li>
+        <li><b>Reviews on autopilot</b> — climb the local map.</li>
+        <li><b>Loyalty punch card</b> — bring the kids back.</li>
+        <li><b>One dashboard</b> — orders, sales, busy hours.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    Pine Cone Sno Co. · Bastrop, TX · Open seasonally, noon–9p
+    <div class="made">A <b>demo</b> by <b>Groundwork · Lost Pines Creative</b> — a sample of the website &amp; order-ahead system we build for local businesses. This shop is fictional.</div>
+  </div>
+</footer>
+
+<button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Order ahead</button>
+<div class="chat" id="chat" role="dialog" aria-label="Order from Pine Cone Sno Co.">
+  <div class="top"><div class="av">🍧</div><div><b>Scoop · Pine Cone Sno</b><small>Order-ahead · replies instantly</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
+  <div class="body" id="chatBody"></div>
+  <div id="chatControls"></div>
+</div>
+
+<script>
+(function(){
+  var rev=[].slice.call(document.querySelectorAll('.reveal'));
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)){ rev.forEach(function(e){e.classList.add('in');}); }
+  else { var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); },{rootMargin:'0px 0px -8% 0px',threshold:.08}); rev.forEach(function(e){ io.observe(e); }); }
+
+  var chat=document.getElementById('chat'), fab=document.getElementById('fab'), body=document.getElementById('chatBody'), controls=document.getElementById('chatControls');
+  var order={}, started=false;
+  var SIZE={ 'Piney':4,'Big Pine':5.5,'Lost Pines':7 }, ADD={ 'Cream top':1,'Sour spray':0.5,'Gummies':1,'No thanks':0 };
+  function scroll(){ body.scrollTop=body.scrollHeight; }
+  function bubble(t,who){ var d=document.createElement('div'); d.className='msg '+who; d.textContent=t; body.appendChild(d); scroll(); }
+  function typing(cb){ var t=document.createElement('div'); t.className='typing'; t.textContent='Scoop is typing…'; body.appendChild(t); scroll(); setTimeout(function(){ t.remove(); cb(); },650); }
+  function botSay(t,then){ typing(function(){ bubble(t,'bot'); if(then) then(); }); }
+  function setChips(list){ controls.innerHTML=''; var w=document.createElement('div'); w.className='chips'; list.forEach(function(c){ var b=document.createElement('button'); b.className='chip'; b.textContent=c.label; b.onclick=function(){ bubble(c.label,'me'); c.go(); }; w.appendChild(b); }); controls.appendChild(w); }
+  function askInput(ph,cb){ controls.innerHTML=''; var f=document.createElement('form'); f.className='field'; var i=document.createElement('input'); i.placeholder=ph; i.autocomplete='off'; var b=document.createElement('button'); b.type='submit'; b.textContent='Send'; f.appendChild(i); f.appendChild(b); f.onsubmit=function(e){ e.preventDefault(); var v=i.value.trim(); if(!v)return; bubble(v,'me'); controls.innerHTML=''; cb(v); }; controls.appendChild(f); setTimeout(function(){ i.focus(); },50); }
+  function start(){ body.innerHTML=''; controls.innerHTML=''; order={};
+    botSay("Hey there! I'm Scoop 🍧 What size are we cooling off with?", function(){
+      setChips(Object.keys(SIZE).map(function(s){ return { label:s+' — $'+SIZE[s].toFixed(2).replace('.00',''), go:function(){ order.size=s; askFlavor(); } }; })); });
+  }
+  function askFlavor(){ botSay("Nice. Pick your flavor:", function(){
+      setChips([
+        {label:"Tiger's Blood", go:function(){ order.fl="Tiger's Blood"; askAdd(); }},
+        {label:'Blue Pines', go:function(){ order.fl='Blue Pines'; askAdd(); }},
+        {label:'Mango Tango', go:function(){ order.fl='Mango Tango'; askAdd(); }},
+        {label:'Watermelon Wave', go:function(){ order.fl='Watermelon Wave'; askAdd(); }},
+        {label:'Surprise me!', go:function(){ order.fl='Scoop’s pick'; askAdd(); }}
+      ]); }); }
+  function askAdd(){ botSay("Top it off?", function(){
+      setChips(Object.keys(ADD).map(function(a){ return { label:a+(ADD[a]?(' +$'+ADD[a].toFixed(2).replace('.00','')):''), go:function(){ order.add=a; askName(); } }; })); }); }
+  function askName(){ botSay("What name for the order?", function(){ askInput('Your name…', function(v){ order.name=v; done(); }); }); }
+  function done(){ var total=(SIZE[order.size]||0)+(ADD[order.add]||0);
+    botSay("You got it, "+order.name.split(' ')[0]+"! Pay in the app and it'll be ready in about 5 minutes. 🌴", function(){
+      var c=document.createElement('div'); c.className='msg card';
+      c.innerHTML='<div class="h">🍧 Order ready in ~5 min</div>'+
+        '<div class="kv"><span>'+order.size+' shaved ice</span><b>$'+(SIZE[order.size]||0).toFixed(2)+'</b></div>'+
+        '<div class="kv"><span>Flavor</span><b>'+order.fl+'</b></div>'+
+        (ADD[order.add]?('<div class="kv"><span>'+order.add+'</span><b>$'+ADD[order.add].toFixed(2)+'</b></div>'):'')+
+        '<div class="kv total"><span>Total</span><b>$'+total.toFixed(2)+'</b></div>'+
+        '<div class="kv"><span>Pickup for</span><b>'+order.name+'</b></div>';
+      body.appendChild(c); scroll();
+      setChips([{label:'Start a new order', go:start},{label:'Done!', go:function(){ botSay("Stay cool out there! 🌴"); controls.innerHTML=''; }}]);
+    }); }
+  window.openChat=function(){ chat.classList.add('open'); fab.style.display='none'; if(!started){ started=true; start(); } };
+  window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
+})();
+</script>
