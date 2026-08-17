@@ -134,6 +134,71 @@
   .chat .field input{ flex:1; border:1px solid var(--line); padding:10px 12px; font:inherit; background:var(--putty); color:var(--ink); }
   .chat .field button{ border:none; background:var(--ink); color:var(--putty); padding:0 16px; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; cursor:pointer; }
   .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; font-style:italic; }
+  /* ---- booking modal ---- */
+  .book-overlay{ position:fixed; inset:0; z-index:60; background:rgba(20,17,13,.6); -webkit-backdrop-filter:blur(3px); backdrop-filter:blur(3px); display:none; align-items:center; justify-content:center; padding:20px; }
+  .book-overlay.open{ display:flex; }
+  .book{ width:470px; max-width:100%; max-height:calc(100vh - 40px); background:var(--card); border:1px solid var(--line); box-shadow:0 40px 90px -30px rgba(20,17,13,.7); display:flex; flex-direction:column; overflow:hidden; }
+  .book-top{ background:var(--ink); color:var(--putty); padding:18px 20px; display:flex; align-items:center; gap:12px; }
+  .book-top .av{ width:36px; height:36px; border:1px solid rgba(239,228,214,.4); display:grid; place-items:center; }
+  .book-top .av svg{ width:1.05em; height:1.05em; }
+  .book-top b{ font-family:var(--serif); font-size:1.1rem; letter-spacing:.03em; } .book-top small{ display:block; font-size:.62rem; letter-spacing:.18em; text-transform:uppercase; opacity:.8; margin-top:2px; }
+  .book-top .x{ margin-left:auto; background:none; border:none; color:var(--putty); font-size:1.4rem; line-height:1; cursor:pointer; }
+  .steps{ display:flex; gap:5px; padding:16px 20px 0; }
+  .steps .s{ flex:1; height:2px; background:var(--line); transition:background .3s; }
+  .steps .s.on{ background:var(--bronze); }
+  .book-body{ padding:20px; overflow-y:auto; }
+  .book-body .label{ display:block; margin-bottom:8px; }
+  .book-body h4{ font-family:var(--serif); font-weight:400; font-size:1.5rem; margin-bottom:6px; }
+  .book-body .hint{ color:var(--muted); font-size:.86rem; margin-bottom:18px; line-height:1.6; }
+  .err{ color:var(--mauve); font-size:.8rem; letter-spacing:.02em; margin-top:12px; }
+
+  .pick{ display:grid; gap:10px; }
+  .pick button{ display:flex; justify-content:space-between; align-items:baseline; gap:14px; width:100%; text-align:left; background:var(--putty); border:1px solid var(--line); padding:15px 18px; font:inherit; cursor:pointer; color:var(--ink); transition:.15s; }
+  .pick button:hover{ border-color:var(--ink); }
+  .pick button.sel{ border-color:var(--bronze); background:color-mix(in srgb,var(--bronze) 9%,var(--putty)); }
+  .pick .nm{ font-family:var(--serif); font-size:1.2rem; }
+  .pick .de{ display:block; font-family:var(--sans); font-size:.74rem; color:var(--muted); margin-top:3px; }
+  .pick .pr{ font-family:var(--serif); font-size:1.05rem; color:var(--bronze); white-space:nowrap; font-variant-numeric:tabular-nums; }
+
+  .cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .cal-head b{ font-family:var(--serif); font-size:1.1rem; letter-spacing:.02em; }
+  .cal-nav{ background:var(--putty); border:1px solid var(--line); width:38px; height:38px; cursor:pointer; font-size:1.1rem; color:var(--ink); }
+  .cal-nav:disabled{ opacity:.3; cursor:default; }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+  .cal-grid .dow{ text-align:center; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); font-weight:600; padding:2px 0; }
+  .cal-grid .day{ aspect-ratio:1/1; border:1px solid var(--line); background:var(--putty); font:inherit; font-family:var(--serif); font-size:1.02rem; cursor:pointer; color:var(--ink); position:relative; }
+  .cal-grid .day:hover:not(:disabled){ border-color:var(--bronze); }
+  .cal-grid .day.sel{ background:var(--ink); color:var(--putty); border-color:var(--ink); }
+  .cal-grid .day:disabled{ opacity:.28; cursor:default; background:transparent; }
+  .cal-grid .day.booked{ opacity:.5; cursor:default; }
+  .cal-grid .day.booked::after{ content:""; position:absolute; left:50%; bottom:5px; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--mauve); }
+  .legend{ display:flex; gap:18px; margin-top:14px; font-size:.68rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+  .legend i{ width:8px; height:8px; display:inline-block; margin-right:5px; vertical-align:middle; }
+
+  .slots{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .slot{ padding:14px 8px; border:1px solid var(--line); background:var(--putty); font-family:var(--serif); font-size:.98rem; cursor:pointer; color:var(--ink); }
+  .slot:hover:not(:disabled){ border-color:var(--ink); }
+  .slot.sel{ background:var(--ink); color:var(--putty); border-color:var(--ink); }
+  .slot:disabled{ opacity:.34; cursor:default; text-decoration:line-through; }
+
+  .bform{ display:grid; gap:14px; }
+  .bform label{ font-size:.64rem; letter-spacing:.16em; text-transform:uppercase; font-weight:600; color:var(--muted); display:block; margin-bottom:6px; }
+  .bform input{ width:100%; border:1px solid var(--line); padding:12px 14px; font:inherit; background:var(--putty); color:var(--ink); }
+  .bform input:focus{ outline:none; border-color:var(--bronze); }
+
+  .book-foot{ display:flex; gap:10px; margin-top:20px; }
+  .book-foot .btn{ flex:1; text-align:center; padding:14px; }
+  .btn-ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .btn-ghost:hover{ border-color:var(--ink); }
+
+  .bsummary{ text-align:center; }
+  .bsummary .crest{ width:56px; height:56px; border:1px solid var(--bronze); border-radius:50%; color:var(--bronze); display:grid; place-items:center; margin:2px auto 16px; }
+  .bsummary .crest svg{ width:28px; height:28px; }
+  .bcard{ text-align:left; background:var(--putty); border:1px solid var(--bronze); padding:18px 20px; margin-top:14px; }
+  .bcard .kv{ display:flex; justify-content:space-between; gap:14px; padding:7px 0; border-bottom:1px solid var(--line-soft); font-size:.9rem; }
+  .bcard .kv:last-child{ border-bottom:none; } .bcard .kv span{ color:var(--muted); } .bcard .kv b{ text-align:right; font-weight:600; }
+  .deposit-note{ font-size:.78rem; color:var(--muted); margin-top:14px; line-height:1.6; }
+
   :focus-visible{ outline:2px solid var(--bronze); outline-offset:3px; }
 </style>
 </head>
@@ -145,7 +210,7 @@
 <div class="wrap">
   <nav class="nav">
     <div class="logo"><b>Willow &amp; Oak</b><small>Beauty · Bastrop</small></div>
-    <a class="book" href="#" onclick="openChat();return false">Book</a>
+    <a class="book" href="#" onclick="openBook();return false">Book</a>
   </nav>
 
   <section class="hero">
@@ -153,7 +218,7 @@
     <h1>The art of<br><em>looking like you.</em></h1>
     <p>A Main Street salon &amp; beauty studio for custom color, precision cuts, premium extensions, and brow artistry — thoughtful, unhurried, yours.</p>
     <div class="row">
-      <button class="btn btn-fill" onclick="openChat()">Book an appointment</button>
+      <button class="btn btn-fill" onclick="openBook()">Book an appointment</button>
       <a class="btn btn-line" href="#services">View services</a>
     </div>
   </section>
@@ -247,11 +312,17 @@
   </div>
 </footer>
 
-<button class="fab" id="fab" onclick="openChat()">Book</button>
-<div class="chat" id="chat" role="dialog" aria-modal="true" aria-label="Book with Willow & Oak">
-  <div class="top"><div class="av">I</div><div><b>Ivy</b><small>Booking · Willow &amp; Oak</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
-  <div class="body" id="chatBody"></div>
-  <div id="chatControls"></div>
+<button class="fab" id="fab" onclick="openBook()">Book</button>
+<div class="book-overlay" id="bookOverlay">
+  <div class="book" role="dialog" aria-modal="true" aria-label="Book with Willow &amp; Oak">
+    <div class="book-top">
+      <span class="av"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></span>
+      <span><b>Book an appointment</b><small>Willow &amp; Oak Beauty</small></span>
+      <button class="x" onclick="closeBook()" aria-label="Close">×</button>
+    </div>
+    <div class="steps" id="bookSteps"></div>
+    <div class="book-body" id="bookBody"></div>
+  </div>
 </div>
 
 <script>
@@ -260,52 +331,138 @@
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)){ rev.forEach(function(e){e.classList.add('in');}); }
   else { var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); },{rootMargin:'0px 0px -8% 0px',threshold:.08}); rev.forEach(function(e){ io.observe(e); }); }
 
-  var chat=document.getElementById('chat'), fab=document.getElementById('fab'), body=document.getElementById('chatBody'), controls=document.getElementById('chatControls');
-  var appt={}, started=false;
-  function scroll(){ body.scrollTop=body.scrollHeight; }
-  function bubble(t,who){ var d=document.createElement('div'); d.className='msg '+who; d.textContent=t; body.appendChild(d); scroll(); }
-  function typing(cb){ var t=document.createElement('div'); t.className='typing'; t.textContent='Ivy is typing…'; body.appendChild(t); scroll(); setTimeout(function(){ t.remove(); cb(); },700); }
-  function botSay(t,then){ typing(function(){ bubble(t,'bot'); if(then) then(); }); }
-  function setChips(list){ controls.innerHTML=''; var w=document.createElement('div'); w.className='chips'; list.forEach(function(c){ var b=document.createElement('button'); b.className='chip'; b.textContent=c.label; b.onclick=function(){ bubble(c.label,'me'); c.go(); }; w.appendChild(b); }); controls.appendChild(w); }
-  function askInput(ph,cb){ controls.innerHTML=''; var f=document.createElement('form'); f.className='field'; var i=document.createElement('input'); i.placeholder=ph; i.autocomplete='off'; var b=document.createElement('button'); b.type='submit'; b.textContent='Send'; f.appendChild(i); f.appendChild(b); f.onsubmit=function(e){ e.preventDefault(); var v=i.value.trim(); if(!v)return; bubble(v,'me'); controls.innerHTML=''; cb(v); }; controls.appendChild(f); setTimeout(function(){ i.focus(); },50); }
-  function start(){ body.innerHTML=''; controls.innerHTML=''; appt={};
-    botSay("Hi, welcome to Willow & Oak. I'm Ivy — what are we booking?", function(){
-      setChips([
-        {label:'Cut & style', go:function(){ appt.svc='Cut & style'; appt.dep='$15'; askStylist(); }},
-        {label:'Color', go:function(){ appt.svc='Custom color'; appt.dep='$30'; askStylist(); }},
-        {label:'Extensions', go:function(){ appt.svc='Extensions consult'; appt.dep='$25'; askStylist(); }},
-        {label:'Brows & lash', go:function(){ appt.svc='Brows & lash'; appt.dep='$10'; askStylist(); }}
-      ]); });
+  var overlay=document.getElementById('bookOverlay'), body=document.getElementById('bookBody'), stepsEl=document.getElementById('bookSteps');
+  var st={}, vY, vM;
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var DOW=['Su','Mo','Tu','We','Th','Fr','Sa'];
+  var SLOTS=['9:00 AM','10:30 AM','12:00 PM','1:30 PM','3:00 PM','4:30 PM'];
+  var SERVICES=[
+    {nm:'Precision cut & style', de:'Consultation, wash, cut, finish', pr:'$65', dep:'$15'},
+    {nm:'Custom color', de:'Single process, gloss & toner', pr:'$110', dep:'$30'},
+    {nm:'Dimensional / balayage', de:'Hand-painted, lived-in', pr:'$185', dep:'$40'},
+    {nm:'Hair extensions', de:'Consultation first', pr:'Quote', dep:'$25'},
+    {nm:'Brow lamination & tint', de:'Mapping, shape, tint', pr:'$70', dep:'$10'},
+    {nm:'Scalp & smoothing treatment', de:'Four-step, lasts up to 5 months', pr:'$95', dep:'$20'}
+  ];
+  var ARTISTS=[
+    {nm:'Ashley', de:'Color & balayage specialist'},
+    {nm:'Mia', de:'Cuts, extensions & brows'},
+    {nm:'First available', de:'Soonest opening'}
+  ];
+
+  function setSteps(n){ stepsEl.innerHTML=''; for(var i=1;i<=5;i++){ var s=document.createElement('div'); s.className='s'+(i<=n?' on':''); stepsEl.appendChild(s); } }
+  function isBooked(y,m,d){ return ((d*3 + m*7) % 11)===0; }        /* deterministic sample bookings */
+  function slotTaken(d,i){ return ((d+i)%7)===3; }                  /* deterministic sample sold-out slots */
+  function fmtDate(o,opts){ return new Date(o.y,o.m,o.d).toLocaleDateString(undefined,opts); }
+  function foot(backFn,nextLabel,nextFn,nextDisabled){
+    var f=document.createElement('div'); f.className='book-foot';
+    var b=document.createElement('button'); b.className='btn btn-ghost'; b.type='button'; b.textContent='Back'; b.onclick=backFn;
+    var n=document.createElement('button'); n.className='btn btn-fill'; n.type='button'; n.textContent=nextLabel; n.onclick=nextFn; if(nextDisabled) n.disabled=true;
+    f.appendChild(b); f.appendChild(n); return f;
   }
-  function askStylist(){ botSay("Lovely choice. Any artist preference?", function(){
-      setChips([
-        {label:'Ashley', go:function(){ appt.sty='Ashley'; askSlot(); }},
-        {label:'Mia', go:function(){ appt.sty='Mia'; askSlot(); }},
-        {label:'No preference', go:function(){ appt.sty='First available'; askSlot(); }}
-      ]); }); }
-  function askSlot(){ botSay("Here's what's open this week:", function(){
-      setChips([
-        {label:'Thu 10:00', go:function(){ appt.slot='Thu 10:00 AM'; askName(); }},
-        {label:'Fri 2:30', go:function(){ appt.slot='Fri 2:30 PM'; askName(); }},
-        {label:'Sat 9:00', go:function(){ appt.slot='Sat 9:00 AM'; askName(); }}
-      ]); }); }
-  function askName(){ botSay("Perfect. What name shall I put it under?", function(){ askInput('Your name…', function(v){ appt.name=v; askPhone(); }); }); }
-  function askPhone(){ botSay("And a cell for your confirmation & reminders?", function(){ askInput('(512) 555-…', function(v){ appt.phone=v; done(); }); }); }
-  function done(){ botSay("You're booked, "+appt.name.split(' ')[0]+". A "+appt.dep+" deposit holds your appointment — we've texted a secure link. We can't wait to see you.", function(){
-      var c=document.createElement('div'); c.className='msg card';
-      c.innerHTML='<div class="h">Appointment confirmed</div>'+
-        '<div class="kv"><span>Service</span><b>'+appt.svc+'</b></div>'+
-        '<div class="kv"><span>Artist</span><b>'+appt.sty+'</b></div>'+
-        '<div class="kv"><span>When</span><b>'+appt.slot+'</b></div>'+
-        '<div class="kv"><span>Deposit</span><b>'+appt.dep+'</b></div>'+
-        '<div class="kv"><span>Reminders to</span><b>'+appt.phone+'</b></div>';
-      body.appendChild(c); scroll();
-      setChips([{label:'Book another', go:function(){ start(); }},{label:'All done', go:function(){ botSay("See you soon."); controls.innerHTML=''; }}]);
-    }); }
-  window.openChat=function(){ chat.classList.add('open'); fab.style.display='none'; if(!started){ started=true; start(); } };
-  window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
+
+  function renderService(){
+    setSteps(1);
+    var h='<span class="label">Step one</span><h4>Choose a service</h4><div class="hint">Starting prices — your artist confirms at consultation.</div><div class="pick" id="pk"></div>';
+    body.innerHTML=h;
+    var pk=document.getElementById('pk');
+    SERVICES.forEach(function(s){ var b=document.createElement('button'); b.type='button'; b.className=(st.svc===s.nm?'sel':''); b.innerHTML='<span class="nm">'+s.nm+'<span class="de">'+s.de+'</span></span><span class="pr">'+s.pr+'</span>'; b.onclick=function(){ st.svc=s.nm; st.dep=s.dep; renderArtist(); }; pk.appendChild(b); });
+  }
+  function renderArtist(){
+    setSteps(2);
+    var h='<span class="label">Step two</span><h4>With whom?</h4><div class="hint">Every artist takes a real consultation first.</div><div class="pick" id="pk"></div>';
+    body.innerHTML=h;
+    var pk=document.getElementById('pk');
+    ARTISTS.forEach(function(a){ var b=document.createElement('button'); b.type='button'; b.className=(st.sty===a.nm?'sel':''); b.innerHTML='<span class="nm">'+a.nm+'<span class="de">'+a.de+'</span></span>'; b.onclick=function(){ st.sty=a.nm; renderDate(); }; pk.appendChild(b); });
+    body.appendChild(foot(renderService,'',function(){},true)).querySelector('.btn-fill').style.display='none';
+  }
+  function renderDate(){
+    setSteps(3);
+    var now=new Date(); now.setHours(0,0,0,0);
+    var minIdx=now.getFullYear()*12+now.getMonth(), curIdx=vY*12+vM;
+    var startDow=new Date(vY,vM,1).getDay();
+    var daysIn=new Date(vY,vM+1,0).getDate();
+    var h='<span class="label">Step three</span><h4>Pick a date</h4><div class="hint">Open Tuesday–Saturday, by appointment.</div>';
+    h+='<div class="cal-head"><button class="cal-nav" id="pM"'+(curIdx<=minIdx?' disabled':'')+' aria-label="Previous month">‹</button><b>'+MONTHS[vM]+' '+vY+'</b><button class="cal-nav" id="nM"'+(curIdx>=minIdx+3?' disabled':'')+' aria-label="Next month">›</button></div><div class="cal-grid">';
+    DOW.forEach(function(d){ h+='<div class="dow">'+d+'</div>'; });
+    for(var i=0;i<startDow;i++) h+='<div></div>';
+    for(var d=1;d<=daysIn;d++){
+      var dt=new Date(vY,vM,d); dt.setHours(0,0,0,0);
+      var dow=dt.getDay(); var past=dt<now, closed=(dow===0||dow===1), booked=!past&&!closed&&isBooked(vY,vM,d);
+      var dis=past||closed||booked;
+      var sel=st.date&&st.date.y===vY&&st.date.m===vM&&st.date.d===d;
+      var title=booked?' title="Fully booked"':closed?' title="Closed Sunday & Monday"':'';
+      h+='<button class="day'+(booked?' booked':'')+(sel?' sel':'')+'"'+(dis?' disabled':'')+title+' data-d="'+d+'">'+d+'</button>';
+    }
+    h+='</div><div class="legend"><span><i style="background:var(--ink)"></i>Selected</span><span><i style="background:var(--mauve)"></i>Booked</span></div>';
+    body.innerHTML=h;
+    document.getElementById('pM').onclick=function(){ if(vM===0){vM=11;vY--;}else vM--; renderDate(); };
+    document.getElementById('nM').onclick=function(){ if(vM===11){vM=0;vY++;}else vM++; renderDate(); };
+    Array.prototype.forEach.call(body.querySelectorAll('.day:not(:disabled)'),function(b){ b.onclick=function(){ st.date={y:vY,m:vM,d:+b.getAttribute('data-d')}; renderTime(); }; });
+    var f=document.createElement('div'); f.className='book-foot'; var back=document.createElement('button'); back.className='btn btn-ghost'; back.type='button'; back.textContent='Back'; back.onclick=renderArtist; f.appendChild(back); body.appendChild(f);
+  }
+  function renderTime(){
+    setSteps(4);
+    var label=fmtDate(st.date,{weekday:'long',month:'long',day:'numeric'});
+    var h='<span class="label">Step four</span><h4>Choose a time</h4><div class="hint">'+label+' · with '+st.sty+'.</div><div class="slots">';
+    SLOTS.forEach(function(s,i){ var taken=slotTaken(st.date.d,i); h+='<button class="slot'+(st.time===s?' sel':'')+'"'+(taken?' disabled':'')+' data-s="'+s+'">'+s+'</button>'; });
+    h+='</div>';
+    body.innerHTML=h;
+    var f=foot(renderDate,'Continue',renderDetails,!st.time); body.appendChild(f);
+    var next=f.querySelector('.btn-fill');
+    Array.prototype.forEach.call(body.querySelectorAll('.slot:not(:disabled)'),function(b){ b.onclick=function(){ st.time=b.getAttribute('data-s'); Array.prototype.forEach.call(body.querySelectorAll('.slot'),function(x){x.classList.remove('sel');}); b.classList.add('sel'); next.disabled=false; }; });
+  }
+  function val(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+  function renderDetails(){
+    setSteps(5);
+    var h='<span class="label">Step five</span><h4>Your details</h4><div class="hint">We’ll text your confirmation and reminders here.</div>';
+    h+='<div class="bform"><div><label for="fName">Full name</label><input id="fName" placeholder="First & last"></div>'
+      +'<div><label for="fPhone">Mobile number</label><input id="fPhone" inputmode="tel" placeholder="(512) 555-0134"></div>'
+      +'<div><label for="fNote">Anything we should know? (optional)</label><input id="fNote" placeholder="Inspo, hair history, occasion…"></div></div>'
+      +'<p class="err" id="fErr" hidden>Please add your name and mobile number so we can confirm.</p>';
+    body.innerHTML=h;
+    if(st.name) document.getElementById('fName').value=st.name;
+    if(st.phone) document.getElementById('fPhone').value=st.phone;
+    if(st.note) document.getElementById('fNote').value=st.note;
+    var f=foot(renderTime,'Review',function(){
+      st.name=val('fName'); st.phone=val('fPhone'); st.note=val('fNote');
+      if(!st.name||!st.phone){ document.getElementById('fErr').hidden=false; (st.name?document.getElementById('fPhone'):document.getElementById('fName')).focus(); return; }
+      renderConfirm();
+    },false);
+    body.appendChild(f);
+  }
+  function summaryCard(){
+    return '<div class="bcard">'
+      +'<div class="kv"><span>Service</span><b>'+st.svc+'</b></div>'
+      +'<div class="kv"><span>Artist</span><b>'+st.sty+'</b></div>'
+      +'<div class="kv"><span>Date</span><b>'+fmtDate(st.date,{weekday:'long',month:'long',day:'numeric',year:'numeric'})+'</b></div>'
+      +'<div class="kv"><span>Time</span><b>'+st.time+'</b></div>'
+      +'<div class="kv"><span>Deposit</span><b>'+st.dep+'</b></div>'
+      +'<div class="kv"><span>Confirmation to</span><b>'+st.name+' · '+st.phone+'</b></div>'
+      +'</div>';
+  }
+  function renderConfirm(){
+    setSteps(5);
+    body.innerHTML='<span class="label">Almost there</span><h4>Confirm your appointment</h4><div class="hint">A '+st.dep+' deposit holds the chair — refundable up to 48 hours before.</div>'+summaryCard();
+    var f=foot(renderDetails,'Confirm & reserve',renderDone,false); body.appendChild(f);
+  }
+  function renderDone(){
+    setSteps(5);
+    body.innerHTML='<div class="bsummary"><div class="crest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>'
+      +'<h4>You’re booked</h4>'
+      +'<div class="hint">'+st.name.split(' ')[0]+', we’ve reserved '+fmtDate(st.date,{weekday:'long',month:'long',day:'numeric'})+' at '+st.time+' with '+st.sty+'. A secure '+st.dep+' deposit link is on its way to '+st.phone+'.</div>'
+      +summaryCard()
+      +'<p class="deposit-note">Reminder texts go out 48 hours and 2 hours before. Need to reschedule? Just reply to any text.</p></div>';
+    var f=document.createElement('div'); f.className='book-foot';
+    var b=document.createElement('button'); b.className='btn btn-fill'; b.type='button'; b.style.flex='1'; b.textContent='Done'; b.onclick=closeBook;
+    f.appendChild(b); body.appendChild(f);
+  }
+
+  window.openBook=function(){ var now=new Date(); vY=now.getFullYear(); vM=now.getMonth(); st={}; overlay.classList.add('open'); renderService(); };
+  window.closeBook=function(){ overlay.classList.remove('open'); };
+  overlay.addEventListener('click',function(e){ if(e.target===overlay) closeBook(); });
 })();
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){var b=document.getElementById("bookOverlay");if(b&&b.classList.contains("open")&&window.closeBook){window.closeBook();}}});
 </script>
-<script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
 </body>
 </html>
