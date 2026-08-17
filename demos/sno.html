@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner-dashboard.css?v=2">
 
 <style>
   :root{
@@ -313,7 +314,8 @@
 
   <section class="band">
     <h2 class="reveal">What the owner sees</h2>
-    <p class="sub reveal">Orders, tickets, and busy hours at a glance. (Example day.)</p>
+    <p class="sub reveal">Orders, tickets, and busy hours at a glance. This preview is only the surface.</p>
+    <div style="text-align:center;margin-bottom:26px" class="reveal"><button class="btn btn-coral" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
       <div class="dash-head"><b>Pine Cone Sno · Today</b><span>sample data · powered by Groundwork</span></div>
       <div class="tiles">
@@ -557,5 +559,78 @@
 })();
 document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();return;}var b=document.getElementById("bookOverlay");if(b&&b.classList.contains("open")&&window.closeBook){window.closeBook();}}});
 </script>
+
+<!-- Owner dashboard: config + engine -->
+<script>
+window.OWNER_DASH_CONFIG = {
+  business: "Pine Cone Sno Co.",
+  label: "Owner dashboard",
+  today: "Sat, Aug 15",
+  cur: "$",
+  terms: { team: "Crew", member: "Crew", job: "Order", jobs: "Orders", location: "Station", schedule: "Orders" },
+  theme: {
+    bg:"var(--cream)", surface:"var(--card)", panel:"var(--cream)", ink:"var(--ink)",
+    muted:"var(--muted)", line:"var(--line)", accent:"var(--aqua-deep)", "accent-2":"var(--coral)",
+    good:"var(--lime)", font:"var(--round)"
+  },
+  kpis: [
+    { l:"Orders today", n:"128", d:"18", up:true },
+    { l:"Sales today", n:"$806", d:"16%", up:true },
+    { l:"Avg ticket", n:"$6.30", d:"4%", up:true },
+    { l:"Events booked", n:"5", d:"2", up:true },
+    { l:"Repeat customers", n:"38%", d:"5%", up:true },
+    { l:"New 5★ reviews", n:"14", d:"4", up:true }
+  ],
+  revenue: [["Mon",0.6],["Tue",0.7],["Wed",0.65],["Thu",0.8],["Fri",1.1],["Sat",1.6],["Sun",1.3]],
+  appointments: {
+    today: [
+      { t:"1:10p", c:"The Ramirez Fam", s:"3× Tiger's Blood, cream", area:"Window", who:"Casey M.", st:"done" },
+      { t:"1:25p", c:"Coach D.", s:"6× assorted (team)", area:"Window", who:"Casey M.", st:"progress" },
+      { t:"1:40p", c:"Jenna K.", s:"Lost Pines + sour", area:"Window", who:"Riley P.", st:"confirmed" },
+      { t:"2:00p", c:"Marcus D.", s:"2× Blue Pines", area:"Window", who:"Riley P.", st:"confirmed" },
+      { t:"2:15p", c:"The Bakers", s:"Mango Tango, cream", area:"Window", who:"Casey M.", st:"confirmed" }
+    ],
+    tomorrow: [
+      { t:"12:30p", c:"Splash Pad group", s:"8× assorted", area:"Truck", who:"Casey M.", st:"confirmed" },
+      { t:"1:00p", c:"Priya S.", s:"Watermelon Wave", area:"Window", who:"Riley P.", st:"confirmed" },
+      { t:"1:30p", c:"Leo V.", s:"Grape Escape, gummies", area:"Window", who:"Riley P.", st:"confirmed" }
+    ]
+  },
+  team: [
+    { name:"Casey M.", role:"Lead / truck", status:"On order", where:"Window", jobs:42, util:82 },
+    { name:"Riley P.", role:"Server", status:"On order", where:"Window", jobs:34, util:72 },
+    { name:"Sam T.", role:"Server", status:"Available", where:"Prep", jobs:20, util:48 },
+    { name:"Jordan B.", role:"Weekend crew", status:"Available", where:"On call", jobs:0, util:20 }
+  ],
+  unassigned: [
+    { t:"Sat 2–5p", c:"Ramirez birthday", s:"Truck event · 40 guests", area:"Lost Pines Park" },
+    { t:"Sun 12–3p", c:"Bastrop Little League", s:"Fundraiser · 120 cups", area:"Mayfest Field" }
+  ],
+  reports: [
+    { type:"bars", title:"Busiest days", note:"orders", data:[["Mon",64],["Tue",72],["Wed",68],["Thu",88],["Fri",132],["Sat",176],["Sun",150]] },
+    { type:"hbars", title:"Top flavors", data:[["Tiger's Blood",164],["Blue Pines",120],["Mango Tango",96],["Watermelon Wave",78],["Grape Escape",54]] },
+    { type:"bars", title:"Orders by hour", note:"today", data:[["12p",14],["1p",22],["2p",20],["4p",16],["6p",24],["7p",30],["8p",22]] },
+    { type:"hbars", title:"Revenue by source", money:true, data:[["Truck events",2600],["Walk-up window",2400],["Order-ahead",1900]] }
+  ],
+  payroll: {
+    period: "Aug 10–16, 2026", note: "Friday",
+    rows: [
+      { name:"Casey M.", role:"Lead / truck", detail:"36 hrs × $17", gross:612 },
+      { name:"Riley P.", role:"Server", detail:"30 hrs × $14", gross:420 },
+      { name:"Sam T.", role:"Server", detail:"24 hrs × $13", gross:312 },
+      { name:"Jordan B.", role:"Weekend crew", detail:"16 hrs × $13", gross:208 }
+    ]
+  },
+  analytics: [
+    { l:"Avg wait time", n:"3.1 min" },
+    { l:"Order-ahead share", n:"58%" },
+    { l:"Repeat customers", n:"38%" },
+    { l:"Items per order", n:"2.6" },
+    { l:"Review score", n:"4.9★" },
+    { l:"Events / month", n:"12" }
+  ]
+};
+</script>
+<script src="owner-dashboard.js?v=2"></script>
 </body>
 </html>
