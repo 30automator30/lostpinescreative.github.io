@@ -452,10 +452,30 @@ img {
 
 .equipment-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 24px;
   margin-bottom: 40px;
 }
+
+@media (max-width: 900px) {
+  .equipment-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* Placeholder panel for equipment awaiting a real photo (not a stock image) */
+.equipment-ph {
+  height: 280px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background:
+    radial-gradient(ellipse at 50% 32%, var(--accent-glow), transparent 68%),
+    var(--bg-card-hover);
+  color: var(--accent-light);
+}
+.equipment-ph svg { width: 72px; height: 72px; }
+.equipment-ph span { font-size: 0.72rem; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); }
 
 .equipment-card {
   background: var(--bg-card);
