@@ -7,7 +7,7 @@
 <title>Pecan Street Coffee — Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
 
 <style>
   :root{
@@ -16,6 +16,7 @@
     --shadow:0 14px 34px -18px rgba(44,33,26,.4);
     --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --serif:"Fraunces","Fraunces","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --slab:"Zilla Slab","Rockwell",Georgia,"Times New Roman",serif;
     --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
   }
   @media (prefers-color-scheme:dark){
@@ -127,6 +128,41 @@
   .chat .field input{ flex:1; border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; background:var(--cream); color:var(--ink); }
   .chat .field button{ border:none; background:var(--caramel); color:#fff; border-radius:9px; padding:0 14px; font-weight:700; cursor:pointer; }
   .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; }
+
+  /* ---- Texas Coffee Works style adoption ---- */
+  .btn-ghost-light{ background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.55); color:#fff; }
+  .btn-ghost-light:hover{ background:rgba(255,255,255,.22); }
+
+  .herofull{ position:relative; min-height:clamp(440px,66vh,660px); display:grid; place-items:center; text-align:center; color:#fff; background:var(--espresso); background-size:cover; background-position:center; }
+  .herofull::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(24,16,10,.28),rgba(24,16,10,.6)); }
+  .herofull .inner{ position:relative; z-index:2; padding:0 22px; max-width:900px; }
+  .herofull .eyebrow{ font-family:var(--mono); letter-spacing:.24em; text-transform:uppercase; font-size:.72rem; color:#f3e8d8; margin-bottom:18px; }
+  .herofull h1{ font-family:var(--slab); text-transform:uppercase; letter-spacing:.01em; font-weight:700; font-size:clamp(2.6rem,7vw,5rem); line-height:.96; color:#fff; text-shadow:0 2px 34px rgba(0,0,0,.45); margin-bottom:16px; }
+  .herofull p{ color:#f3e8d8; font-size:1.1rem; max-width:52ch; margin:0 auto 26px; line-height:1.6; }
+  .herofull .row{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+  .hoursstrip{ border-bottom:1px solid var(--line); background:var(--card); }
+  .hoursstrip .inner{ display:flex; justify-content:center; flex-wrap:wrap; gap:10px 30px; padding:15px 0; font-size:.82rem; color:var(--muted); }
+  .hoursstrip b{ color:var(--ink); }
+  .hoursstrip .open2{ display:inline-flex; align-items:center; gap:7px; color:var(--sage); font-weight:700; }
+  .hoursstrip .dot{ width:8px; height:8px; border-radius:50%; background:var(--sage); box-shadow:0 0 0 4px color-mix(in srgb,var(--sage) 22%,transparent); }
+
+  .feat3{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .fcard{ background:var(--card); border:1px solid var(--line); border-radius:16px; overflow:hidden; box-shadow:var(--shadow); transition:transform .18s; }
+  .fcard:hover{ transform:translateY(-4px); }
+  .fcard .ph{ height:180px; background:var(--crema); background-size:cover; background-position:center; }
+  .fcard .b{ padding:16px 18px 18px; }
+  .fcard h3{ font-family:var(--serif); font-size:1.15rem; margin-bottom:3px; }
+  .fcard p{ font-size:.85rem; color:var(--muted); }
+  .fcard .pr{ font-family:var(--mono); color:var(--caramel); font-weight:600; margin-top:9px; display:inline-block; }
+  @media(max-width:700px){ .feat3{ grid-template-columns:1fr; } }
+
+  .coffeeband{ position:relative; min-height:clamp(280px,40vw,440px); display:grid; place-items:center; text-align:center; color:#fff; background:var(--espresso); background-size:cover; background-position:center; }
+  .coffeeband::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(24,16,10,.35),rgba(24,16,10,.55)); }
+  .coffeeband .inner{ position:relative; z-index:2; padding:0 22px; }
+  .coffeeband h2{ font-family:var(--slab); text-transform:uppercase; color:#fff; font-size:clamp(1.7rem,4.4vw,2.8rem); margin-bottom:8px; }
+  .coffeeband p{ color:#f3e8d8; }
+
   :focus-visible{ outline:2px solid var(--caramel); outline-offset:2px; }
 </style>
 </head>
@@ -140,29 +176,35 @@
     <div class="logo"><span class="mk" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.14em"><path d="M4 9h13v4a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c0 1-1 1.2-1 2.2M12 3c0 1-1 1.2-1 2.2"/></svg></span><span><b>Pecan Street Coffee</b><small>Bastrop, Texas</small></span></div>
     <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
   </nav>
-
-  <section class="hero">
-    <div>
-      <div class="eyebrow">Small-batch roasts · Kolaches · Cold brew</div>
-      <h1>Your morning, <em>done right.</em></h1>
-      <p>Locally roasted coffee and fresh kolaches on Main Street. Order ahead, skip the line, and grab it on your way through downtown Bastrop.</p>
-      <div class="row">
-        <button class="btn btn-caramel" onclick="openChat()">Order ahead</button>
-        <a class="btn btn-ghost" href="#menu">See the menu</a>
-      </div>
-    </div>
-    <div class="hero-card">
-      <h3>Find us</h3>
-      <div class="hours"><span>Mon–Fri</span><b>6:30a – 4p</b></div>
-      <div class="hours"><span>Saturday</span><b>7a – 5p</b></div>
-      <div class="hours"><span>Sunday</span><b>7a – 2p</b></div>
-      <div class="hours"><span>Main Street, Bastrop</span><b>★ 4.9</b></div>
-      <span class="open"><span class="dot"></span> Open now · order ahead ready</span>
-    </div>
-  </section>
 </div>
 
+<section class="herofull" style="background-image:url(img/coffee-hero.webp)">
+  <div class="inner">
+    <div class="eyebrow">Small-batch roasts · Kolaches · Cold brew</div>
+    <h1>Better mornings.<br>In Bastrop.</h1>
+    <p>Locally roasted coffee and fresh kolaches on Main Street. Order ahead, skip the line, and grab it on your way through downtown.</p>
+    <div class="row">
+      <button class="btn btn-caramel" onclick="openChat()">Order ahead</button>
+      <a class="btn btn-ghost-light" href="#menu">See the menu</a>
+    </div>
+  </div>
+</section>
+
+<div class="hoursstrip"><div class="wrap"><div class="inner">
+  <span><b>Mon–Fri</b> 6:30a–4p</span><span><b>Sat</b> 7a–5p</span><span><b>Sun</b> 7a–2p</span><span><b>Main Street, Bastrop</b> · ★ 4.9</span><span class="open2"><span class="dot"></span> Open now · order-ahead ready</span>
+</div></div></div>
+
 <div class="wrap">
+  <section class="band">
+    <h2 class="reveal">Fresh this morning</h2>
+    <p class="sub reveal">Roasted and baked on Main Street — order ahead for pickup.</p>
+    <div class="feat3 reveal">
+      <div class="fcard"><div class="ph" style="background-image:url(img/coffee-latte.webp)" role="img" aria-label="Latte with rosette art"></div><div class="b"><h3>Lattes &amp; espresso</h3><p>Hot or iced, pulled fresh all day.</p><span class="pr">from $4.25</span></div></div>
+      <div class="fcard"><div class="ph" style="background-image:url(img/coffee-kolache.webp)" role="img" aria-label="Sausage and cheese kolache"></div><div class="b"><h3>Kolaches</h3><p>Sausage &amp; cheese, or fruit — baked each morning.</p><span class="pr">$3.50</span></div></div>
+      <div class="fcard"><div class="ph" style="background-image:url(img/coffee-coldbrew.webp)" role="img" aria-label="Cold brew over ice"></div><div class="b"><h3>Cold brew</h3><p>18-hour steep, smooth over ice.</p><span class="pr">$4.50</span></div></div>
+    </div>
+  </section>
+
   <section class="band" id="menu">
     <h2 class="reveal">The menu</h2>
     <p class="sub reveal">Roasted here. Pulled fresh. Order ahead for pickup.</p>
@@ -177,7 +219,16 @@
       <div class="item"><span class="nm">Bag of beans<span class="de">12 oz, whole or ground</span></span><span class="dots"></span><span class="pr">$16</span></div>
     </div>
   </section>
+</div>
 
+<div class="coffeeband" style="background-image:url(img/coffee-band.webp)">
+  <div class="inner">
+    <h2>Roasted here. Pulled fresh.</h2>
+    <p>Small-batch coffee and morning kolaches, made on Main Street.</p>
+  </div>
+</div>
+
+<div class="wrap">
   <section class="band">
     <h2 class="reveal">What the owner sees</h2>
     <p class="sub reveal">Orders, tickets, and regulars — at a glance. (Example day.)</p>
