@@ -442,6 +442,60 @@
             margin-top: 40px;
         }
 
+        /* Collapsible Software / Design & Craft boxes (native <details>) */
+        .collapse + .collapse {
+            margin-top: 34px;
+        }
+
+        summary.category-label {
+            list-style: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            user-select: none;
+        }
+
+        summary.category-label::-webkit-details-marker { display: none; }
+
+        /* Chevron: points down when collapsed, up when open */
+        summary.category-label::after {
+            content: "";
+            width: 8px;
+            height: 8px;
+            flex: none;
+            border-right: 2px solid var(--accent);
+            border-bottom: 2px solid var(--accent);
+            transform: translateY(-2px) rotate(45deg);
+            transition: transform 0.3s var(--ease);
+        }
+
+        details.collapse[open] > summary.category-label::after {
+            transform: translateY(2px) rotate(-135deg);
+        }
+
+        summary.category-label:hover { color: var(--accent-hover); }
+
+        summary.category-label:focus-visible {
+            outline: 2px solid var(--accent-hover);
+            outline-offset: 3px;
+            border-radius: 3px;
+        }
+
+        .collapse-body { padding-top: 4px; }
+
+        @media (prefers-reduced-motion: no-preference) {
+            details.collapse[open] > .collapse-body {
+                animation: collapse-open 0.35s var(--ease-out);
+            }
+        }
+
+        @keyframes collapse-open {
+            from { opacity: 0; transform: translateY(-6px); }
+            to   { opacity: 1; transform: none; }
+        }
+
         /* Survey map — a static pipeline header above the Software grid. Plots the
            four software products across their stages so the trajectory reads at a
            glance. Supplementary only: the grid below carries the same information,
@@ -978,6 +1032,154 @@
             </div>
         </section>
 
+        <section class="products survey-rule" id="work">
+            <h2>What we're building</h2>
+
+            <details class="collapse" open>
+            <summary class="category-label">Software</summary>
+            <div class="collapse-body">
+
+            <blockquote class="belief reveal">
+                Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
+            </blockquote>
+
+            <figure class="survey-map reveal" aria-hidden="true">
+                <svg viewBox="0 0 760 132" role="presentation">
+                    <line class="survey-track" x1="90" y1="66" x2="670" y2="66" />
+                    <g class="survey-node">
+                        <text class="survey-name" x="90" y="40">Sovereign School</text>
+                        <circle class="n-concept" cx="90" cy="66" r="7" />
+                        <text class="survey-stage sc-concept" x="90" y="98">CONCEPT</text>
+                    </g>
+                    <g class="survey-node">
+                        <text class="survey-name" x="283" y="40">Evident House</text>
+                        <circle class="n-dev" cx="283" cy="66" r="7" />
+                        <text class="survey-stage sc-dev" x="283" y="98">EARLY DEV</text>
+                    </g>
+                    <g class="survey-node">
+                        <text class="survey-name" x="477" y="40">Remember Who</text>
+                        <circle class="n-prelaunch" cx="477" cy="66" r="7" />
+                        <text class="survey-stage sc-prelaunch" x="477" y="98">PRE-LAUNCH</text>
+                    </g>
+                    <g class="survey-node">
+                        <text class="survey-name" x="670" y="40">NomadCore</text>
+                        <circle class="n-live" cx="670" cy="66" r="7" />
+                        <text class="survey-stage sc-live" x="670" y="98">LIVE</text>
+                    </g>
+                </svg>
+            </figure>
+
+            <div class="product-grid stagger">
+                <div class="product-card reveal">
+                    <div class="card-media">
+                        <img src="/nomadcore-screen.webp" alt="NomadCore app dashboard showing the family preparedness home screen" width="420" height="560" loading="lazy">
+                    </div>
+                    <h3>NomadCore</h3>
+                    <span class="stage stage-active">Live on iOS & Android</span>
+                    <p>Family emergency preparedness powered by offline AI. Emergency plans, supply tracking, offline maps, and a knowledge base of 1,320 procedures — all without needing signal.</p>
+                    <div class="tagline">"Your family's plan, in your pocket."</div>
+                    <br>
+                    <a href="https://www.nomad-core.com">nomad-core.com</a>
+                    &nbsp;&middot;&nbsp;
+                    <a href="https://apps.apple.com/us/app/nomadcore/id6751544385">App Store</a>
+                    &nbsp;&middot;&nbsp;
+                    <a href="https://play.google.com/store/apps/details?id=com.nomadcoreapp.nomadcore">Google Play</a>
+                </div>
+
+                <div class="product-card reveal">
+                    <div class="card-media">
+                        <img src="/rememberwho-screen.webp" alt="Remember Who app showing the contacts list with follow-up reminders" width="399" height="757" loading="lazy">
+                    </div>
+                    <h3>Remember Who</h3>
+                    <span class="stage stage-prelaunch">Pre-Launch</span>
+                    <p>A privacy-first personal CRM that helps you remember everyone you meet. On-device AI transcription, encrypted storage, geo-reminders — your contacts never leave your phone.</p>
+                    <div class="tagline">"Your relationships. Your data. Your device."</div>
+                    <br>
+                    <a href="https://www.rememberwho.app">rememberwho.app</a>
+                </div>
+
+                <div class="product-card reveal">
+                    <h3>Evident House</h3>
+                    <span class="stage stage-upcoming">Early Development</span>
+                    <p>Document your belongings with cryptographic proof. When disaster strikes and you need to prove what you owned, Evident House provides evidence your insurer can't dispute.</p>
+                    <div class="tagline">"Your insurance proof, owned by you."</div>
+                </div>
+
+                <div class="product-card reveal">
+                    <h3>Sovereign School</h3>
+                    <span class="stage stage-concept">Concept</span>
+                    <p>A multi-agent AI homeschool platform that gives parents a coordinated cabinet of educators — superintendent, principal, teachers — while keeping the parent as the ultimate authority.</p>
+                    <div class="tagline">"Your children's education, guided by AI, governed by you."</div>
+                </div>
+            </div>
+            </div>
+            </details>
+
+            <details class="collapse" open>
+            <summary class="category-label">Design &amp; Craft</summary>
+            <div class="collapse-body">
+            <div class="product-grid stagger">
+                <div class="product-card reveal">
+                    <div class="card-media photo">
+                        <img src="/work-dragon.webp" alt="Articulated 3D-printed dragon made by DeSmit Designs" width="520" height="520" loading="lazy">
+                    </div>
+                    <h3>DeSmit Designs</h3>
+                    <span class="stage stage-active">Active</span>
+                    <p>Engineering-driven design services — 3D printing, CAD modeling, and laser cutting. From custom prototypes to finished products, built with the same precision as medical-grade hardware.</p>
+                    <div class="tagline">"Driving innovation with engineering excellence."</div>
+                    <br>
+                    <a href="/desmitdesigns/">Visit DeSmit Designs &rarr;</a>
+                    &nbsp;&middot;&nbsp;
+                    <a href="https://www.facebook.com/profile.php?id=61571339641377" target="_blank" rel="noopener noreferrer">Facebook</a>
+                </div>
+
+                <div class="product-card reveal">
+                    <div class="card-media photo">
+                        <img src="/blueplumeria-necklace.webp" alt="Handcrafted blue beaded necklace from Blue Plumeria, worn" width="600" height="334" loading="lazy">
+                    </div>
+                    <h3>Blue Plumeria</h3>
+                    <span class="stage stage-active">Open for Orders</span>
+                    <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
+                    <div class="tagline">"Handcrafted. Small-batch. Made with intention."</div>
+                    <br>
+                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection &rarr;</a>
+                </div>
+            </div>
+
+            <div class="work-intro reveal">
+                <h3>DeSmit Designs — selected work</h3>
+                <p>A sample of recent commissions across 3D printing, CAD modeling, and laser work. <a href="mailto:desmitdesignz@gmail.com?subject=Design%20%26%20fabrication%20inquiry">Start a project &rarr;</a></p>
+            </div>
+            <div class="work-gallery stagger">
+                <figure class="work-item reveal">
+                    <img src="/work-led-sign.webp" alt="Backlit acrylic LED gaming sign made by DeSmit Designs" width="560" height="560" loading="lazy">
+                    <figcaption>Custom LED signage</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-mandala.webp" alt="Framed multi-layer mandala wall art, laser cut" width="560" height="560" loading="lazy">
+                    <figcaption>Layered laser art</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-cad.webp" alt="CAD model of a mechanical assembly" width="560" height="560" loading="lazy">
+                    <figcaption>CAD modeling</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-feeder.webp" alt="3D-printed hummingbird feeder" width="560" height="560" loading="lazy">
+                    <figcaption>Functional product design</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-dragon.webp" alt="Articulated 3D-printed dragon" width="560" height="560" loading="lazy">
+                    <figcaption>Complex 3D prints</figcaption>
+                </figure>
+                <figure class="work-item reveal">
+                    <img src="/work-texas.webp" alt="3D-printed topographic relief map of Texas" width="560" height="560" loading="lazy">
+                    <figcaption>Custom modeling</figcaption>
+                </figure>
+            </div>
+            </div>
+            </details>
+        </section>
+
         <section class="systems survey-rule">
             <h2 class="reveal">What I bring</h2>
             <p class="systems-lead reveal">Fifteen years building regulated hardware and software, now applied as an engineering practice — architecture, delivery, and the judgment to ship. Every capability below is proven in shipped product.</p>
@@ -1062,146 +1264,6 @@
                     <span class="sys-proof">15 years in medical devices</span>
                 </div>
 
-            </div>
-        </section>
-
-        <section class="products" id="work">
-            <h2>What we're building</h2>
-
-            <div class="category-label reveal">Software</div>
-
-            <blockquote class="belief reveal">
-                Everything we create starts with the same belief: the most important parts of your life — your family's safety, your relationships, your belongings, your home — shouldn't depend on systems you don't control.
-            </blockquote>
-
-            <figure class="survey-map reveal" aria-hidden="true">
-                <svg viewBox="0 0 760 132" role="presentation">
-                    <line class="survey-track" x1="90" y1="66" x2="670" y2="66" />
-                    <g class="survey-node">
-                        <text class="survey-name" x="90" y="40">Sovereign School</text>
-                        <circle class="n-concept" cx="90" cy="66" r="7" />
-                        <text class="survey-stage sc-concept" x="90" y="98">CONCEPT</text>
-                    </g>
-                    <g class="survey-node">
-                        <text class="survey-name" x="283" y="40">Evident House</text>
-                        <circle class="n-dev" cx="283" cy="66" r="7" />
-                        <text class="survey-stage sc-dev" x="283" y="98">EARLY DEV</text>
-                    </g>
-                    <g class="survey-node">
-                        <text class="survey-name" x="477" y="40">Remember Who</text>
-                        <circle class="n-prelaunch" cx="477" cy="66" r="7" />
-                        <text class="survey-stage sc-prelaunch" x="477" y="98">PRE-LAUNCH</text>
-                    </g>
-                    <g class="survey-node">
-                        <text class="survey-name" x="670" y="40">NomadCore</text>
-                        <circle class="n-live" cx="670" cy="66" r="7" />
-                        <text class="survey-stage sc-live" x="670" y="98">LIVE</text>
-                    </g>
-                </svg>
-            </figure>
-
-            <div class="product-grid stagger">
-                <div class="product-card reveal">
-                    <div class="card-media">
-                        <img src="/nomadcore-screen.webp" alt="NomadCore app dashboard showing the family preparedness home screen" width="420" height="560" loading="lazy">
-                    </div>
-                    <h3>NomadCore</h3>
-                    <span class="stage stage-active">Live on iOS & Android</span>
-                    <p>Family emergency preparedness powered by offline AI. Emergency plans, supply tracking, offline maps, and a knowledge base of 1,320 procedures — all without needing signal.</p>
-                    <div class="tagline">"Your family's plan, in your pocket."</div>
-                    <br>
-                    <a href="https://www.nomad-core.com">nomad-core.com</a>
-                    &nbsp;&middot;&nbsp;
-                    <a href="https://apps.apple.com/us/app/nomadcore/id6751544385">App Store</a>
-                    &nbsp;&middot;&nbsp;
-                    <a href="https://play.google.com/store/apps/details?id=com.nomadcoreapp.nomadcore">Google Play</a>
-                </div>
-
-                <div class="product-card reveal">
-                    <div class="card-media">
-                        <img src="/rememberwho-screen.webp" alt="Remember Who app showing the contacts list with follow-up reminders" width="399" height="757" loading="lazy">
-                    </div>
-                    <h3>Remember Who</h3>
-                    <span class="stage stage-prelaunch">Pre-Launch</span>
-                    <p>A privacy-first personal CRM that helps you remember everyone you meet. On-device AI transcription, encrypted storage, geo-reminders — your contacts never leave your phone.</p>
-                    <div class="tagline">"Your relationships. Your data. Your device."</div>
-                    <br>
-                    <a href="https://www.rememberwho.app">rememberwho.app</a>
-                </div>
-
-                <div class="product-card reveal">
-                    <h3>Evident House</h3>
-                    <span class="stage stage-upcoming">Early Development</span>
-                    <p>Document your belongings with cryptographic proof. When disaster strikes and you need to prove what you owned, Evident House provides evidence your insurer can't dispute.</p>
-                    <div class="tagline">"Your insurance proof, owned by you."</div>
-                </div>
-
-                <div class="product-card reveal">
-                    <h3>Sovereign School</h3>
-                    <span class="stage stage-concept">Concept</span>
-                    <p>A multi-agent AI homeschool platform that gives parents a coordinated cabinet of educators — superintendent, principal, teachers — while keeping the parent as the ultimate authority.</p>
-                    <div class="tagline">"Your children's education, guided by AI, governed by you."</div>
-                </div>
-            </div>
-
-            <div class="category-label reveal" style="margin-top: 40px;">Design &amp; Craft</div>
-            <div class="product-grid stagger">
-                <div class="product-card reveal">
-                    <div class="card-media photo">
-                        <img src="/work-dragon.webp" alt="Articulated 3D-printed dragon made by DeSmit Designs" width="520" height="520" loading="lazy">
-                    </div>
-                    <h3>DeSmit Designs</h3>
-                    <span class="stage stage-active">Active</span>
-                    <p>Engineering-driven design services — 3D printing, CAD modeling, and laser cutting. From custom prototypes to finished products, built with the same precision as medical-grade hardware.</p>
-                    <div class="tagline">"Driving innovation with engineering excellence."</div>
-                    <br>
-                    <a href="/desmitdesigns/">Visit DeSmit Designs &rarr;</a>
-                    &nbsp;&middot;&nbsp;
-                    <a href="https://www.facebook.com/profile.php?id=61571339641377" target="_blank" rel="noopener noreferrer">Facebook</a>
-                </div>
-
-                <div class="product-card reveal">
-                    <div class="card-media photo">
-                        <img src="/blueplumeria-necklace.webp" alt="Handcrafted blue beaded necklace from Blue Plumeria, worn" width="600" height="334" loading="lazy">
-                    </div>
-                    <h3>Blue Plumeria</h3>
-                    <span class="stage stage-active">Open for Orders</span>
-                    <p>Handcrafted jewelry from a working atelier. Limited small-batch pieces featuring natural stones, crystals, freshwater pearls, and copper wire work — each one made by hand in the USA.</p>
-                    <div class="tagline">"Handcrafted. Small-batch. Made with intention."</div>
-                    <br>
-                    <a href="https://30automator30.github.io/BluePlumeria/index.html">Shop the Studio Collection &rarr;</a>
-                </div>
-            </div>
-
-            <div class="work-intro reveal">
-                <h3>DeSmit Designs — selected work</h3>
-                <p>A sample of recent commissions across 3D printing, CAD modeling, and laser work. <a href="mailto:desmitdesignz@gmail.com?subject=Design%20%26%20fabrication%20inquiry">Start a project &rarr;</a></p>
-            </div>
-            <div class="work-gallery stagger">
-                <figure class="work-item reveal">
-                    <img src="/work-led-sign.webp" alt="Backlit acrylic LED gaming sign made by DeSmit Designs" width="560" height="560" loading="lazy">
-                    <figcaption>Custom LED signage</figcaption>
-                </figure>
-                <figure class="work-item reveal">
-                    <img src="/work-mandala.webp" alt="Framed multi-layer mandala wall art, laser cut" width="560" height="560" loading="lazy">
-                    <figcaption>Layered laser art</figcaption>
-                </figure>
-                <figure class="work-item reveal">
-                    <img src="/work-cad.webp" alt="CAD model of a mechanical assembly" width="560" height="560" loading="lazy">
-                    <figcaption>CAD modeling</figcaption>
-                </figure>
-                <figure class="work-item reveal">
-                    <img src="/work-feeder.webp" alt="3D-printed hummingbird feeder" width="560" height="560" loading="lazy">
-                    <figcaption>Functional product design</figcaption>
-                </figure>
-                <figure class="work-item reveal">
-                    <img src="/work-dragon.webp" alt="Articulated 3D-printed dragon" width="560" height="560" loading="lazy">
-                    <figcaption>Complex 3D prints</figcaption>
-                </figure>
-                <figure class="work-item reveal">
-                    <img src="/work-texas.webp" alt="3D-printed topographic relief map of Texas" width="560" height="560" loading="lazy">
-                    <figcaption>Custom modeling</figcaption>
-                </figure>
             </div>
         </section>
 
@@ -1337,6 +1399,16 @@
 
             loops.forEach(function (el) { io.observe(el); });
         })();
+
+        // When a collapsible box opens, make sure its content is revealed
+        // (covers collapse-then-reopen and any box that starts closed).
+        document.querySelectorAll('details.collapse').forEach(function (d) {
+            d.addEventListener('toggle', function () {
+                if (d.open) d.querySelectorAll('.reveal').forEach(function (el) {
+                    el.classList.add('is-visible');
+                });
+            });
+        });
 
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', function () {
