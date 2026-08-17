@@ -64,6 +64,7 @@
   .strip{ border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
   .strip .inner{ display:flex; justify-content:center; flex-wrap:wrap; gap:8px 44px; padding:22px 0; }
   .strip span{ font-size:.7rem; letter-spacing:.26em; text-transform:uppercase; color:var(--muted); }
+  .imgband{ height:clamp(300px,42vw,520px); background:var(--sand); background-size:cover; background-position:center 45%; }
 
   section.band{ padding:74px 0; }
   .band .label{ display:block; text-align:center; margin-bottom:14px; }
@@ -78,10 +79,7 @@
   .svc .pr{ font-family:var(--serif); font-size:1.25rem; color:var(--bronze); font-variant-numeric:tabular-nums; white-space:nowrap; }
 
   .exp{ display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:center; }
-  .exp .art{ aspect-ratio:4/5; background:
-      radial-gradient(80% 60% at 30% 20%, color-mix(in srgb,var(--mauve) 40%,transparent), transparent 60%),
-      linear-gradient(150deg,var(--sand),var(--card)); border:1px solid var(--line); position:relative; }
-  .exp .art::after{ content:"W&O"; position:absolute; inset:0; display:grid; place-items:center; font-family:var(--serif); font-size:3rem; color:color-mix(in srgb,var(--bronze) 55%,transparent); letter-spacing:.05em; }
+  .exp .art{ aspect-ratio:4/5; background:var(--sand); background-size:cover; background-position:center; border:1px solid var(--line); position:relative; }
   .exp h2{ text-align:left; }
   .exp p{ color:var(--muted); line-height:1.9; margin-top:14px; }
   @media (max-width:760px){ .exp{ grid-template-columns:1fr; gap:32px; } .exp .art{ max-width:320px; } }
@@ -167,6 +165,8 @@
   </div></div>
 </div>
 
+<div class="imgband" role="img" aria-label="Inside the Willow &amp; Oak studio" style="background-image:url(img/salon-interior.webp)"></div>
+
 <div class="wrap">
   <section class="band" id="services">
     <span class="label">The menu</span>
@@ -186,7 +186,7 @@
 <div class="wrap">
   <section class="band">
     <div class="exp reveal">
-      <div class="art" aria-hidden="true"></div>
+      <div class="art" role="img" aria-label="Dimensional balayage finished at Willow &amp; Oak" style="background-image:url(img/salon-balayage.webp)"></div>
       <div>
         <span class="label">The experience</span>
         <h2>Unhurried, and entirely about you.</h2>
