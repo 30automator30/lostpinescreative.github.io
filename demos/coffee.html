@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Zilla+Slab:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner-dashboard.css?v=2">
 
 <style>
   :root{
@@ -231,7 +232,8 @@
 <div class="wrap">
   <section class="band">
     <h2 class="reveal">What the owner sees</h2>
-    <p class="sub reveal">Orders, tickets, and regulars — at a glance. (Example day.)</p>
+    <p class="sub reveal">Orders, tickets, and regulars — at a glance. This preview is only the surface.</p>
+    <div style="text-align:center;margin-bottom:26px" class="reveal"><button class="btn btn-caramel" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
       <div class="dash-head"><b>Pecan Street · Today</b><span>sample data · powered by Groundwork</span></div>
       <div class="tiles">
@@ -326,5 +328,78 @@
 })();
 </script>
 <script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+
+<!-- Owner dashboard: config + engine -->
+<script>
+window.OWNER_DASH_CONFIG = {
+  business: "Pecan Street Coffee",
+  label: "Owner dashboard",
+  today: "Mon, Aug 17",
+  cur: "$",
+  terms: { team: "Baristas", member: "Barista", job: "Order", jobs: "Orders", location: "Station", schedule: "Orders" },
+  theme: {
+    bg:"var(--cream)", surface:"var(--card)", panel:"var(--cream)", ink:"var(--ink)",
+    muted:"var(--muted)", line:"var(--line)", accent:"var(--caramel)", "accent-2":"var(--gold)",
+    good:"var(--sage)", font:"var(--serif)"
+  },
+  kpis: [
+    { l:"Orders today", n:"96", d:"11", up:true },
+    { l:"Avg ticket", n:"$7.10", d:"4%", up:true },
+    { l:"Order-ahead share", n:"63%", d:"9%", up:true },
+    { l:"Repeat customers", n:"41%", d:"3%", up:true },
+    { l:"Sales today", n:"$682", d:"14%", up:true },
+    { l:"New 5★ reviews", n:"8", d:"2", up:true }
+  ],
+  revenue: [["Mon",0.7],["Tue",0.8],["Wed",0.75],["Thu",0.9],["Fri",1.1],["Sat",1.3],["Sun",0.9]],
+  appointments: {
+    today: [
+      { t:"6:48a", c:"Marcus D.", s:"2× Latte, 1 Kolache", area:"Bar 1", who:"Maya L.", st:"done" },
+      { t:"7:05a", c:"Priya S.", s:"Cold brew, Cinnamon roll", area:"Bar 2", who:"Theo P.", st:"progress" },
+      { t:"7:20a", c:"The Bakers", s:"2× Drip, Breakfast taco", area:"Bar 1", who:"Maya L.", st:"confirmed" },
+      { t:"7:35a", c:"Dana R.", s:"Cortado", area:"Bar 2", who:"Theo P.", st:"confirmed" },
+      { t:"7:50a", c:"Leo V.", s:"Latte, Kolache", area:"Bar 1", who:"Sana R.", st:"confirmed" }
+    ],
+    tomorrow: [
+      { t:"6:40a", c:"Nina F.", s:"Cold brew", area:"Bar 2", who:"Theo P.", st:"confirmed" },
+      { t:"7:10a", c:"Office order · Wexler", s:"6× assorted", area:"Bar 1", who:"Maya L.", st:"confirmed" },
+      { t:"7:45a", c:"Chris B.", s:"Latte, Cinnamon roll", area:"Bar 1", who:"Sana R.", st:"confirmed" }
+    ]
+  },
+  team: [
+    { name:"Maya L.", role:"Lead barista", status:"On order", where:"Bar 1", jobs:34, util:82 },
+    { name:"Theo P.", role:"Barista", status:"On order", where:"Bar 2", jobs:28, util:72 },
+    { name:"Sana R.", role:"Barista", status:"Available", where:"Register", jobs:22, util:55 },
+    { name:"Cody W.", role:"Baker", status:"On order", where:"Kitchen", jobs:18, util:60 }
+  ],
+  unassigned: [
+    { t:"8:12a", c:"Mobile · Alex D.", s:"2× Latte, 1 Kolache", area:"Order-ahead" },
+    { t:"8:15a", c:"Mobile · Robin C.", s:"Cold brew, Cinnamon roll", area:"Order-ahead" }
+  ],
+  reports: [
+    { type:"bars", title:"Busiest days", note:"orders", data:[["Mon",84],["Tue",92],["Wed",88],["Thu",101],["Fri",128],["Sat",146],["Sun",98]] },
+    { type:"hbars", title:"Top items", data:[["Latte",142],["Cold brew",96],["Kolache",88],["Drip coffee",74],["Cinnamon roll",40]] },
+    { type:"bars", title:"Orders by hour", note:"today", data:[["6a",9],["7a",22],["8a",26],["9a",15],["11a",8],["1p",10],["3p",6]] },
+    { type:"hbars", title:"Revenue by category", money:true, data:[["Espresso drinks",3200],["Cold brew",1400],["Bakery",1200],["Retail beans",480]] }
+  ],
+  payroll: {
+    period: "Aug 10–16, 2026", note: "Friday",
+    rows: [
+      { name:"Maya L.", role:"Lead barista", detail:"38 hrs × $19", gross:722 },
+      { name:"Theo P.", role:"Barista", detail:"32 hrs × $16", gross:512 },
+      { name:"Sana R.", role:"Barista", detail:"28 hrs × $16", gross:448 },
+      { name:"Cody W.", role:"Baker", detail:"34 hrs × $18", gross:612 }
+    ]
+  },
+  analytics: [
+    { l:"Avg wait time", n:"4.2 min" },
+    { l:"Order-ahead share", n:"63%" },
+    { l:"Repeat customers", n:"41%" },
+    { l:"Items per order", n:"2.3" },
+    { l:"Review score", n:"4.9★" },
+    { l:"Avg ticket", n:"$7.10" }
+  ]
+};
+</script>
+<script src="owner-dashboard.js?v=2"></script>
 </body>
 </html>

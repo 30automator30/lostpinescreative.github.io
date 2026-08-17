@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner-dashboard.css?v=2">
 
 <style>
   :root{
@@ -307,7 +308,8 @@
   <div class="divider"></div>
 
   <section class="band">
-    <div class="head reveal"><div class="eyebrow">The part your competition doesn't have</div><h2>What the owner sees</h2><p>Every estimate request, booking, and review in one place — so nothing slips through Messenger. (Example week.)</p></div>
+    <div class="head reveal"><div class="eyebrow">The part your competition doesn't have</div><h2>What the owner sees</h2><p>Every estimate request, booking, and review in one place — so nothing slips through Messenger. This preview is only the surface.</p></div>
+    <div style="text-align:center;margin:0 0 26px" class="reveal"><button class="btn btn-amber" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
       <div class="dash-head"><b>Handy Men &amp; Sons — Example week</b><span>sample data · powered by Groundwork</span></div>
       <div class="tiles">
@@ -454,5 +456,78 @@
 })();
 </script>
 <script>document.addEventListener("keydown",function(e){if(e.key==="Escape"){var c=document.getElementById("chat");if(c&&c.classList.contains("open")&&window.closeChat){window.closeChat();}}});</script>
+
+<!-- Owner dashboard: config + engine -->
+<script>
+window.OWNER_DASH_CONFIG = {
+  business: "Handy Men & Sons",
+  label: "Owner dashboard",
+  today: "Fri, Aug 14",
+  cur: "$",
+  terms: { team: "Crew", member: "Pro", job: "Job", jobs: "Jobs", location: "Area", schedule: "Schedule" },
+  theme: {
+    bg:"var(--bone)", surface:"var(--card)", panel:"var(--paper)", ink:"var(--ink)",
+    muted:"var(--muted)", line:"var(--line)", accent:"var(--cedar)", "accent-2":"var(--amber)",
+    good:"var(--pine)", font:"var(--slab)"
+  },
+  kpis: [
+    { l:"Estimate requests", n:"21", d:"6", up:true },
+    { l:"Jobs booked", n:"11", d:"3", up:true },
+    { l:"Missed calls recovered", n:"7", d:"2", up:true },
+    { l:"Close rate", n:"74%", d:"8%", up:true },
+    { l:"Revenue collected", n:"$9,340", d:"16%", up:true },
+    { l:"New reviews", n:"4", d:"2", up:true }
+  ],
+  revenue: [["Mon",1.4],["Tue",1.7],["Wed",1.2],["Thu",2.0],["Fri",1.9],["Sat",1.1]],
+  appointments: {
+    today: [
+      { t:"8–10a", c:"The Alvarez Fam", s:"Fence repair", area:"Bastrop 78602", who:"Marcus H.", st:"done" },
+      { t:"10–12p", c:"J. Whitfield", s:"Drywall patch & paint", area:"Cedar Creek", who:"Ray V.", st:"enroute" },
+      { t:"12–2p", c:"S. Okafor", s:"Deck board replace", area:"Elgin", who:"Tomas B.", st:"progress" },
+      { t:"2–4p", c:"K. Delgado", s:"Door & lock install", area:"Bastrop 78602", who:"Marcus H.", st:"confirmed" },
+      { t:"4–6p", c:"R. Solis", s:"Ceiling fan mount", area:"Smithville", who:"Diego S.", st:"confirmed" }
+    ],
+    tomorrow: [
+      { t:"8–10a", c:"M. Barrera", s:"Gutter repair", area:"Cedar Creek", who:"Ray V.", st:"confirmed" },
+      { t:"10–12p", c:"T. Nguyen", s:"Tile backsplash", area:"Bastrop 78602", who:"Marcus H.", st:"confirmed" },
+      { t:"1–3p", c:"D. Franklin", s:"Trim & baseboards", area:"Paige", who:"Tomas B.", st:"confirmed" }
+    ]
+  },
+  team: [
+    { name:"Marcus H.", role:"Lead carpenter", status:"On job", where:"Bastrop", jobs:3, util:78 },
+    { name:"Ray V.", role:"Handyman", status:"En route", where:"Cedar Creek", jobs:4, util:82 },
+    { name:"Tomas B.", role:"Handyman", status:"On job", where:"Elgin", jobs:3, util:65 },
+    { name:"Diego S.", role:"Apprentice", status:"Available", where:"Shop", jobs:2, util:45 }
+  ],
+  unassigned: [
+    { t:"1–3p", c:"L. Cho", s:"Fence section replace", area:"Bastrop 78602" },
+    { t:"3–5p", c:"P. Reyes", s:"Bathroom caulk & regrout", area:"Smithville" }
+  ],
+  reports: [
+    { type:"bars", title:"Busiest days", note:"jobs", data:[["Mon",8],["Tue",11],["Wed",7],["Thu",13],["Fri",12],["Sat",6]] },
+    { type:"hbars", title:"Top job types", data:[["Repairs",34],["Carpentry",22],["Drywall & paint",16],["Fencing",14],["Installs",12]] },
+    { type:"bars", title:"Requests by source", note:"this week", data:[["Website",9],["Facebook",6],["Referral",4],["Google",2]] },
+    { type:"hbars", title:"Revenue by service", money:true, data:[["Carpentry",3600],["Repairs",2800],["Fencing",1600],["Paint & drywall",1340]] }
+  ],
+  payroll: {
+    period: "Aug 4–10, 2026", note: "Friday",
+    rows: [
+      { name:"Marcus H.", role:"Lead carpenter", detail:"44 hrs × $32", gross:1408 },
+      { name:"Ray V.", role:"Handyman", detail:"42 hrs × $26", gross:1092 },
+      { name:"Tomas B.", role:"Handyman", detail:"40 hrs × $25", gross:1000 },
+      { name:"Diego S.", role:"Apprentice", detail:"38 hrs × $18", gross:684 }
+    ]
+  },
+  analytics: [
+    { l:"Avg response time", n:"3.1 hrs" },
+    { l:"Close rate", n:"74%" },
+    { l:"Repeat customers", n:"48%" },
+    { l:"Review score", n:"4.8★" },
+    { l:"Jobs per pro / day", n:"2.4" },
+    { l:"Avg job value", n:"$420" }
+  ]
+};
+</script>
+<script src="owner-dashboard.js?v=2"></script>
 </body>
 </html>

@@ -47,7 +47,7 @@
 
   var TABS = [
     { id: 'overview', label: 'Overview', icon: ICON.grid, render: renderOverview },
-    { id: 'appointments', label: 'Appointments', icon: ICON.cal, render: renderAppointments },
+    { id: 'appointments', label: (T.schedule || 'Appointments'), icon: ICON.cal, render: renderAppointments },
     { id: 'team', label: (T.team || 'Team') + ' & dispatch', icon: ICON.team, render: renderTeam },
     { id: 'reports', label: 'Reports', icon: ICON.chart, render: renderReports },
     { id: 'payroll', label: 'Payroll', icon: ICON.cash, render: renderPayroll }
@@ -156,8 +156,8 @@
     var counts = {};
     list.forEach(function (a) { counts[a.st] = (counts[a.st] || 0) + 1; });
     main.innerHTML =
-      '<h2 class="oda-h">Appointments</h2>' +
-      '<p class="oda-sub">Every booking, who’s assigned, and where it stands — updated the moment a customer books online or the AI answers a call.</p>' +
+      '<h2 class="oda-h">' + (T.schedule || 'Appointments') + '</h2>' +
+      '<p class="oda-sub">Every ' + (T.job || 'job').toLowerCase() + ', who’s on it, and where it stands — live as they come in.</p>' +
       '<div class="oda-row"><div class="oda-seg" id="apptSeg">' +
         '<button data-d="today" class="' + (apptDay === 'today' ? 'on' : '') + '">Today</button>' +
         '<button data-d="tomorrow" class="' + (apptDay === 'tomorrow' ? 'on' : '') + '">Tomorrow</button></div>' +
