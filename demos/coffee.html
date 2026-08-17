@@ -1,0 +1,263 @@
+<title>Pecan Street Coffee — Demo</title>
+<style>
+  :root{
+    --cream:#f4ece0; --card:#fbf5ea; --ink:#2c211a; --espresso:#3a281c; --caramel:#a9682c;
+    --crema:#d8b98a; --sage:#77855f; --gold:#c1913f; --muted:#75695c; --line:#e4d7c4; --line-soft:#efe5d5;
+    --shadow:0 14px 34px -18px rgba(44,33,26,.4);
+    --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Fraunces","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root:not([data-theme="light"]){
+      --cream:#17110c; --card:#20180f; --ink:#efe3d3; --espresso:#e6cfae; --caramel:#d89355;
+      --crema:#d8b98a; --sage:#95a37c; --gold:#dcb264; --muted:#a99a86; --line:#2c2318; --line-soft:#241c12;
+      --shadow:0 14px 34px -18px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+      --cream:#17110c; --card:#20180f; --ink:#efe3d3; --espresso:#e6cfae; --caramel:#d89355;
+      --crema:#d8b98a; --sage:#95a37c; --gold:#dcb264; --muted:#a99a86; --line:#2c2318; --line-soft:#241c12;
+      --shadow:0 14px 34px -18px rgba(0,0,0,.6);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{ background:var(--cream); color:var(--ink); font-family:var(--sans); line-height:1.55; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3{ font-family:var(--serif); font-weight:600; line-height:1.05; }
+  a{ color:var(--caramel); }
+  .wrap{ max-width:1000px; margin:0 auto; padding:0 22px; }
+  .reveal{ opacity:0; transform:translateY(14px); transition:.7s cubic-bezier(.16,1,.3,1); }
+  .reveal.in{ opacity:1; transform:none; }
+  @media (prefers-reduced-motion:reduce){ .reveal{ opacity:1; transform:none; transition:none; } }
+
+  .demo-ribbon{ background:var(--espresso); color:#f2e6d4; text-align:center; font-size:.74rem; letter-spacing:.02em; padding:8px 14px; }
+  .demo-ribbon b{ color:var(--crema); }
+
+  .nav{ display:flex; align-items:center; justify-content:space-between; padding:20px 0; }
+  .logo{ display:flex; align-items:center; gap:11px; }
+  .logo .mk{ width:40px; height:40px; border-radius:50%; background:var(--espresso); color:var(--crema); display:grid; place-items:center; font-size:1.2rem; }
+  .logo b{ font-family:var(--serif); font-size:1.35rem; } .logo small{ display:block; font-size:.6rem; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); }
+  .nav .order{ font-weight:700; text-decoration:none; color:#fff; background:var(--caramel); padding:11px 20px; border-radius:10px; box-shadow:var(--shadow); }
+
+  .hero{ display:grid; grid-template-columns:1.1fr .9fr; gap:34px; align-items:center; padding:44px 0 40px; }
+  .hero .eyebrow{ font-family:var(--mono); font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; color:var(--caramel); margin-bottom:16px; }
+  .hero h1{ font-size:clamp(2.5rem,5.6vw,3.7rem); margin-bottom:16px; text-wrap:balance; }
+  .hero h1 em{ font-style:italic; color:var(--caramel); }
+  .hero p{ font-size:1.12rem; color:var(--muted); max-width:44ch; margin-bottom:22px; }
+  .btn{ font:inherit; font-weight:700; cursor:pointer; border:none; padding:13px 24px; border-radius:10px; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:transform .15s; }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn-caramel{ background:var(--caramel); color:#fff; box-shadow:var(--shadow); }
+  .btn-ghost{ background:transparent; border:1px solid var(--line); color:var(--ink); }
+  .hero .row{ display:flex; gap:12px; flex-wrap:wrap; }
+  .hero-card{ background:var(--card); border:1px solid var(--line); border-radius:18px; padding:22px; box-shadow:var(--shadow); }
+  .hero-card h3{ font-size:1rem; margin-bottom:12px; }
+  .hero-card .hours{ display:flex; justify-content:space-between; padding:7px 0; border-bottom:1px solid var(--line-soft); font-size:.9rem; }
+  .hero-card .hours:last-child{ border-bottom:none; } .hero-card .hours b{ color:var(--caramel); }
+  .hero-card .open{ margin-top:12px; display:inline-flex; align-items:center; gap:7px; font-size:.82rem; color:var(--sage); font-weight:700; }
+  .hero-card .open .dot{ width:9px; height:9px; border-radius:50%; background:var(--sage); box-shadow:0 0 0 4px color-mix(in srgb,var(--sage) 22%,transparent); }
+  @media (max-width:760px){ .hero{ grid-template-columns:1fr; } }
+
+  section.band{ padding:46px 0; border-top:1px solid var(--line); }
+  .band h2{ text-align:center; font-size:2rem; margin-bottom:8px; }
+  .band .sub{ text-align:center; color:var(--muted); max-width:50ch; margin:0 auto 28px; }
+
+  .menu{ display:grid; grid-template-columns:1fr 1fr; gap:8px 40px; max-width:760px; margin:0 auto; }
+  .item{ display:flex; align-items:baseline; gap:12px; padding:11px 0; border-bottom:1px solid var(--line-soft); }
+  .item .nm{ font-family:var(--serif); font-size:1.1rem; }
+  .item .de{ display:block; font-family:var(--sans); font-size:.78rem; color:var(--muted); }
+  .item .dots{ flex:1; border-bottom:1px dotted var(--line); transform:translateY(-4px); }
+  .item .pr{ font-family:var(--mono); font-weight:600; color:var(--caramel); }
+  @media (max-width:600px){ .menu{ grid-template-columns:1fr; } }
+
+  .dash{ background:var(--card); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; max-width:760px; margin:0 auto; }
+  .dash-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid var(--line-soft); background:color-mix(in srgb,var(--caramel) 8%,var(--card)); flex-wrap:wrap; }
+  .dash-head b{ font-family:var(--serif); } .dash-head span{ font-size:.74rem; color:var(--muted); }
+  .tiles{ display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--line-soft); }
+  .tile{ background:var(--card); padding:16px; text-align:center; }
+  .tile .n{ font-family:var(--serif); font-size:1.6rem; font-weight:600; color:var(--caramel); }
+  .tile .n.sage{ color:var(--sage); } .tile .n.gold{ color:var(--gold); }
+  .tile .l{ font-size:.72rem; color:var(--muted); margin-top:3px; }
+  @media (max-width:600px){ .tiles{ grid-template-columns:repeat(2,1fr); } }
+
+  .reviews{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .rev{ background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; box-shadow:var(--shadow); }
+  .rev .stars{ color:var(--gold); letter-spacing:2px; margin-bottom:8px; }
+  .rev p{ font-size:.92rem; margin-bottom:10px; } .rev .who{ font-family:var(--mono); font-size:.76rem; color:var(--muted); }
+  @media (max-width:700px){ .reviews{ grid-template-columns:1fr; } }
+
+  .whatnow{ max-width:760px; margin:0 auto; background:var(--espresso); color:#f0e2cf; border-radius:16px; padding:26px 28px; box-shadow:var(--shadow); }
+  .whatnow h2{ text-align:left; font-size:1.35rem; margin-bottom:12px; color:#fff; }
+  .whatnow ul{ list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:9px 20px; }
+  .whatnow li{ font-size:.92rem; padding-left:22px; position:relative; }
+  .whatnow li::before{ content:"☕"; position:absolute; left:0; font-size:.8rem; }
+  @media (max-width:600px){ .whatnow ul{ grid-template-columns:1fr; } }
+
+  footer.site{ text-align:center; padding:40px 0 60px; color:var(--muted); font-size:.85rem; border-top:1px solid var(--line); }
+  footer.site .made{ margin-top:10px; font-size:.78rem; } footer.site .made b{ color:var(--caramel); }
+
+  .fab{ position:fixed; right:20px; bottom:20px; z-index:40; background:var(--caramel); color:#fff; border:none; cursor:pointer; border-radius:999px; padding:14px 22px; font:inherit; font-weight:700; box-shadow:var(--shadow); display:inline-flex; align-items:center; gap:9px; }
+  .fab .pip{ width:9px; height:9px; border-radius:50%; background:#ffe6c2; box-shadow:0 0 0 4px rgba(255,230,194,.3); }
+  .chat{ position:fixed; right:20px; bottom:20px; z-index:41; width:360px; max-width:calc(100vw - 32px); height:540px; max-height:calc(100vh - 40px); background:var(--card); border:1px solid var(--line); border-radius:18px; box-shadow:0 24px 60px -20px rgba(44,33,26,.5); display:none; flex-direction:column; overflow:hidden; }
+  .chat.open{ display:flex; }
+  .chat .top{ background:var(--espresso); color:#f0e2cf; padding:14px 16px; display:flex; align-items:center; gap:11px; }
+  .chat .top .av{ width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,.15); display:grid; place-items:center; }
+  .chat .top b{ font-family:var(--serif); font-size:1rem; } .chat .top small{ display:block; font-size:.72rem; opacity:.85; }
+  .chat .top .x{ margin-left:auto; background:none; border:none; color:#f0e2cf; font-size:1.3rem; cursor:pointer; }
+  .chat .body{ flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:9px; background:var(--cream); }
+  .msg{ max-width:82%; padding:10px 13px; border-radius:14px; font-size:.9rem; line-height:1.4; }
+  .msg.bot{ background:var(--card); border:1px solid var(--line); border-bottom-left-radius:4px; align-self:flex-start; }
+  .msg.me{ background:var(--caramel); color:#fff; border-bottom-right-radius:4px; align-self:flex-end; }
+  .msg.card{ background:var(--card); border:1px solid var(--caramel); align-self:stretch; max-width:100%; }
+  .msg.card .h{ font-family:var(--serif); font-weight:600; color:var(--caramel); margin-bottom:6px; }
+  .msg.card .kv{ font-size:.84rem; display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px dashed var(--line-soft); }
+  .msg.card .kv:last-child{ border-bottom:none; } .msg.card .kv.total b{ color:var(--caramel); }
+  .chips{ display:flex; flex-wrap:wrap; gap:7px; padding:10px 12px; border-top:1px solid var(--line-soft); background:var(--card); }
+  .chip{ font:inherit; font-size:.82rem; cursor:pointer; border:1px solid var(--caramel); color:var(--caramel); background:transparent; padding:7px 12px; border-radius:999px; }
+  .chip:hover{ background:var(--caramel); color:#fff; }
+  .chat .field{ display:flex; gap:8px; padding:10px 12px; border-top:1px solid var(--line-soft); background:var(--card); }
+  .chat .field input{ flex:1; border:1px solid var(--line); border-radius:9px; padding:9px 11px; font:inherit; background:var(--cream); color:var(--ink); }
+  .chat .field button{ border:none; background:var(--caramel); color:#fff; border-radius:9px; padding:0 14px; font-weight:700; cursor:pointer; }
+  .typing{ font-size:.8rem; color:var(--muted); padding:2px 4px; }
+  :focus-visible{ outline:2px solid var(--caramel); outline-offset:2px; }
+</style>
+
+<div class="demo-ribbon"><b>DEMO</b> · a sample website &amp; order-ahead system built by <b>Groundwork</b> · Lost Pines Creative · this business is fictional</div>
+
+<div class="wrap">
+  <nav class="nav">
+    <div class="logo"><span class="mk" aria-hidden="true">☕</span><span><b>Pecan Street Coffee</b><small>Bastrop, Texas</small></span></div>
+    <a class="order" href="#" onclick="openChat();return false">Order ahead</a>
+  </nav>
+
+  <section class="hero">
+    <div>
+      <div class="eyebrow">Small-batch roasts · Kolaches · Cold brew</div>
+      <h1>Your morning, <em>done right.</em></h1>
+      <p>Locally roasted coffee and fresh kolaches on Main Street. Order ahead, skip the line, and grab it on your way through downtown Bastrop.</p>
+      <div class="row">
+        <button class="btn btn-caramel" onclick="openChat()">Order ahead</button>
+        <a class="btn btn-ghost" href="#menu">See the menu</a>
+      </div>
+    </div>
+    <div class="hero-card">
+      <h3>Find us</h3>
+      <div class="hours"><span>Mon–Fri</span><b>6:30a – 4p</b></div>
+      <div class="hours"><span>Saturday</span><b>7a – 5p</b></div>
+      <div class="hours"><span>Sunday</span><b>7a – 2p</b></div>
+      <div class="hours"><span>Main Street, Bastrop</span><b>★ 4.9</b></div>
+      <span class="open"><span class="dot"></span> Open now · order ahead ready</span>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+  <section class="band" id="menu">
+    <h2 class="reveal">The menu</h2>
+    <p class="sub reveal">Roasted here. Pulled fresh. Order ahead for pickup.</p>
+    <div class="menu reveal">
+      <div class="item"><span class="nm">Drip coffee<span class="de">House roast, free refills in-shop</span></span><span class="dots"></span><span class="pr">$3.25</span></div>
+      <div class="item"><span class="nm">Latte<span class="de">Hot or iced</span></span><span class="dots"></span><span class="pr">$4.75</span></div>
+      <div class="item"><span class="nm">Cold brew<span class="de">18-hour steep</span></span><span class="dots"></span><span class="pr">$4.50</span></div>
+      <div class="item"><span class="nm">Cortado<span class="de">Double shot, steamed milk</span></span><span class="dots"></span><span class="pr">$4.25</span></div>
+      <div class="item"><span class="nm">Kolache<span class="de">Sausage &amp; cheese, or fruit</span></span><span class="dots"></span><span class="pr">$3.50</span></div>
+      <div class="item"><span class="nm">Breakfast taco<span class="de">On a house tortilla</span></span><span class="dots"></span><span class="pr">$3.75</span></div>
+      <div class="item"><span class="nm">Cinnamon roll<span class="de">Baked each morning</span></span><span class="dots"></span><span class="pr">$4.25</span></div>
+      <div class="item"><span class="nm">Bag of beans<span class="de">12 oz, whole or ground</span></span><span class="dots"></span><span class="pr">$16</span></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 class="reveal">What the owner sees</h2>
+    <p class="sub reveal">Orders, tickets, and regulars — at a glance. (Example day.)</p>
+    <div class="dash reveal">
+      <div class="dash-head"><b>Pecan Street · Today</b><span>sample data · powered by Groundwork</span></div>
+      <div class="tiles">
+        <div class="tile"><div class="n">96</div><div class="l">Order-ahead tickets</div></div>
+        <div class="tile"><div class="n gold">$7.10</div><div class="l">Avg ticket</div></div>
+        <div class="tile"><div class="n sage">41%</div><div class="l">Repeat customers</div></div>
+        <div class="tile"><div class="n">8</div><div class="l">New 5★ reviews</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <h2 class="reveal">What the regulars say</h2>
+    <div class="reviews">
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Order on my phone from the car, walk in, it's ready. Best cold brew in Bastrop County."</p><div class="who">— Marcus D.</div></div>
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Found them on Google, now it's a daily stop. The kolaches sell out — order ahead!"</p><div class="who">— Priya S.</div></div>
+      <div class="rev reveal"><div class="stars">★★★★★</div><p>"Real local roast, friendly folks, and the line moves fast. This is our spot."</p><div class="who">— The Bakers</div></div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="whatnow reveal">
+      <h2>What Groundwork would set up</h2>
+      <ul>
+        <li><b>This website</b> — menu that's easy to update.</li>
+        <li><b>Order-ahead &amp; pay</b> — skip-the-line pickup.</li>
+        <li><b>Google Business Profile</b> — get found downtown.</li>
+        <li><b>Reviews on autopilot</b> — climb the local rankings.</li>
+        <li><b>Loyalty &amp; regulars</b> — bring them back.</li>
+        <li><b>One dashboard</b> — orders, sales, reviews.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<footer class="site">
+  <div class="wrap">
+    Pecan Street Coffee · Main Street, Bastrop, TX
+    <div class="made">A <b>demo</b> by <b>Groundwork · Lost Pines Creative</b> — a sample of the website &amp; order-ahead system we build for local businesses. The shop shown is fictional.</div>
+  </div>
+</footer>
+
+<button class="fab" id="fab" onclick="openChat()"><span class="pip"></span> Order ahead</button>
+<div class="chat" id="chat" role="dialog" aria-label="Order from Pecan Street Coffee">
+  <div class="top"><div class="av">🫘</div><div><b>Bean · Pecan Street</b><small>Order-ahead · replies instantly</small></div><button class="x" onclick="closeChat()" aria-label="Close">×</button></div>
+  <div class="body" id="chatBody"></div>
+  <div id="chatControls"></div>
+</div>
+
+<script>
+(function(){
+  var rev=[].slice.call(document.querySelectorAll('.reveal'));
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)){ rev.forEach(function(e){e.classList.add('in');}); }
+  else { var io=new IntersectionObserver(function(es){ es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }); },{rootMargin:'0px 0px -8% 0px',threshold:.08}); rev.forEach(function(e){ io.observe(e); }); }
+
+  var chat=document.getElementById('chat'), fab=document.getElementById('fab'), body=document.getElementById('chatBody'), controls=document.getElementById('chatControls');
+  var cart=[], started=false;
+  var PRICE={ 'Latte':4.75,'Cold brew':4.50,'Drip coffee':3.25,'Cortado':4.25,'Kolache':3.50,'Breakfast taco':3.75,'Cinnamon roll':4.25 };
+  function scroll(){ body.scrollTop=body.scrollHeight; }
+  function bubble(t,who){ var d=document.createElement('div'); d.className='msg '+who; d.textContent=t; body.appendChild(d); scroll(); }
+  function typing(cb){ var t=document.createElement('div'); t.className='typing'; t.textContent='Bean is typing…'; body.appendChild(t); scroll(); setTimeout(function(){ t.remove(); cb(); },650); }
+  function botSay(t,then){ typing(function(){ bubble(t,'bot'); if(then) then(); }); }
+  function setChips(list){ controls.innerHTML=''; var w=document.createElement('div'); w.className='chips'; list.forEach(function(c){ var b=document.createElement('button'); b.className='chip'; b.textContent=c.label; b.onclick=function(){ bubble(c.label,'me'); c.go(); }; w.appendChild(b); }); controls.appendChild(w); }
+  function askInput(ph,cb){ controls.innerHTML=''; var f=document.createElement('form'); f.className='field'; var i=document.createElement('input'); i.placeholder=ph; i.autocomplete='off'; var b=document.createElement('button'); b.type='submit'; b.textContent='Send'; f.appendChild(i); f.appendChild(b); f.onsubmit=function(e){ e.preventDefault(); var v=i.value.trim(); if(!v)return; bubble(v,'me'); controls.innerHTML=''; cb(v); }; controls.appendChild(f); setTimeout(function(){ i.focus(); },50); }
+  function start(){ body.innerHTML=''; controls.innerHTML=''; cart=[];
+    botSay("Morning! I'm Bean. What can I get started for you?", menu);
+  }
+  function menu(){ setChips([
+      {label:'Latte', go:function(){ add('Latte'); }},
+      {label:'Cold brew', go:function(){ add('Cold brew'); }},
+      {label:'Drip coffee', go:function(){ add('Drip coffee'); }},
+      {label:'Kolache', go:function(){ add('Kolache'); }},
+      {label:'Cinnamon roll', go:function(){ add('Cinnamon roll'); }},
+      {label:"That's everything", go:checkout}
+    ]); }
+  function add(item){ cart.push(item); botSay("Added a "+item.toLowerCase()+". Anything else?", menu); }
+  function checkout(){ if(!cart.length){ botSay("Your cart's empty — pick something tasty!", menu); return; }
+    var total=cart.reduce(function(s,i){ return s+(PRICE[i]||0); },0);
+    botSay("Great — what name for the order?", function(){ askInput('Your name…', function(nm){
+      botSay("Perfect, "+nm.split(' ')[0]+"! Pay in the app and it'll be ready for pickup in about 8 minutes.", function(){
+        var counts={}; cart.forEach(function(i){ counts[i]=(counts[i]||0)+1; });
+        var c=document.createElement('div'); c.className='msg card';
+        var rows=Object.keys(counts).map(function(k){ return '<div class="kv"><span>'+counts[k]+'× '+k+'</span><b>$'+(PRICE[k]*counts[k]).toFixed(2)+'</b></div>'; }).join('');
+        c.innerHTML='<div class="h">☕ Order ready in ~8 min</div>'+rows+'<div class="kv total"><span>Total</span><b>$'+total.toFixed(2)+'</b></div><div class="kv"><span>Pickup for</span><b>'+nm+'</b></div>';
+        body.appendChild(c); scroll();
+        setChips([{label:'Start a new order', go:start},{label:'Done!', go:function(){ botSay("See you in a few! ☕"); controls.innerHTML=''; }}]);
+      });
+    }); });
+  }
+  window.openChat=function(){ chat.classList.add('open'); fab.style.display='none'; if(!started){ started=true; start(); } };
+  window.closeChat=function(){ chat.classList.remove('open'); fab.style.display='inline-flex'; };
+})();
+</script>
