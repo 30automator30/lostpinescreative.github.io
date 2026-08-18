@@ -205,9 +205,14 @@
         footer { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
         footer a { color: var(--accent); text-decoration: none; }
         footer .loc { margin-top: 4px; font-size: 0.8rem; }
+
+        .bg-mark { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: min(92vw, 820px); aspect-ratio: 1; color: var(--accent); opacity: 0.12; z-index: 0; pointer-events: none; }
+        .bg-mark svg { width: 100%; height: 100%; }
+        body > .container { position: relative; z-index: 1; }
     </style>
 </head>
 <body>
+    <div class="bg-mark" aria-hidden="true"><svg viewBox="0 0 512 512"><g fill="none" stroke="currentColor" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"><circle cx="256" cy="256" r="196"/><line x1="70" y1="316" x2="442" y2="316"/><path d="M256,112 Q268,150 302,190 L284,182 Q300,208 320,238 L300,230 Q320,254 340,282 L268,282 L268,316 L244,316 L244,282 L172,282 Q192,254 212,230 L192,238 Q212,208 228,182 L210,190 Q244,150 256,112 Z"/><g stroke-width="5"><path d="M256,316 C256,350 256,372 256,400"/><path d="M256,316 C272,346 280,364 282,388"/><path d="M256,316 C240,346 232,364 230,388"/><path d="M256,316 C280,340 296,356 306,384"/><path d="M256,316 C232,340 216,356 206,384"/><path d="M256,316 C300,336 330,350 350,368"/><path d="M256,316 C212,336 182,350 162,368"/><path d="M256,316 C296,330 340,340 372,352"/><path d="M256,316 C216,330 172,340 140,352"/></g><g stroke-width="5" fill="var(--bg)"><circle cx="256" cy="408" r="8"/><circle cx="284" cy="396" r="8"/><circle cx="228" cy="396" r="8"/><circle cx="310" cy="392" r="8"/><circle cx="202" cy="392" r="8"/><circle cx="356" cy="374" r="8"/><circle cx="156" cy="374" r="8"/><circle cx="380" cy="356" r="8"/><circle cx="132" cy="356" r="8"/></g></g></svg></div>
     <div class="container">
         <div class="topbar">
             <a class="home" href="/">
