@@ -377,6 +377,23 @@ img {
   height: 100%;
 }
 
+.service-icon-img {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.service-icon-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.service-card:hover .service-icon-img {
+  border-color: var(--accent);
+}
+
 .service-card h3 {
   font-size: 1.3rem;
   margin-bottom: 12px;
