@@ -13,6 +13,7 @@ let user = null;
 let dashChannel = null;   // realtime on all my projects
 let pjChannel = null;     // realtime on the open project's updates
 let openProjectId = null;
+let currentProject = null; // the row for the open project
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -99,9 +100,11 @@ async function loadProjects() {
 
 function card(p) {
   const q = money(p.quote_amount);
+  const shared = p.customer_id !== user.id;
   return (
     '<div class="card click" data-id="' + p.id + '">' +
-    '<div class="row"><h3 style="flex:1">' + escapeHtml(p.title) + "</h3>" +
+    '<div class="row"><h3 style="flex:1">' + escapeHtml(p.title) +
+    (shared ? ' <span class="badge approved" style="font-size:.62rem;vertical-align:middle">shared with you</span>' : "") + "</h3>" +
     '<span class="badge ' + p.status + '">' + STATUS_LABEL[p.status] + "</span></div>" +
     '<div class="meta">' + escapeHtml(p.service_type || "Project") + " · started " + fmtDate(p.created_at) + "</div>" +
     '<div class="row"><div class="bar"><span style="width:' + (p.progress_percent || 0) + '%"></span></div>' +
@@ -137,6 +140,7 @@ async function renderProject() {
   const id = openProjectId;
   const { data: p, error } = await sb.from("dd_projects").select("*").eq("id", id).single();
   if (error || !p) { toast("Couldn't load that project.", "err"); backToDash(); return; }
+  currentProject = p;
 
   $("pj-title").textContent = p.title;
   $("pj-sub").textContent = (p.service_type || "Project") + " · started " + fmtDate(p.created_at);
@@ -230,6 +234,62 @@ function backToDash() {
   loadProjects();
 }
 $("back-dash").addEventListener("click", backToDash);
+
+/* ---------- share a project ---------- */
+$("pj-share").addEventListener("click", () => {
+  if (!openProjectId) return;
+  $("share-error").textContent = "";
+  $("share-email").value = "";
+  loadShares();
+  $("share-modal").classList.add("show");
+});
+$("share-close").addEventListener("click", () => $("share-modal").classList.remove("show"));
+$("share-modal").addEventListener("click", (e) => {
+  if (e.target === $("share-modal")) $("share-modal").classList.remove("show");
+});
+
+async function loadShares() {
+  const box = $("share-list");
+  box.innerHTML = '<div class="subtle" style="font-size:.85rem">Loading…</div>';
+  const isOwner = currentProject && currentProject.customer_id === user.id;
+  const { data, error } = await sb
+    .from("dd_project_shares")
+    .select("email,user_id")
+    .eq("project_id", openProjectId)
+    .order("created_at", { ascending: true });
+  if (error) { box.innerHTML = '<div class="subtle">Couldn\'t load who has access.</div>'; return; }
+  if (!data.length) { box.innerHTML = '<div class="subtle" style="font-size:.85rem">Not shared with anyone yet.</div>'; return; }
+  box.innerHTML = data.map((s) =>
+    '<div class="row" style="justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">' +
+    '<span>' + escapeHtml(s.email) +
+    (s.user_id ? ' <span class="badge complete" style="font-size:.6rem">active</span>'
+               : ' <span class="badge quoted" style="font-size:.6rem">invited</span>') + "</span>" +
+    (isOwner ? '<button class="btn btn-danger btn-sm" data-remove="' + encodeURIComponent(s.email) + '">Remove</button>' : "") +
+    "</div>").join("");
+  box.querySelectorAll("[data-remove]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      const { error: e2 } = await sb.rpc("dd_unshare_project", {
+        p_project: openProjectId, p_email: decodeURIComponent(b.dataset.remove),
+      });
+      if (e2) { toast("Couldn't remove.", "err"); b.disabled = false; return; }
+      loadShares();
+    }));
+}
+
+$("share-add").addEventListener("click", async () => {
+  const email = $("share-email").value.trim();
+  if (!email) return;
+  const btn = $("share-add");
+  btn.disabled = true;
+  $("share-error").textContent = "";
+  const { error } = await sb.rpc("dd_share_project", { p_project: openProjectId, p_email: email });
+  btn.disabled = false;
+  if (error) { $("share-error").textContent = error.message || "Couldn't share."; return; }
+  $("share-email").value = "";
+  toast("Shared — they'll see it when they sign in.", "ok");
+  loadShares();
+});
 
 /* ---------- request a service ---------- */
 $("new-req").addEventListener("click", () => {

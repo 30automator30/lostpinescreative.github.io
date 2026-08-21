@@ -68,6 +68,7 @@
     <div class="head-row">
       <button class="btn btn-ghost btn-sm" id="back-dash">← Back</button>
       <div class="spacer"></div>
+      <button class="btn btn-ghost btn-sm" id="pj-share">↗ Share</button>
       <span class="badge" id="pj-badge"></span>
     </div>
     <h2 id="pj-title" style="font-size:1.7rem;margin-bottom:4px"></h2>
@@ -126,6 +127,24 @@
           <button type="submit" class="btn btn-primary" id="req-submit">Submit request</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- share modal -->
+  <div class="modal-back" id="share-modal">
+    <div class="modal">
+      <h3>Share this project</h3>
+      <p class="subtle" style="margin-bottom:16px">Add someone by email. They sign in with their own link and see this project — status, quote, and progress — and can approve the quote or add notes.</p>
+      <div id="share-list"></div>
+      <div class="field" style="margin-top:14px">
+        <label for="share-email">Add someone by email</label>
+        <input type="email" id="share-email" placeholder="partner@email.com" autocomplete="off">
+      </div>
+      <div class="error-text" id="share-error"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="share-close">Done</button>
+        <button type="button" class="btn btn-primary" id="share-add">Add person</button>
+      </div>
     </div>
   </div>
 

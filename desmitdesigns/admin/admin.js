@@ -171,10 +171,44 @@ async function openEditor(id) {
   $("e-quotenotes").value = p.quote_notes || "";
   $("e-desc").value = p.description || "";
   $("e-update").value = ""; $("e-update-pct").value = ""; $("e-update-internal").checked = false;
+  $("edit-share-email").value = "";
   $("edit-error").textContent = "";
   await loadEditorTimeline(id);
+  await loadEditorShares(id);
   $("edit-modal").classList.add("show");
 }
+
+async function loadEditorShares(id) {
+  const box = $("edit-shares");
+  const { data } = await sb.from("dd_project_shares").select("email,user_id")
+    .eq("project_id", id).order("created_at", { ascending: true });
+  if (!data || !data.length) { box.innerHTML = '<div class="inline-note">Not shared with anyone yet.</div>'; return; }
+  box.innerHTML = data.map((s) =>
+    '<div class="row" style="justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">' +
+    '<span>' + escapeHtml(s.email) +
+    (s.user_id ? ' <span class="badge complete" style="font-size:.6rem">active</span>'
+               : ' <span class="badge quoted" style="font-size:.6rem">invited</span>') + "</span>" +
+    '<button class="btn btn-danger btn-sm" data-unshare="' + encodeURIComponent(s.email) + '">Remove</button></div>').join("");
+  box.querySelectorAll("[data-unshare]").forEach((b) =>
+    b.addEventListener("click", async () => {
+      b.disabled = true;
+      await sb.rpc("dd_unshare_project", { p_project: id, p_email: decodeURIComponent(b.dataset.unshare) });
+      loadEditorShares(id);
+    }));
+}
+
+$("edit-share-add").addEventListener("click", async () => {
+  if (!editingId) return;
+  const email = $("edit-share-email").value.trim();
+  if (!email) return;
+  const btn = $("edit-share-add"); btn.disabled = true;
+  const { error } = await sb.rpc("dd_share_project", { p_project: editingId, p_email: email });
+  btn.disabled = false;
+  if (error) { $("edit-error").textContent = error.message; return; }
+  $("edit-share-email").value = "";
+  toast("Shared with " + email, "ok");
+  loadEditorShares(editingId);
+});
 
 async function loadEditorTimeline(id) {
   const { data: ups } = await sb.from("dd_project_updates").select("*")
@@ -270,20 +304,23 @@ $("new-save").addEventListener("click", async () => {
     await loadProfiles(); // refresh in case they just signed up
     cust = Object.values(profiles).find((p) => (p.email || "").toLowerCase() === email);
   }
-  if (!cust) {
-    $("new-error").textContent = "No account for that email yet. Ask them to sign in at the portal once, then retry.";
-    return;
-  }
   const btn = $("new-save"); btn.disabled = true;
-  const { error } = await sb.from("dd_projects").insert({
-    customer_id: cust.id,
+  // If the client already has an account they own it; otherwise the admin owns
+  // it and it's shared to the client's email so they see it on first sign-in.
+  const ownerId = cust ? cust.id : user.id;
+  const { data: proj, error } = await sb.from("dd_projects").insert({
+    customer_id: ownerId,
     title,
     service_type: $("n-service").value.trim() || null,
     description: $("n-desc").value.trim() || null,
     status: "requested",
-  });
+  }).select("id").single();
+  if (error) { btn.disabled = false; $("new-error").textContent = error.message; return; }
+  if (!cust) {
+    const { error: e2 } = await sb.rpc("dd_share_project", { p_project: proj.id, p_email: email });
+    if (e2) { btn.disabled = false; $("new-error").textContent = "Project made, but sharing failed: " + e2.message; return; }
+  }
   btn.disabled = false;
-  if (error) { $("new-error").textContent = error.message; return; }
   $("new-modal").classList.remove("show");
   toast("Project created.", "ok");
   loadProjects();
