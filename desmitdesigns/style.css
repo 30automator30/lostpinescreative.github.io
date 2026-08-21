@@ -378,11 +378,12 @@ img {
 }
 
 .service-icon-img {
-  width: 92px;
-  height: 92px;
+  width: 160px;
+  height: 160px;
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
+  margin-bottom: 22px;
 }
 .service-icon-img img {
   width: 100%;
