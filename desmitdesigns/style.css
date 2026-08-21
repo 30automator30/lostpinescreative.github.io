@@ -256,11 +256,15 @@ img {
   padding: 0 24px;
 }
 
+.hero-title {
+  margin: 0 0 12px;
+  line-height: 0;
+}
 .hero-logo {
-  width: 160px;
+  width: min(340px, 78vw);
   height: auto;
-  margin: 0 auto 24px;
-  filter: drop-shadow(0 0 30px var(--accent-glow));
+  margin: 0 auto;
+  filter: drop-shadow(0 0 34px var(--accent-glow));
   animation: logoFloat 6s ease-in-out infinite;
 }
 
@@ -800,7 +804,7 @@ footer {
   }
 
   .hero-logo {
-    width: 120px;
+    width: min(240px, 72vw);
   }
 
   .services-grid {
