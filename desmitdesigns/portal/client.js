@@ -66,3 +66,25 @@ export function showView(id) {
     v.classList.toggle("active", v.id === id));
   window.scrollTo({ top: 0 });
 }
+
+/* Share a project with someone by email via the send-invite Edge Function
+   (records the share AND emails them a magic sign-in link). Returns
+   { ok, error }. */
+export async function shareInvite(projectId, email) {
+  try {
+    const { data } = await sb.auth.getSession();
+    const res = await fetch(CFG.SUPABASE_URL + "/functions/v1/send-invite", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: CFG.SUPABASE_ANON_KEY,
+        Authorization: "Bearer " + (data && data.session ? data.session.access_token : ""),
+      },
+      body: JSON.stringify({ project_id: projectId, email }),
+    });
+    const b = await res.json().catch(() => ({}));
+    return { ok: res.ok, error: b && b.error };
+  } catch (e) {
+    return { ok: false, error: "Network error — please try again." };
+  }
+}

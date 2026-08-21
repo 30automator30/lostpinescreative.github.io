@@ -4,7 +4,7 @@
  * ============================================================ */
 import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
-  escapeHtml, toast, showView,
+  escapeHtml, toast, showView, shareInvite,
 } from "../portal/client.js";
 
 const $ = (id) => document.getElementById(id);
@@ -202,11 +202,11 @@ $("edit-share-add").addEventListener("click", async () => {
   const email = $("edit-share-email").value.trim();
   if (!email) return;
   const btn = $("edit-share-add"); btn.disabled = true;
-  const { error } = await sb.rpc("dd_share_project", { p_project: editingId, p_email: email });
+  const { ok, error } = await shareInvite(editingId, email);
   btn.disabled = false;
-  if (error) { $("edit-error").textContent = error.message; return; }
+  if (!ok) { $("edit-error").textContent = error || "Couldn't share."; return; }
   $("edit-share-email").value = "";
-  toast("Shared with " + email, "ok");
+  toast("Invite emailed to " + email, "ok");
   loadEditorShares(editingId);
 });
 
@@ -316,13 +316,12 @@ $("new-save").addEventListener("click", async () => {
     status: "requested",
   }).select("id").single();
   if (error) { btn.disabled = false; $("new-error").textContent = error.message; return; }
-  if (!cust) {
-    const { error: e2 } = await sb.rpc("dd_share_project", { p_project: proj.id, p_email: email });
-    if (e2) { btn.disabled = false; $("new-error").textContent = "Project made, but sharing failed: " + e2.message; return; }
-  }
+  // Email the client an invite with a sign-in link (also records their access).
+  const { ok, error: e2 } = await shareInvite(proj.id, email);
   btn.disabled = false;
+  if (!ok) { $("new-error").textContent = "Project created, but the invite email failed: " + (e2 || ""); return; }
   $("new-modal").classList.remove("show");
-  toast("Project created.", "ok");
+  toast("Project created — invite emailed to " + email, "ok");
   loadProjects();
 });
 

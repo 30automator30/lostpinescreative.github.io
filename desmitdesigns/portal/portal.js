@@ -4,7 +4,7 @@
  * ============================================================ */
 import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
-  escapeHtml, toast, showView,
+  escapeHtml, toast, showView, shareInvite,
 } from "./client.js";
 
 const $ = (id) => document.getElementById(id);
@@ -283,11 +283,11 @@ $("share-add").addEventListener("click", async () => {
   const btn = $("share-add");
   btn.disabled = true;
   $("share-error").textContent = "";
-  const { error } = await sb.rpc("dd_share_project", { p_project: openProjectId, p_email: email });
+  const { ok, error } = await shareInvite(openProjectId, email);
   btn.disabled = false;
-  if (error) { $("share-error").textContent = error.message || "Couldn't share."; return; }
+  if (!ok) { $("share-error").textContent = error || "Couldn't share."; return; }
   $("share-email").value = "";
-  toast("Shared — they'll see it when they sign in.", "ok");
+  toast("Invite sent — they'll get an email with a sign-in link.", "ok");
   loadShares();
 });
 
