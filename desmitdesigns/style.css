@@ -404,12 +404,14 @@ img {
   overflow: hidden;
   aspect-ratio: 1;
   cursor: pointer;
+  background: #0f1626;
+  border: 1px solid var(--border);
 }
 
 .portfolio-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   transition: transform 0.5s;
 }
 
