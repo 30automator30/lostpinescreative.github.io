@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — DeSmit Designs</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../images/logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../portal/portal.css">
+  <style>
+    .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .tab { padding:9px 16px; border-radius:20px; border:1px solid var(--border); background:transparent;
+      color:var(--text-muted); font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+    .tab.on { background:var(--gradient); color:#fff; border-color:transparent; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .filters select { width:auto; padding:8px 12px; font-size:.85rem; }
+    .inq { border-left:3px solid var(--cyan); }
+    .count { display:inline-block; min-width:20px; text-align:center; font-size:.7rem; font-weight:700;
+      background:var(--danger); color:#fff; border-radius:20px; padding:1px 7px; margin-left:6px; }
+  </style>
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="../">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <span>DeSmit Designs <small>Admin</small></span>
+    </a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="display:none">Sign out</button>
+  </header>
+
+  <div class="wrap wide view active" id="view-loading"><div class="spinner"></div></div>
+
+  <!-- sign-in -->
+  <div class="wrap view" id="view-auth">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Admin sign-in</h1>
+      <p>Enter your studio email and we'll send a one-time sign-in link.</p>
+      <form id="magic-form">
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
+        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+      </form>
+      <div class="error-text" id="auth-error"></div>
+    </div>
+  </div>
+
+  <div class="wrap view" id="view-sent">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Check your email</h1>
+      <p>Sign-in link sent to <b id="sent-to"></b>. Open it on this device.</p>
+    </div>
+  </div>
+
+  <!-- not authorized -->
+  <div class="wrap view" id="view-denied">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Not authorized</h1>
+      <p>This account isn't an admin for DeSmit Designs. If this is your studio account, run the one-time admin bootstrap in the database, then sign in again.</p>
+      <button class="btn btn-ghost" id="denied-out">Sign out</button>
+    </div>
+  </div>
+
+  <!-- console -->
+  <div class="wrap wide view" id="view-console">
+    <div class="tabs">
+      <button class="tab on" data-tab="inbox">Inbox <span class="count" id="inbox-count" style="display:none">0</span></button>
+      <button class="tab" data-tab="projects">Projects</button>
+    </div>
+
+    <div id="pane-inbox">
+      <div class="head-row"><h2>New requests &amp; leads</h2></div>
+      <div id="inbox-list"></div>
+    </div>
+
+    <div id="pane-projects" style="display:none">
+      <div class="head-row"><h2>All projects</h2><div class="spacer"></div>
+        <button class="btn btn-primary btn-sm" id="admin-new">+ New project</button>
+      </div>
+      <div class="filters">
+        <select id="filter-status">
+          <option value="">All statuses</option>
+          <option value="requested">Requested</option>
+          <option value="quoted">Quote ready</option>
+          <option value="approved">Approved</option>
+          <option value="in_progress">In progress</option>
+          <option value="review">In review</option>
+          <option value="complete">Complete</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <div id="proj-list"></div>
+    </div>
+  </div>
+
+  <!-- project editor -->
+  <div class="modal-back" id="edit-modal">
+    <div class="modal">
+      <h3 id="edit-title">Project</h3>
+      <div class="field"><label for="e-customer">Customer</label>
+        <input type="text" id="e-customer" disabled></div>
+      <div class="field"><label for="e-name">Title</label>
+        <input type="text" id="e-name"></div>
+      <div class="grid-2">
+        <div class="field"><label for="e-status">Status</label>
+          <select id="e-status">
+            <option value="requested">Requested</option>
+            <option value="quoted">Quote ready</option>
+            <option value="approved">Approved</option>
+            <option value="in_progress">In progress</option>
+            <option value="review">In review</option>
+            <option value="complete">Complete</option>
+            <option value="cancelled">Cancelled</option>
+          </select></div>
+        <div class="field"><label for="e-progress">Progress %</label>
+          <input type="number" id="e-progress" min="0" max="100" step="5"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="e-quote">Quote amount ($)</label>
+          <input type="number" id="e-quote" min="0" step="0.01" placeholder="e.g. 250"></div>
+        <div class="field"><label for="e-service">Service</label>
+          <input type="text" id="e-service" placeholder="3d-printing, laser…"></div>
+      </div>
+      <div class="field"><label for="e-quotenotes">Quote notes (customer sees this)</label>
+        <textarea id="e-quotenotes" style="min-height:64px" placeholder="What's included, lead time…"></textarea></div>
+      <div class="field"><label for="e-desc">Description</label>
+        <textarea id="e-desc" style="min-height:64px"></textarea></div>
+      <div class="error-text" id="edit-error"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-danger btn-sm" id="edit-delete" style="margin-right:auto">Delete</button>
+        <button type="button" class="btn btn-ghost" id="edit-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="edit-save">Save</button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
+      <h3 style="font-size:1.1rem">Post a progress update</h3>
+      <div class="field"><textarea id="e-update" placeholder="What you did, next steps…" style="min-height:64px"></textarea></div>
+      <div class="grid-2">
+        <div class="field"><label for="e-update-pct">Set progress % (optional)</label>
+          <input type="number" id="e-update-pct" min="0" max="100" step="5" placeholder="leave blank to keep"></div>
+        <div class="field" style="display:flex;align-items:flex-end;gap:8px;padding-bottom:12px">
+          <input type="checkbox" id="e-update-internal" style="width:auto">
+          <label for="e-update-internal" style="margin:0">Internal only (hide from customer)</label></div>
+      </div>
+      <div style="text-align:right"><button type="button" class="btn btn-primary btn-sm" id="edit-post">Post update</button></div>
+      <ul class="timeline" id="edit-timeline" style="margin-top:16px"></ul>
+    </div>
+  </div>
+
+  <!-- new-project modal -->
+  <div class="modal-back" id="new-modal">
+    <div class="modal">
+      <h3>New project</h3>
+      <div class="field"><label for="n-email">Customer email</label>
+        <input type="email" id="n-email" placeholder="customer@email.com">
+        <div class="inline-note">Must be someone who has signed in at least once.</div></div>
+      <div class="field"><label for="n-title">Title</label><input type="text" id="n-title"></div>
+      <div class="field"><label for="n-service">Service</label><input type="text" id="n-service" placeholder="3d-printing"></div>
+      <div class="field"><label for="n-desc">Description</label><textarea id="n-desc"></textarea></div>
+      <div class="error-text" id="new-error"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="new-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="new-save">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="../portal/config.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

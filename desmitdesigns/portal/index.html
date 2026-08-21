@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Portal — DeSmit Designs</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="../images/logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portal.css">
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="../">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <span>DeSmit Designs <small>Client Portal</small></span>
+    </a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="display:none">Sign out</button>
+  </header>
+
+  <!-- boot / loading -->
+  <div class="wrap view active" id="view-loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- sign-in -->
+  <div class="wrap view" id="view-auth">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Client Portal</h1>
+      <p>Track your projects, see progress in real time, and review your quotes. Enter your email and we'll send a one-time sign-in link.</p>
+      <form id="magic-form">
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
+        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+      </form>
+      <div class="error-text" id="auth-error"></div>
+      <p class="muted">New here? The same link creates your account automatically.<br>
+        Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+    </div>
+  </div>
+
+  <!-- magic-link sent confirmation -->
+  <div class="wrap view" id="view-sent">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Check your email</h1>
+      <p>We sent a sign-in link to <b id="sent-to"></b>. Open it on this device to continue. You can close this tab.</p>
+      <button class="btn btn-ghost" id="sent-back">Use a different email</button>
+    </div>
+  </div>
+
+  <!-- dashboard -->
+  <div class="wrap view" id="view-dash">
+    <div class="head-row">
+      <h2>Your projects</h2>
+      <div class="spacer"></div>
+      <button class="btn btn-primary btn-sm" id="new-req">+ Request a service</button>
+    </div>
+    <div id="dash-list"></div>
+  </div>
+
+  <!-- project detail -->
+  <div class="wrap view" id="view-project">
+    <div class="head-row">
+      <button class="btn btn-ghost btn-sm" id="back-dash">← Back</button>
+      <div class="spacer"></div>
+      <span class="badge" id="pj-badge"></span>
+    </div>
+    <h2 id="pj-title" style="font-size:1.7rem;margin-bottom:4px"></h2>
+    <div class="subtle" id="pj-sub" style="margin-bottom:16px"></div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:10px">
+        <div class="bar"><span id="pj-bar" style="width:0%"></span></div>
+        <span class="pct" id="pj-pct">0%</span>
+      </div>
+      <p class="subtle" id="pj-desc"></p>
+    </div>
+
+    <div id="pj-quote-wrap"></div>
+
+    <h3 style="margin:22px 0 6px;font-size:1.25rem">Progress</h3>
+    <ul class="timeline" id="pj-timeline"></ul>
+
+    <div class="card" style="margin-top:16px">
+      <label for="pj-note">Add a note for the studio</label>
+      <textarea id="pj-note" placeholder="A question, a change, a detail…"></textarea>
+      <div style="text-align:right;margin-top:10px">
+        <button class="btn btn-primary btn-sm" id="pj-note-send">Send note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- request-a-service modal -->
+  <div class="modal-back" id="req-modal">
+    <div class="modal">
+      <h3>Request a service</h3>
+      <form id="req-form">
+        <div class="field">
+          <label for="req-title">Project title</label>
+          <input type="text" id="req-title" placeholder="e.g. Custom resin miniature" required>
+        </div>
+        <div class="field">
+          <label for="req-service">Service</label>
+          <select id="req-service">
+            <option value="3d-printing">3D Printing (FDM / multi-color)</option>
+            <option value="resin">Resin Printing (12K detail)</option>
+            <option value="cad-design">CAD &amp; Engineering Design</option>
+            <option value="laser">Laser Cutting &amp; Engraving</option>
+            <option value="product-dev">Product Development</option>
+            <option value="branding">Graphic Design &amp; Branding</option>
+            <option value="custom">Custom Commission</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="req-desc">Tell Daniel about it</label>
+          <textarea id="req-desc" placeholder="What you'd like made, size, quantity, timeline, references…" required></textarea>
+        </div>
+        <div class="error-text" id="req-error"></div>
+        <div class="actions">
+          <button type="button" class="btn btn-ghost" id="req-cancel">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="req-submit">Submit request</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js"></script>
+  <script src="../assistant.js" defer></script>
+  <script type="module" src="portal.js"></script>
+</body>
+</html>
