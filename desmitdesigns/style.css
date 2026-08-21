@@ -378,9 +378,9 @@ img {
 }
 
 .service-icon-img {
-  width: 64px;
-  height: 64px;
-  border-radius: 14px;
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
