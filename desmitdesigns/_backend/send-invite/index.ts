@@ -137,7 +137,9 @@ Deno.serve(async (req) => {
   let link = PORTAL_URL;
   const linkRes = await fetch(`${AUTH}/admin/generate_link`, {
     method: "POST", headers: svc,
-    body: JSON.stringify({ type: "magiclink", email, options: { redirect_to: PORTAL_URL } }),
+    // redirect_to must be top-level for the admin generate_link endpoint;
+    // nesting it under options makes GoTrue ignore it and fall back to Site URL.
+    body: JSON.stringify({ type: "magiclink", email, redirect_to: PORTAL_URL }),
   });
   if (linkRes.ok) {
     const d = await linkRes.json();
