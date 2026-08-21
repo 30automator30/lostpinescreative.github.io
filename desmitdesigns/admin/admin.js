@@ -21,7 +21,10 @@ if (!CONFIGURED) {
   $("magic-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
   sb.auth.getSession().then(({ data }) => routeSession(data.session));
-  sb.auth.onAuthStateChange((_e, s) => routeSession(s));
+  // Defer out of the callback: awaiting a Supabase call *inside* the
+  // onAuthStateChange handler deadlocks on its internal auth lock. setTimeout
+  // releases the lock first so routeSession's queries can run.
+  sb.auth.onAuthStateChange((_e, s) => { setTimeout(() => routeSession(s), 0); });
 }
 
 async function routeSession(session) {
