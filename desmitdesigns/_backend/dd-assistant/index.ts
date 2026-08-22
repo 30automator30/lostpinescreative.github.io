@@ -32,6 +32,13 @@ const MAX_MESSAGES = 24;
 const MAX_CHARS_PER_MSG = 2000;
 const MAX_TOOL_HOPS = 3;
 
+// Abuse controls (Origin is forgeable — never the only gate). Backed by
+// public.ai_call_log via the service role. Overridable by env.
+const RL_PER_IP_HOUR = Number(Deno.env.get("RL_PER_IP_HOUR") ?? "20");
+const RL_GLOBAL_DAY = Number(Deno.env.get("RL_GLOBAL_DAY") ?? "1500");
+const ALLOW_LOCALHOST = Deno.env.get("ALLOW_LOCALHOST") === "1";
+const FN_NAME = "dd-assistant";
+
 const REST = `${SB_URL}/rest/v1`;
 const sbHeaders = {
   apikey: SB_KEY,
@@ -41,7 +48,8 @@ const sbHeaders = {
 
 function corsHeaders(origin: string | null) {
   const allow = origin && (
-    ALLOWED_ORIGINS.includes(origin) || /^http:\/\/localhost(:\d+)?$/.test(origin)
+    ALLOWED_ORIGINS.includes(origin) ||
+    (ALLOW_LOCALHOST && /^http:\/\/localhost(:\d+)?$/.test(origin))
   );
   return {
     "Access-Control-Allow-Origin": allow ? origin! : "null",
@@ -57,6 +65,51 @@ const json = (obj: unknown, status: number, cors: Record<string, string>) =>
     status,
     headers: { "Content-Type": "application/json", ...cors },
   });
+
+function clientIp(req: Request): string {
+  const xff = req.headers.get("x-forwarded-for") ?? "";
+  const first = xff.split(",")[0].trim();
+  return first || req.headers.get("x-real-ip") || "unknown";
+}
+
+// Per-IP/hour and global/day caps. Fail-open on ledger error (availability),
+// but enforced whenever the ledger is reachable. Uses PostgREST exact counts.
+async function rateOk(ip: string): Promise<boolean> {
+  try {
+    const now = Date.now();
+    const hourAgo = new Date(now - 3_600_000).toISOString();
+    const dayAgo = new Date(now - 86_400_000).toISOString();
+    const count = async (params: string): Promise<number> => {
+      const r = await fetch(`${REST}/ai_call_log?${params}`, {
+        method: "GET",
+        headers: { ...sbHeaders, Prefer: "count=exact", Range: "0-0" },
+      });
+      const cr = r.headers.get("content-range") ?? "*/0";
+      return Number(cr.split("/")[1] || "0") || 0;
+    };
+    const perIp = await count(
+      `select=id&fn=eq.${FN_NAME}&ip=eq.${encodeURIComponent(ip)}&created_at=gte.${hourAgo}`,
+    );
+    if (perIp >= RL_PER_IP_HOUR) return false;
+    const global = await count(`select=id&fn=eq.${FN_NAME}&created_at=gte.${dayAgo}`);
+    if (global >= RL_GLOBAL_DAY) return false;
+    await fetch(`${REST}/ai_call_log`, {
+      method: "POST",
+      headers: { ...sbHeaders, Prefer: "return=minimal" },
+      body: JSON.stringify({ fn: FN_NAME, ip }),
+    });
+    if (Math.random() < 0.02) {
+      const old = new Date(now - 2 * 86_400_000).toISOString();
+      await fetch(`${REST}/ai_call_log?created_at=lt.${old}`, {
+        method: "DELETE",
+        headers: { ...sbHeaders, Prefer: "return=minimal" },
+      }).catch(() => {});
+    }
+    return true;
+  } catch (_e) {
+    return true; // fail-open
+  }
+}
 
 // ── Brand + capability grounding. States only what's TRUE and routes
 //    unknowns (exact price/turnaround) to a real quote instead of inventing. ──
@@ -213,6 +266,10 @@ Deno.serve(async (req) => {
   const transcript = messages
     .map((m) => `${m.role === "user" ? "Visitor" : "Assistant"}: ${m.content}`)
     .join("\n");
+
+  if (!(await rateOk(clientIp(req)))) {
+    return json({ error: "busy right now — please try again in a bit" }, 429, cors);
+  }
 
   let leadSaved = false;
   try {
