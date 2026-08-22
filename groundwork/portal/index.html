@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Portal — Groundwork</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/groundwork-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="portal.css">
+  <script src="config.js"></script>
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="/groundwork.html">
+      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
+      <span>Groundwork <small>Client Portal</small></span>
+    </a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="display:none">Sign out</button>
+  </header>
+
+  <div class="wrap view active" id="view-loading"><div class="spinner"></div></div>
+
+  <!-- sign-in -->
+  <div class="wrap view" id="view-auth">
+    <div class="auth">
+      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
+      <h1>Client Portal</h1>
+      <p>See your setup, care plan, monthly reports, and captured messages. Enter your email and we'll send a one-time sign-in link.</p>
+      <form id="magic-form">
+        <input type="email" id="email" placeholder="you@business.com" autocomplete="email" required>
+        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+      </form>
+      <div class="error-text" id="auth-error"></div>
+      <p class="muted">Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+    </div>
+  </div>
+
+  <div class="wrap view" id="view-sent">
+    <div class="auth">
+      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
+      <h1>Check your email</h1>
+      <p>We sent a sign-in link to <b id="sent-to"></b>. Open it on this device to continue.</p>
+      <button class="btn btn-ghost" id="sent-back">Use a different email</button>
+    </div>
+  </div>
+
+  <!-- no client record yet -->
+  <div class="wrap view" id="view-none">
+    <div class="auth">
+      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
+      <h1>You're signed in</h1>
+      <p>Your account isn't linked to a Groundwork setup yet. If you've booked an audit or a build, Daniel will connect it shortly — or reach out at <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a>.</p>
+      <button class="btn btn-ghost" id="none-out">Sign out</button>
+    </div>
+  </div>
+
+  <!-- dashboard -->
+  <div class="wrap view" id="view-dash">
+    <div class="plan-card">
+      <div class="row">
+        <div style="flex:1">
+          <div class="biz" id="pl-biz"></div>
+          <div class="plan" id="pl-plan"></div>
+        </div>
+        <span class="badge" id="pl-status"></span>
+      </div>
+    </div>
+
+    <div class="gw-section">
+      <h3>Your system</h3>
+      <p class="subtle">The tools connected and running for you.</p>
+      <div class="int-grid" id="int-grid"></div>
+    </div>
+
+    <div class="gw-section">
+      <div class="head-row"><h3 style="margin:0">Messages</h3><div class="spacer"></div>
+        <span class="subtle" id="msg-count"></span></div>
+      <p class="subtle">Voicemails, missed calls, and leads captured for you.</p>
+      <div id="msg-list"></div>
+    </div>
+
+    <div class="gw-section">
+      <h3>Reception &amp; voicemail setup</h3>
+      <p class="subtle">How your AI receptionist and missed-call text-back handle callers. Changes save to your account.</p>
+      <div class="card">
+        <div class="field">
+          <label for="set-greeting">Greeting (what callers hear / the AI opens with)</label>
+          <textarea id="set-greeting" placeholder="Thanks for calling [Business] — how can we help?"></textarea>
+        </div>
+        <div class="grid-2">
+          <div class="field">
+            <label for="set-forward">Forward calls to</label>
+            <input type="tel" id="set-forward" placeholder="(512) 555-0123">
+          </div>
+          <div class="field">
+            <label for="set-hours">Business hours</label>
+            <input type="text" id="set-hours" placeholder="Mon–Fri 8a–5p">
+          </div>
+        </div>
+        <div class="field">
+          <label for="set-after">After-hours message</label>
+          <textarea id="set-after" placeholder="You've reached us after hours — leave a message and we'll call back first thing."></textarea>
+        </div>
+        <div class="field">
+          <label for="set-textback">Missed-call text-back message</label>
+          <textarea id="set-textback" placeholder="Sorry we missed you! This is [Business] — how can we help?"></textarea>
+        </div>
+        <div class="error-text" id="set-error"></div>
+        <div style="text-align:right">
+          <button class="btn btn-primary btn-sm" id="set-save">Save setup</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="gw-section">
+      <h3>Monthly reports</h3>
+      <p class="subtle">What your system did for you, month by month.</p>
+      <div id="rep-list"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="/groundwork/assistant.js" defer></script>
+  <script type="module" src="portal.js"></script>
+</body>
+</html>

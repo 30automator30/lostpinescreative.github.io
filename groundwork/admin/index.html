@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Groundwork</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/groundwork-icon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../portal/portal.css">
+  <script src="../portal/config.js"></script>
+  <style>
+    .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+    .tab { padding:9px 16px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
+    .tab.on { background:var(--gradient); color:#071410; border-color:transparent; }
+    .count { display:inline-block; min-width:20px; text-align:center; font-size:.7rem; font-weight:700; background:var(--danger); color:#fff; border-radius:20px; padding:1px 7px; margin-left:6px; }
+    .adm-sect { border-top:1px solid var(--border); margin-top:22px; padding-top:18px; }
+    .adm-sect h3 { font-size:1.15rem; margin-bottom:12px; }
+    .row-line { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .row-line > input, .row-line > select { width:auto; flex:1; min-width:120px; }
+  </style>
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="/groundwork.html">
+      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
+      <span>Groundwork <small>Admin</small></span>
+    </a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="display:none">Sign out</button>
+  </header>
+
+  <div class="wrap wide view active" id="view-loading"><div class="spinner"></div></div>
+
+  <div class="wrap view" id="view-auth">
+    <div class="auth">
+      <h1>Admin sign-in</h1>
+      <p>Enter your studio email for a one-time sign-in link.</p>
+      <form id="magic-form">
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
+        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+      </form>
+      <div class="error-text" id="auth-error"></div>
+    </div>
+  </div>
+  <div class="wrap view" id="view-sent"><div class="auth"><h1>Check your email</h1><p>Sign-in link sent to <b id="sent-to"></b>.</p></div></div>
+  <div class="wrap view" id="view-denied"><div class="auth"><h1>Not authorized</h1><p>This account isn't an admin.</p><button class="btn btn-ghost" id="denied-out">Sign out</button></div></div>
+
+  <!-- console -->
+  <div class="wrap wide view" id="view-console">
+    <div class="tabs">
+      <button class="tab on" data-tab="clients">Clients</button>
+      <button class="tab" data-tab="inbox">Inbox <span class="count" id="inbox-count" style="display:none">0</span></button>
+    </div>
+    <div id="pane-clients">
+      <div class="head-row"><h2>Clients</h2><div class="spacer"></div><button class="btn btn-primary btn-sm" id="new-client">+ New client</button></div>
+      <div id="client-list"></div>
+    </div>
+    <div id="pane-inbox" style="display:none">
+      <div class="head-row"><h2>New leads (from the assistant)</h2></div>
+      <div id="inbox-list"></div>
+    </div>
+  </div>
+
+  <!-- client detail -->
+  <div class="wrap wide view" id="view-client">
+    <div class="head-row">
+      <button class="btn btn-ghost btn-sm" id="back-list">← Clients</button>
+      <div class="spacer"></div>
+      <button class="btn btn-danger btn-sm" id="client-delete">Delete client</button>
+    </div>
+    <h2 id="cd-title" style="font-size:1.6rem;margin-bottom:4px"></h2>
+    <div class="subtle" id="cd-owner" style="margin-bottom:16px"></div>
+
+    <div class="card">
+      <div class="grid-2">
+        <div class="field"><label for="cd-biz">Business name</label><input type="text" id="cd-biz"></div>
+        <div class="field"><label for="cd-email">Contact email</label><input type="email" id="cd-email"></div>
+      </div>
+      <div class="grid-2">
+        <div class="field"><label for="cd-plan">Care plan</label>
+          <select id="cd-plan"><option value="none">No care plan</option><option value="essential">Essential care</option><option value="growth">Growth care</option><option value="partner">Partner</option></select></div>
+        <div class="field"><label for="cd-status">Status</label>
+          <select id="cd-status"><option value="onboarding">Onboarding</option><option value="active">Active</option><option value="paused">Paused</option><option value="cancelled">Cancelled</option></select></div>
+      </div>
+      <div class="field"><label for="cd-phone">Phone</label><input type="tel" id="cd-phone"></div>
+      <div class="error-text" id="cd-error"></div>
+      <div style="text-align:right"><button class="btn btn-primary btn-sm" id="cd-save">Save client</button></div>
+    </div>
+
+    <!-- integrations -->
+    <div class="adm-sect">
+      <h3>Integrations</h3>
+      <div id="cd-ints"></div>
+      <div class="row-line" style="margin-top:10px">
+        <input type="text" id="int-label" placeholder="Label (e.g. Website & Google profile)">
+        <select id="int-status"><option value="planned">Planned</option><option value="in_progress">In progress</option><option value="live">Live</option><option value="paused">Paused</option></select>
+        <input type="url" id="int-url" placeholder="URL (optional)">
+        <button class="btn btn-primary btn-sm" id="int-add">Add</button>
+      </div>
+    </div>
+
+    <!-- messages -->
+    <div class="adm-sect">
+      <h3>Messages inbox</h3>
+      <div id="cd-msgs"></div>
+      <div class="row-line" style="margin-top:10px">
+        <select id="msg-kind"><option value="voicemail">Voicemail</option><option value="missed_call">Missed call</option><option value="textback">Text-back</option><option value="lead">Lead</option></select>
+        <input type="text" id="msg-from" placeholder="From (name)">
+        <input type="tel" id="msg-phone" placeholder="Phone">
+      </div>
+      <div class="row-line" style="margin-top:8px">
+        <input type="text" id="msg-body" placeholder="Message / transcript" style="flex:3">
+        <button class="btn btn-primary btn-sm" id="msg-add">Log message</button>
+      </div>
+    </div>
+
+    <!-- reports -->
+    <div class="adm-sect">
+      <h3>Monthly reports</h3>
+      <div id="cd-reps"></div>
+      <div class="row-line" style="margin-top:10px">
+        <input type="text" id="rep-period" placeholder="Period (2026-08)" style="max-width:140px">
+        <input type="text" id="rep-title" placeholder="Title">
+      </div>
+      <div class="row-line" style="margin-top:8px">
+        <input type="number" id="rep-calls" placeholder="Calls">
+        <input type="number" id="rep-missed" placeholder="Missed→saved">
+        <input type="number" id="rep-leads" placeholder="Leads">
+        <input type="number" id="rep-reviews" placeholder="Reviews">
+      </div>
+      <div class="row-line" style="margin-top:8px">
+        <input type="text" id="rep-summary" placeholder="Summary" style="flex:3">
+        <button class="btn btn-primary btn-sm" id="rep-add">Add report</button>
+      </div>
+    </div>
+
+    <!-- settings -->
+    <div class="adm-sect">
+      <h3>Reception / voicemail setup</h3>
+      <div class="field"><label for="cd-greeting">Greeting</label><textarea id="cd-greeting"></textarea></div>
+      <div class="grid-2">
+        <div class="field"><label for="cd-forward">Forward to</label><input type="tel" id="cd-forward"></div>
+        <div class="field"><label for="cd-hours">Hours</label><input type="text" id="cd-hours"></div>
+      </div>
+      <div class="field"><label for="cd-after">After-hours</label><textarea id="cd-after"></textarea></div>
+      <div class="field"><label for="cd-textback">Text-back</label><textarea id="cd-textback"></textarea></div>
+      <div style="text-align:right"><button class="btn btn-primary btn-sm" id="cd-set-save">Save setup</button></div>
+    </div>
+  </div>
+
+  <!-- new client modal -->
+  <div class="modal-back" id="new-modal">
+    <div class="modal">
+      <h3>New client</h3>
+      <div class="field"><label for="n-email">Owner email</label><input type="email" id="n-email" placeholder="owner@business.com">
+        <div class="inline-note">Must be someone who has signed in at the portal at least once.</div></div>
+      <div class="field"><label for="n-biz">Business name</label><input type="text" id="n-biz"></div>
+      <div class="field"><label for="n-plan">Care plan</label>
+        <select id="n-plan"><option value="none">No care plan</option><option value="essential">Essential care</option><option value="growth">Growth care</option><option value="partner">Partner</option></select></div>
+      <div class="error-text" id="new-error"></div>
+      <div class="actions"><button type="button" class="btn btn-ghost" id="new-cancel">Cancel</button><button type="button" class="btn btn-primary" id="new-save">Create</button></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

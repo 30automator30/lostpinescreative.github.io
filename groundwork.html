@@ -215,7 +215,10 @@
                 <img src="/mark.svg" alt="Lost Pines Creative" width="34" height="29">
                 <span>Lost Pines <b>Creative</b></span>
             </a>
-            <a class="btn btn-ghost" href="#start" style="padding:9px 18px;font-size:0.9rem;">Book a free audit</a>
+            <div style="display:flex;align-items:center;gap:14px;">
+                <a href="/groundwork/portal/" style="font-size:0.9rem;color:var(--text-muted);text-decoration:none;">Client login</a>
+                <a class="btn btn-ghost" href="#start" style="padding:9px 18px;font-size:0.9rem;">Book a free audit</a>
+            </div>
         </div>
 
         <section class="hero">
@@ -456,5 +459,7 @@
             window.addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });
         }
     </script>
+    <script src="/groundwork/portal/config.js"></script>
+    <script src="/groundwork/assistant.js" defer></script>
 </body>
 </html>
