@@ -825,6 +825,24 @@ footer {
   text-decoration: underline;
 }
 
+/* "Already have a project? Client login" under the contact heading */
+#contact .section-subtitle { margin-bottom: 8px; }
+.contact-login {
+  text-align: center;
+  margin-bottom: 44px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.contact-login a {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-weight: 600;
+}
+.contact-login a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .footer-copy {
   color: var(--text-dim);
   font-size: 0.8rem;
