@@ -2,6 +2,11 @@
  * Groundwork — AI assistant widget (floating chat)
  * Self-contained; talks to the gw-assistant Edge Function. Reads
  * window.GW_CONFIG (from portal/config.js). Drop this + config.js on any page.
+ *
+ * Agent Build Standard controls on the client:
+ *   SCOPE-02 (discloses it's AI), OUT-01 (escape + link-destination allowlist),
+ *   SEC-06 (echoes the server's signed assistant turns), PRIV-03 (storage
+ *   notice + deletion path), SEC-05 (sends a Turnstile token when configured).
  * ============================================================ */
 (function () {
   "use strict";
@@ -11,8 +16,14 @@
   var CFG = window.GW_CONFIG || {};
   var ENDPOINT = CFG.ASSISTANT_FN || "";
   var CONFIGURED = ENDPOINT && ENDPOINT.indexOf("REPLACE_ME") === -1;
+  var TS_SITEKEY = CFG.TURNSTILE_SITEKEY || ""; // SEC-05: set to activate Turnstile
+  var CONTACT = CFG.CONTACT_EMAIL || "desmitdesignz@gmail.com";
   var history = [];
   var busy = false;
+
+  // OUT-01: only these hosts become clickable absolute links; anything else the
+  // model emits stays inert escaped text (no first-party phishing via a hallucinated URL).
+  var LINK_HOSTS = ["lostpinescreative.com", "www.lostpinescreative.com", "blue-plumeria.com", "nomad-core.com"];
 
   var css = "\
 .gwa-launch{position:fixed;right:20px;bottom:20px;z-index:2147483000;width:58px;height:58px;border:none;border-radius:50%;\
@@ -36,11 +47,14 @@ box-shadow:0 24px 60px -20px rgba(0,0,0,.7);display:none;flex-direction:column;o
 .gwa-typing span{width:7px;height:7px;border-radius:50%;background:#5a6b64;animation:gwa-blink 1.2s infinite}\
 .gwa-typing span:nth-child(2){animation-delay:.2s}.gwa-typing span:nth-child(3){animation-delay:.4s}\
 @keyframes gwa-blink{0%,60%,100%{opacity:.3}30%{opacity:1}}\
-.gwa-form{display:flex;gap:8px;padding:12px;border-top:1px solid #1a2f28;background:#0a0f0d}\
+.gwa-form{display:flex;gap:8px;padding:12px 12px 8px;border-top:1px solid #1a2f28;background:#0a0f0d}\
 .gwa-form input{flex:1;background:#111f1b;border:1px solid #1a2f28;border-radius:10px;padding:10px 12px;color:#e2e8e6;font-size:.9rem;font-family:inherit}\
 .gwa-form input:focus{outline:none;border-color:#4a9e7e}\
 .gwa-send{background:linear-gradient(135deg,#4a9e7e,#4ade80);border:none;border-radius:10px;width:42px;color:#071410;cursor:pointer;display:flex;align-items:center;justify-content:center}\
 .gwa-send:disabled{opacity:.5}.gwa-send svg{width:18px;height:18px}\
+.gwa-note{font-size:.66rem;line-height:1.4;color:#5a6b64;text-align:center;padding:0 12px 10px;background:#0a0f0d}\
+.gwa-note a{color:#5a6b64;text-decoration:underline}\
+#gwa-ts{position:absolute;left:-9999px;bottom:0}\
 @media (prefers-reduced-motion:reduce){.gwa-panel.gwa-open,.gwa-launch:hover{animation:none;transform:none}}";
   var style = document.createElement("style"); style.textContent = css; document.head.appendChild(style);
 
@@ -51,34 +65,73 @@ box-shadow:0 24px 60px -20px rgba(0,0,0,.7);display:none;flex-direction:column;o
   var panel = document.createElement("div");
   panel.className = "gwa-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "Groundwork assistant");
   panel.innerHTML =
-    '<div class="gwa-head"><div style="flex:1"><b>Groundwork Assistant</b><small>Lost Pines Creative · usually a few seconds</small></div>' +
+    '<div class="gwa-head"><div style="flex:1"><b>Groundwork Assistant</b><small>Virtual AI · Lost Pines Creative</small></div>' +
     '<button class="gwa-x" aria-label="Close">×</button></div>' +
     '<div class="gwa-log" role="log" aria-live="polite"></div>' +
     '<form class="gwa-form"><input type="text" placeholder="Ask about your business systems…" aria-label="Message" autocomplete="off"/>' +
-    '<button class="gwa-send" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></form>';
+    '<button class="gwa-send" type="submit" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button></form>' +
+    '<div class="gwa-note">AI assistant — replies may be imperfect. Chats may be stored so Daniel can follow up; email <a href="mailto:' + esc(CONTACT) + '">' + esc(CONTACT) + '</a> to delete yours.</div>' +
+    '<div id="gwa-ts"></div>';
 
   document.body.appendChild(launch); document.body.appendChild(panel);
   var log = panel.querySelector(".gwa-log"), form = panel.querySelector(".gwa-form"),
       input = panel.querySelector(".gwa-form input"), sendBtn = panel.querySelector(".gwa-send"), opened = false;
 
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
-  function render(t){var o=esc(t);o=o.replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');o=o.replace(/(^|[\s(])(\/[a-zA-Z0-9/_.-]+)/g,'$1<a href="$2">$2</a>');o=o.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,'<a href="mailto:$1">$1</a>');return o;}
+  function render(t){
+    var o=esc(t);
+    // OUT-01: absolute links only for allowlisted hosts.
+    o=o.replace(/(https?:\/\/[^\s<]+)/g,function(m){try{var h=new URL(m).host;if(LINK_HOSTS.indexOf(h)>=0)return '<a href="'+m+'" target="_blank" rel="noopener">'+m+'</a>';}catch(e){}return m;});
+    o=o.replace(/(^|[\s(])(\/[a-zA-Z0-9/_.-]+)/g,'$1<a href="$2">$2</a>');
+    o=o.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,'<a href="mailto:$1">$1</a>');
+    return o;
+  }
   function addMsg(role,t){var e=document.createElement("div");e.className="gwa-msg "+(role==="user"?"gwa-user":"gwa-bot");e.innerHTML=render(t);log.appendChild(e);log.scrollTop=log.scrollHeight;}
   function typing(on){var ex=log.querySelector(".gwa-typing");if(on&&!ex){var t=document.createElement("div");t.className="gwa-typing";t.innerHTML="<span></span><span></span><span></span>";log.appendChild(t);log.scrollTop=log.scrollHeight;}else if(!on&&ex){ex.remove();}}
 
-  function open(){panel.classList.add("gwa-open");launch.style.display="none";if(!opened){opened=true;addMsg("bot",CONFIGURED?"Hi! I'm the Groundwork assistant. Ask me how I'd connect your business tools and add AI — or I can book your free digital audit.":"The assistant isn't switched on yet. Email desmitdesignz@gmail.com and Daniel will get right back to you.");}setTimeout(function(){input.focus();},60);}
+  // ── SEC-05: Cloudflare Turnstile (only when a sitekey is configured). ──
+  var tsWidgetId = null, tsResolve = null;
+  if (TS_SITEKEY) {
+    window.__gwaTsCb = function () {
+      try {
+        tsWidgetId = window.turnstile.render("#gwa-ts", {
+          sitekey: TS_SITEKEY, size: "invisible",
+          callback: function (tok) { if (tsResolve) { tsResolve(tok); tsResolve = null; } },
+          "error-callback": function () { if (tsResolve) { tsResolve(""); tsResolve = null; } },
+        });
+      } catch (e) { /* noop */ }
+    };
+    var ts = document.createElement("script");
+    ts.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__gwaTsCb&render=explicit";
+    ts.async = true; ts.defer = true; document.head.appendChild(ts);
+  }
+  function getToken() {
+    if (!TS_SITEKEY || tsWidgetId === null || !window.turnstile) return Promise.resolve("");
+    return new Promise(function (res) {
+      tsResolve = res;
+      var done = false; var finish = function (v) { if (!done) { done = true; res(v); tsResolve = null; } };
+      tsResolve = finish;
+      try { window.turnstile.reset(tsWidgetId); window.turnstile.execute(tsWidgetId); } catch (e) { finish(""); }
+      setTimeout(function () { finish(""); }, 8000); // degrade: no token -> server decides
+    });
+  }
+
+  function open(){panel.classList.add("gwa-open");launch.style.display="none";if(!opened){opened=true;addMsg("bot",CONFIGURED?"Hi! I'm Groundwork's virtual (AI) assistant. Ask me how I'd connect your business tools and add AI — or I can book your free digital audit.":"The assistant isn't switched on yet. Email "+CONTACT+" and Daniel will get right back to you.");}setTimeout(function(){input.focus();},60);}
   function close(){panel.classList.remove("gwa-open");launch.style.display="flex";}
   launch.addEventListener("click",open);panel.querySelector(".gwa-x").addEventListener("click",close);
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&panel.classList.contains("gwa-open"))close();});
 
   form.addEventListener("submit",function(e){e.preventDefault();var text=input.value.trim();if(!text||busy)return;
-    if(!CONFIGURED){input.value="";addMsg("user",text);addMsg("bot","I'm not connected yet — please email desmitdesignz@gmail.com for now.");return;}
+    if(!CONFIGURED){input.value="";addMsg("user",text);addMsg("bot","I'm not connected yet — please email "+CONTACT+" for now.");return;}
     input.value="";addMsg("user",text);history.push({role:"user",content:text});send();});
 
   function send(){busy=true;sendBtn.disabled=true;typing(true);
-    fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history})})
+    getToken().then(function(tsToken){
+      return fetch(ENDPOINT,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({messages:history,tsToken:tsToken})});
+    })
       .then(function(r){return r.json().catch(function(){return {};});})
-      .then(function(d){typing(false);var reply=(d&&d.reply)||"Sorry — I hit a snag. Reach Daniel at desmitdesignz@gmail.com.";addMsg("bot",reply);history.push({role:"assistant",content:reply});})
-      .catch(function(){typing(false);addMsg("bot","I couldn't connect just now. Please email desmitdesignz@gmail.com.");})
+      // SEC-06: keep the server's signature so the next turn can prove this reply is real.
+      .then(function(d){typing(false);var reply=(d&&d.reply)||"Sorry — I hit a snag. Reach Daniel at "+CONTACT+".";addMsg("bot",reply);history.push({role:"assistant",content:reply,sig:(d&&d.sig)||undefined});})
+      .catch(function(){typing(false);addMsg("bot","I couldn't connect just now. Please email "+CONTACT+".");})
       .finally(function(){busy=false;sendBtn.disabled=false;input.focus();});}
 })();

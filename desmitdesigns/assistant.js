@@ -14,8 +14,12 @@
   var CFG = window.DD_CONFIG || {};
   var ENDPOINT = CFG.ASSISTANT_FN || "";
   var CONFIGURED = ENDPOINT && ENDPOINT.indexOf("REPLACE_ME") === -1;
+  var TS_SITEKEY = CFG.TURNSTILE_SITEKEY || ""; // SEC-05: set to activate Turnstile
+  var CONTACT = CFG.CONTACT_EMAIL || "desmitdesignz@gmail.com";
+  // OUT-01: only these hosts become clickable absolute links.
+  var LINK_HOSTS = ["lostpinescreative.com", "www.lostpinescreative.com", "blue-plumeria.com", "nomad-core.com"];
 
-  // Conversation state: [{role, content}] of plain text turns.
+  // Conversation state: [{role, content, sig?}] of plain text turns.
   var history = [];
   var busy = false;
 
@@ -51,6 +55,9 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
 .dda-form input:focus{outline:none;border-color:#3b82f6}\
 .dda-send{background:linear-gradient(135deg,#3b82f6,#06b6d4);border:none;border-radius:10px;width:42px;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}\
 .dda-send:disabled{opacity:.5;cursor:default}.dda-send svg{width:18px;height:18px}\
+.dda-note{font-size:.66rem;line-height:1.4;color:#64748b;text-align:center;padding:0 12px 10px;background:#0b1120}\
+.dda-note a{color:#64748b;text-decoration:underline}\
+#dda-ts{position:absolute;left:-9999px;bottom:0}\
 @media (prefers-reduced-motion:reduce){.dda-panel.dda-open,.dda-launch:hover{animation:none;transform:none}}";
 
   var style = document.createElement("style");
@@ -69,14 +76,16 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
   panel.setAttribute("aria-label", "DeSmit Designs assistant");
   panel.innerHTML =
     '<div class="dda-head"><div style="flex:1"><b>Studio Assistant</b>' +
-    '<small>DeSmit Designs · usually a few seconds</small></div>' +
+    '<small>Virtual AI · DeSmit Designs</small></div>' +
     '<button class="dda-x" aria-label="Close">×</button></div>' +
     '<div class="dda-log" role="log" aria-live="polite"></div>' +
     '<form class="dda-form"><input type="text" placeholder="Ask about a project…" ' +
     'aria-label="Message" autocomplete="off"/>' +
     '<button class="dda-send" type="submit" aria-label="Send">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
-    '</button></form>';
+    '</button></form>' +
+    '<div class="dda-note">AI assistant — replies may be imperfect. Chats may be stored so the studio can follow up; email <a href="mailto:' + esc(CONTACT) + '">' + esc(CONTACT) + '</a> to delete yours.</div>' +
+    '<div id="dda-ts"></div>';
 
   document.body.appendChild(launch);
   document.body.appendChild(panel);
@@ -92,10 +101,14 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  // Render text with safe auto-links for relative paths, mailto, tel, and http.
+  // Render text with safe auto-links. OUT-01: escape first, then linkify only
+  // relative paths, mailto, and absolute URLs on allowlisted hosts.
   function render(text) {
     var out = esc(text);
-    out = out.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+    out = out.replace(/(https?:\/\/[^\s<]+)/g, function (m) {
+      try { var h = new URL(m).host; if (LINK_HOSTS.indexOf(h) >= 0) return '<a href="' + m + '" target="_blank" rel="noopener">' + m + '</a>'; } catch (e) {}
+      return m;
+    });
     out = out.replace(/(^|[\s(])(\/[a-zA-Z0-9/_-]+\/?)/g, '$1<a href="$2">$2</a>');
     out = out.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1">$1</a>');
     return out;
@@ -121,14 +134,40 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
     }
   }
 
+  // ── SEC-05: Cloudflare Turnstile (only when a sitekey is configured). ──
+  var tsWidgetId = null, tsResolve = null;
+  if (TS_SITEKEY) {
+    window.__ddaTsCb = function () {
+      try {
+        tsWidgetId = window.turnstile.render("#dda-ts", {
+          sitekey: TS_SITEKEY, size: "invisible",
+          callback: function (tok) { if (tsResolve) { tsResolve(tok); tsResolve = null; } },
+          "error-callback": function () { if (tsResolve) { tsResolve(""); tsResolve = null; } },
+        });
+      } catch (e) { /* noop */ }
+    };
+    var tscript = document.createElement("script");
+    tscript.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=__ddaTsCb&render=explicit";
+    tscript.async = true; tscript.defer = true; document.head.appendChild(tscript);
+  }
+  function getToken() {
+    if (!TS_SITEKEY || tsWidgetId === null || !window.turnstile) return Promise.resolve("");
+    return new Promise(function (res) {
+      var done = false; var finish = function (v) { if (!done) { done = true; res(v); tsResolve = null; } };
+      tsResolve = finish;
+      try { window.turnstile.reset(tsWidgetId); window.turnstile.execute(tsWidgetId); } catch (e) { finish(""); }
+      setTimeout(function () { finish(""); }, 8000);
+    });
+  }
+
   function open() {
     panel.classList.add("dda-open");
     launch.style.display = "none";
     if (!opened) {
       opened = true;
       addMsg("bot", CONFIGURED
-        ? "Hi! I'm the DeSmit Designs studio assistant. Ask me about 3D printing, laser work, CAD, or a custom project — or tell me what you'd like to make and I'll pass it to Daniel."
-        : "The assistant isn't switched on yet — the studio is finishing setup. In the meantime, email desmitdesignz@gmail.com and Daniel will get right back to you.");
+        ? "Hi! I'm DeSmit Designs' virtual (AI) assistant. Ask me about 3D printing, laser work, CAD, or a custom project — or tell me what you'd like to make and I'll pass it to Daniel."
+        : "The assistant isn't switched on yet — the studio is finishing setup. In the meantime, email " + CONTACT + " and Daniel will get right back to you.");
     }
     setTimeout(function () { input.focus(); }, 60);
   }
@@ -163,22 +202,26 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
     busy = true;
     sendBtn.disabled = true;
     typing(true);
-    fetch(ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: history }),
-    })
+    getToken()
+      .then(function (tsToken) {
+        return fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: history, tsToken: tsToken }),
+        });
+      })
       .then(function (r) { return r.json().catch(function () { return {}; }); })
       .then(function (data) {
         typing(false);
         var reply = (data && data.reply) ||
-          "Sorry — I hit a snag. You can reach the studio at desmitdesignz@gmail.com.";
+          "Sorry — I hit a snag. You can reach the studio at " + CONTACT + ".";
         addMsg("bot", reply);
-        history.push({ role: "assistant", content: reply });
+        // SEC-06: keep the server's signature so the next turn proves this reply is real.
+        history.push({ role: "assistant", content: reply, sig: (data && data.sig) || undefined });
       })
       .catch(function () {
         typing(false);
-        addMsg("bot", "I couldn't reach the studio just now. Please email desmitdesignz@gmail.com.");
+        addMsg("bot", "I couldn't reach the studio just now. Please email " + CONTACT + ".");
       })
       .finally(function () {
         busy = false;
