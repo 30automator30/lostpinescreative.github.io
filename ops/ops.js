@@ -13,9 +13,9 @@ const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : 
 const REDIRECT = CFG.REDIRECT || (location.origin + location.pathname);
 const $ = (id) => document.getElementById(id);
 
-const CAT_ORDER = ["domain", "service", "app_store", "analytics", "account", "repo", "other"];
-const CAT_LABEL = { domain: "Domains", service: "Services & infrastructure", app_store: "App stores & commerce", analytics: "Analytics", account: "Accounts", repo: "Repositories", other: "Other" };
-const CADENCE_SUFFIX = { monthly: "/mo", yearly: "/yr", one_time: " once", usage: " usage", free: "" };
+const CAT_ORDER = ["product", "domain", "service", "app_store", "analytics", "account", "repo", "other"];
+const CAT_LABEL = { product: "Products & apps", domain: "Domains", service: "Services & infrastructure", app_store: "App stores & commerce", analytics: "Analytics", account: "Accounts", repo: "Repositories", other: "Other" };
+const CADENCE_SUFFIX = { monthly: "/mo", yearly: "/yr", one_time: " once", usage: " usage", free: "", none: "" };
 
 let user = null, channel = null, editingId = null, assets = [];
 
