@@ -7,6 +7,7 @@ import {
   sb, CONFIGURED, REDIRECT, CARE_LABEL, STATUS_LABEL, INT_STATUS, MSG_KIND,
   fmtDate, fmtDateTime, escapeHtml, toast, showView,
 } from "../portal/client.js";
+import { initAuth, isRecovering } from "/portal-auth.js";
 
 const $ = (id) => document.getElementById(id);
 let user = null;
@@ -17,13 +18,15 @@ let current = null;    // open client row
 if (!CONFIGURED) {
   showView("view-auth");
   $("auth-error").textContent = "Backend not connected.";
-  $("magic-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
+  $("auth-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
+  initAuth(sb, REDIRECT);
   sb.auth.getSession().then(({ data }) => routeSession(data.session));
   sb.auth.onAuthStateChange((_e, s) => { setTimeout(() => routeSession(s), 0); });
 }
 
 async function routeSession(session) {
+  if (isRecovering()) return;
   if (!session || !session.user) {
     user = null; $("signout").style.display = "none"; $("who").textContent = ""; showView("view-auth"); return;
   }
@@ -36,15 +39,7 @@ async function routeSession(session) {
   enterConsole();
 }
 
-$("magic-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = $("email").value.trim(); if (!email) return;
-  const btn = $("magic-btn"); btn.disabled = true; $("auth-error").textContent = "";
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: REDIRECT } });
-  btn.disabled = false;
-  if (error) { $("auth-error").textContent = error.message; return; }
-  $("sent-to").textContent = email; showView("view-sent");
-});
+/* auth (email + password) wired in /portal-auth.js */
 $("signout").addEventListener("click", () => sb.auth.signOut());
 $("denied-out").addEventListener("click", () => sb.auth.signOut());
 

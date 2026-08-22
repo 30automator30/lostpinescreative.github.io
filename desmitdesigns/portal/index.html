@@ -33,24 +33,48 @@
     <div class="auth">
       <img src="../images/logo.png" alt="DeSmit Designs">
       <h1>Client Portal</h1>
-      <p>Track your projects, see progress in real time, and review your quotes. Enter your email and we'll send a one-time sign-in link.</p>
-      <form id="magic-form">
+      <p>Track your projects, see progress in real time, and review your quotes.</p>
+      <form id="auth-form">
         <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
-        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" minlength="8" required>
+        <button class="btn btn-primary" type="submit" id="auth-btn">Sign in</button>
       </form>
       <div class="error-text" id="auth-error"></div>
-      <p class="muted">New here? The same link creates your account automatically.<br>
-        Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+      <p class="muted"><a href="#" id="toggle-mode">Create an account</a> &nbsp;&middot;&nbsp; <a href="#" id="forgot">Forgot password?</a></p>
+      <p class="muted" style="margin-top:10px;font-size:.8rem">Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
     </div>
   </div>
 
-  <!-- magic-link sent confirmation -->
+  <!-- signup confirmation (only shown if email confirmation is on) -->
   <div class="wrap view" id="view-sent">
     <div class="auth">
       <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Confirm your email</h1>
+      <p>We sent a confirmation link to <b id="sent-to"></b>. Click it, then come back and sign in.</p>
+      <button class="btn btn-ghost" id="sent-back">Back to sign in</button>
+    </div>
+  </div>
+
+  <!-- password reset sent -->
+  <div class="wrap view" id="view-reset-sent">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
       <h1>Check your email</h1>
-      <p>We sent a sign-in link to <b id="sent-to"></b>. Open it on this device to continue. You can close this tab.</p>
-      <button class="btn btn-ghost" id="sent-back">Use a different email</button>
+      <p>We sent a password-reset link to your email. Open it to set a new password.</p>
+      <button class="btn btn-ghost" id="reset-back">Back to sign in</button>
+    </div>
+  </div>
+
+  <!-- set new password (after clicking the reset link) -->
+  <div class="wrap view" id="view-setpw">
+    <div class="auth">
+      <img src="../images/logo.png" alt="DeSmit Designs">
+      <h1>Set a new password</h1>
+      <form id="setpw-form">
+        <input type="password" id="setpw" placeholder="New password" autocomplete="new-password" minlength="8" required>
+        <button class="btn btn-primary" type="submit" id="setpw-btn">Save password</button>
+      </form>
+      <div class="error-text" id="setpw-error"></div>
     </div>
   </div>
 

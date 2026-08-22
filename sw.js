@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v18';
+const VERSION = 'v19';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -26,6 +26,7 @@ const PRECACHE_URLS = [
   '/groundwork.html',
   '/terms.html',
   '/analytics.js',
+  '/portal-auth.js',
   '/manifest.webmanifest',
   '/mark.svg',
   '/lostpines.png',

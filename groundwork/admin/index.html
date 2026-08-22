@@ -38,15 +38,20 @@
   <div class="wrap view" id="view-auth">
     <div class="auth">
       <h1>Admin sign-in</h1>
-      <p>Enter your studio email for a one-time sign-in link.</p>
-      <form id="magic-form">
+      <form id="auth-form">
         <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
-        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" minlength="8" required>
+        <button class="btn btn-primary" type="submit" id="auth-btn">Sign in</button>
       </form>
       <div class="error-text" id="auth-error"></div>
+      <p class="muted"><a href="#" id="toggle-mode">Create an account</a> &nbsp;&middot;&nbsp; <a href="#" id="forgot">Forgot password?</a></p>
     </div>
   </div>
-  <div class="wrap view" id="view-sent"><div class="auth"><h1>Check your email</h1><p>Sign-in link sent to <b id="sent-to"></b>.</p></div></div>
+  <div class="wrap view" id="view-sent"><div class="auth"><h1>Confirm your email</h1><p>Confirmation link sent to <b id="sent-to"></b>. Click it, then sign in.</p><button class="btn btn-ghost" id="sent-back">Back to sign in</button></div></div>
+  <div class="wrap view" id="view-reset-sent"><div class="auth"><h1>Check your email</h1><p>Password-reset link sent. Open it to set a new password.</p><button class="btn btn-ghost" id="reset-back">Back to sign in</button></div></div>
+  <div class="wrap view" id="view-setpw"><div class="auth"><h1>Set a new password</h1>
+    <form id="setpw-form"><input type="password" id="setpw" placeholder="New password" autocomplete="new-password" minlength="8" required><button class="btn btn-primary" type="submit" id="setpw-btn">Save password</button></form>
+    <div class="error-text" id="setpw-error"></div></div></div>
   <div class="wrap view" id="view-denied"><div class="auth"><h1>Not authorized</h1><p>This account isn't an admin.</p><button class="btn btn-ghost" id="denied-out">Sign out</button></div></div>
 
   <!-- console -->

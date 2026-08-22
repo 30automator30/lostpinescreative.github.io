@@ -6,6 +6,7 @@ import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
 } from "./client.js";
+import { initAuth, isRecovering } from "/portal-auth.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,8 +21,9 @@ if (!CONFIGURED) {
   showView("view-auth");
   $("auth-error").textContent =
     "The portal isn't connected yet — the studio is finishing setup. Email desmitdesignz@gmail.com in the meantime.";
-  $("magic-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
+  $("auth-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
+  initAuth(sb, REDIRECT);
   sb.auth.getSession().then(({ data }) => routeSession(data.session));
   // Defer out of the callback: awaiting a Supabase call *inside* the
   // onAuthStateChange handler deadlocks on its internal auth lock. setTimeout
@@ -30,6 +32,7 @@ if (!CONFIGURED) {
 }
 
 function routeSession(session) {
+  if (isRecovering()) return;
   if (session && session.user) {
     if (user && user.id === session.user.id) return; // already set up
     user = session.user;
@@ -45,27 +48,7 @@ function routeSession(session) {
   }
 }
 
-/* ---------- auth ---------- */
-$("magic-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = $("email").value.trim();
-  if (!email) return;
-  const btn = $("magic-btn");
-  btn.disabled = true;
-  $("auth-error").textContent = "";
-  const { error } = await sb.auth.signInWithOtp({
-    email,
-    options: { emailRedirectTo: REDIRECT },
-  });
-  btn.disabled = false;
-  if (error) {
-    $("auth-error").textContent = error.message || "Couldn't send the link. Try again.";
-    return;
-  }
-  $("sent-to").textContent = email;
-  showView("view-sent");
-});
-$("sent-back").addEventListener("click", () => showView("view-auth"));
+/* ---------- auth (email + password wired in /portal-auth.js) ---------- */
 $("signout").addEventListener("click", async () => { await sb.auth.signOut(); });
 
 /* ---------- dashboard ---------- */

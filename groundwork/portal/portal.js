@@ -7,6 +7,7 @@ import {
   sb, CONFIGURED, REDIRECT, CARE_LABEL, STATUS_LABEL, INT_STATUS, MSG_KIND,
   money, fmtDate, fmtDateTime, escapeHtml, toast, showView,
 } from "./client.js";
+import { initAuth, isRecovering } from "/portal-auth.js";
 
 const $ = (id) => document.getElementById(id);
 let user = null;
@@ -17,14 +18,16 @@ let channel = null;
 if (!CONFIGURED) {
   showView("view-auth");
   $("auth-error").textContent = "The portal isn't connected yet — email desmitdesignz@gmail.com in the meantime.";
-  $("magic-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
+  $("auth-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
+  initAuth(sb, REDIRECT);
   sb.auth.getSession().then(({ data }) => routeSession(data.session));
   // Defer out of the callback — awaiting Supabase inside onAuthStateChange deadlocks.
   sb.auth.onAuthStateChange((_e, s) => { setTimeout(() => routeSession(s), 0); });
 }
 
 async function routeSession(session) {
+  if (isRecovering()) return;
   if (!session || !session.user) {
     user = null; client = null; teardown();
     $("signout").style.display = "none"; $("who").textContent = "";
@@ -44,18 +47,7 @@ async function routeSession(session) {
   enterDashboard();
 }
 
-/* ---------- auth ---------- */
-$("magic-form").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = $("email").value.trim();
-  if (!email) return;
-  const btn = $("magic-btn"); btn.disabled = true; $("auth-error").textContent = "";
-  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: REDIRECT } });
-  btn.disabled = false;
-  if (error) { $("auth-error").textContent = error.message || "Couldn't send the link."; return; }
-  $("sent-to").textContent = email; showView("view-sent");
-});
-$("sent-back").addEventListener("click", () => showView("view-auth"));
+/* ---------- auth (email + password wired in /portal-auth.js) ---------- */
 $("signout").addEventListener("click", () => sb.auth.signOut());
 $("none-out").addEventListener("click", () => sb.auth.signOut());
 

@@ -30,23 +30,28 @@
     <div class="auth">
       <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
       <h1>Client Portal</h1>
-      <p>See your setup, care plan, monthly reports, and captured messages. Enter your email and we'll send a one-time sign-in link.</p>
-      <form id="magic-form">
+      <p>See your setup, care plan, monthly reports, and captured messages.</p>
+      <form id="auth-form">
         <input type="email" id="email" placeholder="you@business.com" autocomplete="email" required>
-        <button class="btn btn-primary" type="submit" id="magic-btn">Email me a sign-in link</button>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" minlength="8" required>
+        <button class="btn btn-primary" type="submit" id="auth-btn">Sign in</button>
       </form>
       <div class="error-text" id="auth-error"></div>
-      <p class="muted">Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+      <p class="muted"><a href="#" id="toggle-mode">Create an account</a> &nbsp;&middot;&nbsp; <a href="#" id="forgot">Forgot password?</a></p>
+      <p class="muted" style="margin-top:10px;font-size:.8rem">Questions? <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
     </div>
   </div>
 
   <div class="wrap view" id="view-sent">
-    <div class="auth">
-      <img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'">
-      <h1>Check your email</h1>
-      <p>We sent a sign-in link to <b id="sent-to"></b>. Open it on this device to continue.</p>
-      <button class="btn btn-ghost" id="sent-back">Use a different email</button>
-    </div>
+    <div class="auth"><img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'"><h1>Confirm your email</h1><p>Confirmation link sent to <b id="sent-to"></b>. Click it, then sign in.</p><button class="btn btn-ghost" id="sent-back">Back to sign in</button></div>
+  </div>
+  <div class="wrap view" id="view-reset-sent">
+    <div class="auth"><img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'"><h1>Check your email</h1><p>Password-reset link sent. Open it to set a new password.</p><button class="btn btn-ghost" id="reset-back">Back to sign in</button></div>
+  </div>
+  <div class="wrap view" id="view-setpw">
+    <div class="auth"><img src="/groundwork-mark.svg" alt="Groundwork" onerror="this.style.display='none'"><h1>Set a new password</h1>
+      <form id="setpw-form"><input type="password" id="setpw" placeholder="New password" autocomplete="new-password" minlength="8" required><button class="btn btn-primary" type="submit" id="setpw-btn">Save password</button></form>
+      <div class="error-text" id="setpw-error"></div></div>
   </div>
 
   <!-- no client record yet -->
