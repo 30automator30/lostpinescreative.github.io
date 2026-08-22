@@ -35,7 +35,9 @@ async function routeSession(session) {
   user = session.user;
   $("who").textContent = user.email;
   $("signout").style.display = "";
-  const { data, error } = await sb.from("gw_clients").select("*").eq("owner_id", user.id).limit(1);
+  const em = (user.email || "").toLowerCase();
+  const { data, error } = await sb.from("gw_clients").select("*")
+    .or(`owner_id.eq.${user.id},owner_email.eq.${em}`).limit(1);
   if (error) { toast("Couldn't load your account.", "err"); return; }
   if (!data || !data.length) { showView("view-none"); return; }
   client = data[0];

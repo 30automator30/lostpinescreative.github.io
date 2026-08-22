@@ -65,6 +65,7 @@ async function loadProfiles() {
   profiles = {}; (data || []).forEach((p) => (profiles[p.id] = p));
 }
 const ownerEmail = (id) => (profiles[id] ? profiles[id].email : "unknown");
+const clientEmail = (c) => c.owner_email || (c.owner_id ? ownerEmail(c.owner_id) : "—");
 
 /* ---------- clients list ---------- */
 async function loadClients() {
@@ -75,7 +76,7 @@ async function loadClients() {
   list.innerHTML = '<div class="cards">' + data.map((c) =>
     '<div class="card click" data-id="' + c.id + '"><div class="row"><h3 style="flex:1">' + escapeHtml(c.business_name) + "</h3>" +
     '<span class="badge ' + (c.status === "active" ? "live" : c.status === "paused" ? "paused" : "planned") + '">' + (STATUS_LABEL[c.status] || c.status) + "</span></div>" +
-    '<div class="meta">' + escapeHtml(ownerEmail(c.owner_id)) + " · " + (CARE_LABEL[c.care_plan] || CARE_LABEL.none) + "</div></div>"
+    '<div class="meta">' + escapeHtml(clientEmail(c)) + " · " + (CARE_LABEL[c.care_plan] || CARE_LABEL.none) + "</div></div>"
   ).join("") + "</div>";
   list.querySelectorAll("[data-id]").forEach((el) => el.addEventListener("click", () => openClient(el.dataset.id)));
 }
@@ -112,9 +113,10 @@ $("new-save").addEventListener("click", async () => {
   if (!email || !biz) { $("new-error").textContent = "Owner email and business name are required."; return; }
   let owner = Object.values(profiles).find((p) => (p.email || "").toLowerCase() === email);
   if (!owner) { await loadProfiles(); owner = Object.values(profiles).find((p) => (p.email || "").toLowerCase() === email); }
-  if (!owner) { $("new-error").textContent = "No account for that email yet. Ask them to sign in at the portal once, then retry."; return; }
   const btn = $("new-save"); btn.disabled = true;
-  const { error } = await sb.from("gw_clients").insert({ owner_id: owner.id, business_name: biz, contact_email: email, care_plan: $("n-plan").value, status: "onboarding" });
+  // owner_id links now if they have an account, otherwise on their first sign-in
+  // (owner_email match handles access until then).
+  const { error } = await sb.from("gw_clients").insert({ owner_id: owner ? owner.id : null, owner_email: email, business_name: biz, contact_email: email, care_plan: $("n-plan").value, status: "onboarding" });
   btn.disabled = false;
   if (error) { $("new-error").textContent = error.message; return; }
   $("new-modal").classList.remove("show"); toast("Client created.", "ok"); loadClients();
@@ -129,7 +131,7 @@ async function openClient(id) {
   current = c;
   showView("view-client");
   $("cd-title").textContent = c.business_name;
-  $("cd-owner").textContent = ownerEmail(c.owner_id);
+  $("cd-owner").textContent = clientEmail(c) + (c.owner_id ? "" : " · pending first sign-in");
   $("cd-biz").value = c.business_name || ""; $("cd-email").value = c.contact_email || "";
   $("cd-plan").value = c.care_plan || "none"; $("cd-status").value = c.status || "onboarding";
   $("cd-phone").value = c.phone || ""; $("cd-error").textContent = "";
