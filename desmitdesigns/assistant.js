@@ -46,6 +46,7 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
 .dda-bot{align-self:flex-start;background:#1a2332;border:1px solid #1e293b;border-bottom-left-radius:4px}\
 .dda-user{align-self:flex-end;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border-bottom-right-radius:4px}\
 .dda-msg a{color:#60a5fa}.dda-user a{color:#fff;text-decoration:underline}\
+.dda-msg strong{font-weight:700}.dda-msg code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;background:#0d1b30;border:1px solid #1e3a5f;padding:1px 5px;border-radius:4px}\
 .dda-typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;background:#1a2332;border:1px solid #1e293b;border-radius:14px}\
 .dda-typing span{width:7px;height:7px;border-radius:50%;background:#64748b;animation:dda-blink 1.2s infinite}\
 .dda-typing span:nth-child(2){animation-delay:.2s}.dda-typing span:nth-child(3){animation-delay:.4s}\
@@ -101,14 +102,25 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  // Render text with safe auto-links. OUT-01: escape first, then linkify only
-  // relative paths, mailto, and absolute URLs on allowlisted hosts.
+  // Render text with safe auto-links + minimal markdown. OUT-01: escape first,
+  // then an absolute link is emitted only for an allowlisted host; otherwise the
+  // label survives as inert text (no first-party phishing via a made-up URL).
+  function linkAbs(url, text) {
+    try { if (LINK_HOSTS.indexOf(new URL(url).host) >= 0) return '<a href="' + url + '" target="_blank" rel="noopener">' + text + '</a>'; } catch (e) {}
+    return text;
+  }
   function render(text) {
     var out = esc(text);
-    out = out.replace(/(https?:\/\/[^\s<]+)/g, function (m) {
-      try { var h = new URL(m).host; if (LINK_HOSTS.indexOf(h) >= 0) return '<a href="' + m + '" target="_blank" rel="noopener">' + m + '</a>'; } catch (e) {}
-      return m;
+    // Markdown links [text](url): allowlisted absolute (new tab) or root-relative.
+    out = out.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|\/[A-Za-z0-9/_.#?=&%-]*)\)/g, function (m, txt, url) {
+      return url.charAt(0) === "/" ? '<a href="' + url + '">' + txt + '</a>' : linkAbs(url, txt);
     });
+    // Minimal markdown (input is already HTML-escaped): bold + inline code.
+    out = out.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/__([^_\n]+)__/g, '<strong>$1</strong>');
+    out = out.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+    // Bare links — leading boundary so we never re-match inside an inserted tag.
+    out = out.replace(/(^|\s)(https?:\/\/[^\s<]+)/g, function (m, pre, url) { return pre + linkAbs(url, url); });
     out = out.replace(/(^|[\s(])(\/[a-zA-Z0-9/_-]+\/?)/g, '$1<a href="$2">$2</a>');
     out = out.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g, '<a href="mailto:$1">$1</a>');
     return out;

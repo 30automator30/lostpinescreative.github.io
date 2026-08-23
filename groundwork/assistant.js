@@ -43,6 +43,7 @@ box-shadow:0 24px 60px -20px rgba(0,0,0,.7);display:none;flex-direction:column;o
 .gwa-bot{align-self:flex-start;background:#111f1b;border:1px solid #1a2f28;border-bottom-left-radius:4px}\
 .gwa-user{align-self:flex-end;background:linear-gradient(135deg,#4a9e7e,#4ade80);color:#071410;border-bottom-right-radius:4px}\
 .gwa-msg a{color:#5fb896}.gwa-user a{color:#071410;text-decoration:underline}\
+.gwa-msg strong{font-weight:700}.gwa-msg code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.85em;background:#0a1512;border:1px solid #1a2f28;padding:1px 5px;border-radius:4px}\
 .gwa-typing{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;background:#111f1b;border:1px solid #1a2f28;border-radius:14px}\
 .gwa-typing span{width:7px;height:7px;border-radius:50%;background:#5a6b64;animation:gwa-blink 1.2s infinite}\
 .gwa-typing span:nth-child(2){animation-delay:.2s}.gwa-typing span:nth-child(3){animation-delay:.4s}\
@@ -78,10 +79,21 @@ box-shadow:0 24px 60px -20px rgba(0,0,0,.7);display:none;flex-direction:column;o
       input = panel.querySelector(".gwa-form input"), sendBtn = panel.querySelector(".gwa-send"), opened = false;
 
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  // OUT-01: an absolute link is emitted only for an allowlisted host; otherwise
+  // the label survives as inert text (no first-party phishing via a made-up URL).
+  function linkAbs(url,text){try{if(LINK_HOSTS.indexOf(new URL(url).host)>=0)return '<a href="'+url+'" target="_blank" rel="noopener">'+text+'</a>';}catch(e){}return text;}
   function render(t){
     var o=esc(t);
-    // OUT-01: absolute links only for allowlisted hosts.
-    o=o.replace(/(https?:\/\/[^\s<]+)/g,function(m){try{var h=new URL(m).host;if(LINK_HOSTS.indexOf(h)>=0)return '<a href="'+m+'" target="_blank" rel="noopener">'+m+'</a>';}catch(e){}return m;});
+    // Markdown links [text](url): allowlisted absolute (new tab) or root-relative.
+    o=o.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+|\/[A-Za-z0-9/_.#?=&%-]*)\)/g,function(m,txt,url){
+      return url.charAt(0)==="/" ? '<a href="'+url+'">'+txt+'</a>' : linkAbs(url,txt);
+    });
+    // Minimal markdown (input is already HTML-escaped): bold + inline code.
+    o=o.replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>');
+    o=o.replace(/__([^_\n]+)__/g,'<strong>$1</strong>');
+    o=o.replace(/`([^`\n]+)`/g,'<code>$1</code>');
+    // Bare links — leading boundary so we never re-match inside an inserted tag.
+    o=o.replace(/(^|\s)(https?:\/\/[^\s<]+)/g,function(m,pre,url){return pre+linkAbs(url,url);});
     o=o.replace(/(^|[\s(])(\/[a-zA-Z0-9/_.-]+)/g,'$1<a href="$2">$2</a>');
     o=o.replace(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g,'<a href="mailto:$1">$1</a>');
     return o;
