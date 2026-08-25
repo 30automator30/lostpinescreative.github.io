@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Onboarding admin — Lost Pines Creative</title>
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="onboarding.css">
+  <style>
+    .wrap { max-width: 1000px; }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .filters select { width:auto; padding:8px 12px; font-size:.85rem; }
+    table.list { width:100%; border-collapse:collapse; }
+    table.list th, table.list td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--border); font-size:.86rem; }
+    table.list th { color:var(--text-dim); font-weight:600; font-size:.72rem; text-transform:uppercase; letter-spacing:.6px; }
+    table.list tr.click { cursor:pointer; }
+    table.list tr.click:hover td { background:var(--bg-card-2); }
+    .pill { font-size:.68rem; border:1px solid var(--border); border-radius:20px; padding:1px 9px; text-transform:capitalize; }
+    .pill.active, .pill.deposit_paid, .pill.accepted, .pill.signed { border-color:var(--ok); color:var(--ok); }
+    .pill.past_due, .pill.declined { border-color:var(--danger); color:var(--danger); }
+    .pill.submitted, .pill.in_review { border-color:var(--warn); color:var(--warn); }
+    .admin-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-top:16px; }
+    .admin-actions .field { margin:0; }
+  </style>
+  <script src="/analytics.js"></script>
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="/"><span>Lost Pines Creative</span> <small>Onboarding admin</small></a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="margin-left:10px;display:none">Sign out</button>
+  </header>
+
+  <div class="wrap view active" id="view-loading"><div class="spinner"></div></div>
+
+  <div class="wrap view" id="view-denied">
+    <div class="card" style="text-align:center;max-width:460px;margin:40px auto">
+      <h2 style="font-size:1.4rem;margin-bottom:8px">Admin only</h2>
+      <p class="muted" id="denied-hint">Sign in with your studio admin account.</p>
+      <p style="margin-top:16px"><a class="btn btn-primary" href="/desmitdesigns/portal/">Go to portal to sign in →</a></p>
+    </div>
+  </div>
+
+  <div class="wrap view" id="view-list">
+    <h2 class="step-title" style="margin-bottom:16px">Client onboarding</h2>
+    <div class="filters">
+      <select id="f-product"><option value="">All products</option><option value="desmit">DeSmit Designs</option><option value="groundwork">Groundwork</option></select>
+      <select id="f-status"><option value="">All statuses</option><option value="draft">Draft</option><option value="submitted">Submitted</option><option value="in_review">In review</option><option value="accepted">Accepted</option><option value="declined">Declined</option></select>
+    </div>
+    <div id="list-box"></div>
+  </div>
+
+  <div class="wrap view" id="view-detail">
+    <div class="nav-row" style="margin:0 0 18px"><button class="btn btn-ghost btn-sm" id="back">← All intakes</button></div>
+    <div id="detail-box"></div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <script src="config.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
