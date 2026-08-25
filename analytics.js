@@ -74,7 +74,7 @@
     bar.setAttribute("aria-label", "Cookie consent");
     bar.innerHTML =
       '<p>We use cookies to measure site traffic and improve the experience. ' +
-      'Analytics stay off until you accept. <a href="/terms.html">Learn more</a></p>' +
+      'Analytics stay off until you accept. <a href="/privacy.html">Learn more</a></p>' +
       '<div class="lpc-cc-btns">' +
       '<button type="button" class="lpc-cc-decline">Decline</button>' +
       '<button type="button" class="lpc-cc-accept">Accept</button></div>';

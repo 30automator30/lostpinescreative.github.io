@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v21';
+const VERSION = 'v22';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -25,6 +25,7 @@ const PRECACHE_URLS = [
   '/index.html',
   '/groundwork.html',
   '/terms.html',
+  '/privacy.html',
   '/analytics.js',
   '/portal-auth.js',
   '/manifest.webmanifest',
