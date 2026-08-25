@@ -111,8 +111,10 @@ function detailHtml(it, assets, events) {
         <dt>Contact</dt><dd>${esc(it.contact_name)} · ${esc(it.contact_email)} · ${esc(it.contact_phone)}</dd>
         <dt>Industry</dt><dd>${esc(it.industry) || "—"}</dd>
         <dt>Describes as</dt><dd>${esc(it.business_description) || "—"}</dd>
+        <dt>Address</dt><dd>${esc((it.about || {}).address) || "—"}</dd>
+        <dt>Hours</dt><dd>${esc((it.about || {}).hours) || "—"}</dd>
         <dt>Service area</dt><dd>${esc((it.about || {}).service_area) || "—"}</dd>
-        <dt>Current web</dt><dd>${esc((it.about || {}).current_web) || "—"}</dd>
+        <dt>Current web</dt><dd>${esc((it.about || {}).current_web) || "—"}</dd>${(it.about || {}).google_place_id ? `<dt>Google Place ID</dt><dd class="muted">${esc(it.about.google_place_id)}</dd>` : ""}
       </dl>
       <h3>Brand & look</h3>
       <dl>

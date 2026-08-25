@@ -139,6 +139,20 @@ html[data-product="groundwork"] .tgl.on { background: rgba(74,158,126,.14); }
 .thumb .kind { position: absolute; bottom: 0; left: 0; right: 0; font-size: .62rem; text-transform: uppercase; letter-spacing: .5px; background: rgba(10,14,23,.75); color: var(--text-muted); padding: 2px 4px; text-align: center; }
 .thumb.pdf { display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: .72rem; padding: 8px; text-align: center; }
 
+/* ---- business lookup (Google Places autocomplete) ---- */
+.lookup { position: relative; }
+.lookup-menu {
+  display: none; position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 30;
+  background: var(--bg-card-2); border: 1px solid var(--border); border-radius: 10px;
+  overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,.4);
+}
+.lookup-menu.show { display: block; }
+.lookup-item { padding: 10px 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.lookup-item:last-child { border-bottom: none; }
+.lookup-item:hover { background: var(--bg-dark); }
+.lookup-item b { display: block; font-size: .92rem; font-weight: 600; }
+.lookup-item small { color: var(--text-dim); font-size: .78rem; }
+
 /* color chips input */
 .colors { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .color-pill { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 20px; padding: 4px 6px 4px 4px; font-size: .8rem; }

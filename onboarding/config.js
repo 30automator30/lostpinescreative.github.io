@@ -54,6 +54,7 @@ window.ONB_CONFIG = {
   CHECKOUT_FN: `${SUPABASE_URL}/functions/v1/onb-checkout`,
   SIGN_FN: `${SUPABASE_URL}/functions/v1/onb-sign`,
   NOTIFY_FN: `${SUPABASE_URL}/functions/v1/onb-notify`,
+  LOOKUP_FN: `${SUPABASE_URL}/functions/v1/onb-lookup`,
   STORAGE_BUCKET: "onboarding",
   // Where Stripe / auth should return the client. Must be an allowed redirect
   // in Supabase Auth ▸ URL Configuration.

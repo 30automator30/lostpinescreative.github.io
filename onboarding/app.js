@@ -39,6 +39,8 @@ let user = null;
 let intake = null;          // the onb_intakes row
 let assets = [];            // onb_assets rows (+ .url signed)
 let stepIndex = 0;
+let lookupSession = null;   // Google Places session token (one billable session)
+let lookupTimer = null;     // debounce for autocomplete
 const MODEL = specModel(P.key);
 
 const STEPS = [
@@ -265,7 +267,17 @@ async function notifyStudio() {
  * STEP 1 — business
  * ============================================================ */
 function renderBusiness(root) {
+  const a = intake.about || {};
   root.innerHTML = `
+    <div class="card">
+      <label>Find your business <span class="hint" style="display:inline">— autofill from Google (optional)</span></label>
+      <p class="hint" style="margin-bottom:8px">Start typing your business name, pick it, and we'll fill in the details for you to check. Or just fill the fields below.</p>
+      <div class="lookup">
+        <input type="text" id="f-lookup" placeholder="Search your business name…" autocomplete="off">
+        <div class="lookup-menu" id="lookup-menu"></div>
+      </div>
+      <div class="muted" id="lookup-note" style="margin-top:6px"></div>
+    </div>
     <div class="card">
       <div class="grid2">
         <div class="field"><label>Business name</label><input type="text" id="f-bn" value="${esc(intake.business_name)}" placeholder="e.g. Lost Pines Landscaping"></div>
@@ -279,9 +291,13 @@ function renderBusiness(root) {
       </div>
       <div class="grid2">
         <div class="field"><label>Phone</label><input type="tel" id="f-cp" value="${esc(intake.contact_phone)}" placeholder="(512) 555-0142"></div>
-        <div class="field"><label>Service area <span class="hint" style="display:inline">— towns / radius</span></label><input type="text" id="f-area" value="${esc((intake.about || {}).service_area)}" placeholder="e.g. Bastrop + 30 mi"></div>
+        <div class="field"><label>Service area <span class="hint" style="display:inline">— towns / radius</span></label><input type="text" id="f-area" value="${esc(a.service_area)}" placeholder="e.g. Bastrop + 30 mi"></div>
       </div>
-      <div class="field"><label>Current website / social (if any)</label><input type="url" id="f-web" value="${esc((intake.about || {}).current_web)}" placeholder="https://…"></div>
+      <div class="field"><label>Address</label><input type="text" id="f-addr" value="${esc(a.address)}" placeholder="123 Main St, Bastrop, TX"></div>
+      <div class="grid2">
+        <div class="field"><label>Hours</label><input type="text" id="f-hours" value="${esc(a.hours)}" placeholder="Mon–Fri 8a–5p"></div>
+        <div class="field"><label>Current website / social (if any)</label><input type="url" id="f-web" value="${esc(a.current_web)}" placeholder="https://…"></div>
+      </div>
     </div>`;
   bind("f-bn", (v) => (intake.business_name = v));
   bind("f-ind", (v) => (intake.industry = v));
@@ -290,7 +306,75 @@ function renderBusiness(root) {
   bind("f-ce", (v) => (intake.contact_email = v));
   bind("f-cp", (v) => (intake.contact_phone = v));
   bindAbout("f-area", "service_area");
+  bindAbout("f-addr", "address");
+  bindAbout("f-hours", "hours");
   bindAbout("f-web", "current_web");
+  wireLookup();
+}
+
+/* ---- Google Places business lookup + autofill ---- */
+function wireLookup() {
+  const input = $("f-lookup"), menu = $("lookup-menu"), note = $("lookup-note");
+  if (!input) return;
+  const close = () => { menu.classList.remove("show"); menu.innerHTML = ""; };
+  input.oninput = () => {
+    const q = input.value.trim();
+    clearTimeout(lookupTimer);
+    if (q.length < 3) { close(); return; }
+    lookupTimer = setTimeout(async () => {
+      if (!lookupSession) lookupSession = crypto.randomUUID();
+      const res = await lookupCall({ action: "autocomplete", query: q, session: lookupSession });
+      const sug = (res && res.suggestions) || [];
+      if (!sug.length) { close(); return; }
+      menu.innerHTML = sug.map((s, i) =>
+        `<div class="lookup-item" data-i="${i}"><b>${esc(s.main)}</b>${s.secondary ? `<small>${esc(s.secondary)}</small>` : ""}</div>`).join("");
+      menu.classList.add("show");
+      menu.querySelectorAll(".lookup-item").forEach((el) =>
+        el.onmousedown = (e) => { e.preventDefault(); selectPlace(sug[+el.dataset.i]); });
+    }, 300);
+  };
+  input.onblur = () => setTimeout(close, 150);
+
+  async function selectPlace(s) {
+    close(); input.value = s.main; note.textContent = "Looking up…";
+    const res = await lookupCall({ action: "details", place_id: s.place_id, session: lookupSession });
+    lookupSession = null; // the details call closes the billing session
+    if (!res || !res.place) { note.textContent = "Couldn't fetch details — please fill the fields in yourself."; return; }
+    applyPlace(res.place);
+    note.textContent = "✓ Filled from Google — please check everything and edit as needed.";
+  }
+}
+async function lookupCall(payload) {
+  try {
+    const { data: sess } = await sb.auth.getSession();
+    if (!sess || !sess.session) return null;
+    const res = await fetch(CFG.LOOKUP_FN, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", apikey: CFG.SUPABASE_ANON_KEY,
+        Authorization: "Bearer " + sess.session.access_token },
+      body: JSON.stringify(payload),
+    });
+    if (res.status === 503) {
+      const n = $("lookup-note"); if (n) n.textContent = "Business lookup isn't set up yet — just fill in the fields below.";
+      return null;
+    }
+    return await res.json().catch(() => null);
+  } catch (_) { return null; }
+}
+function applyPlace(p) {
+  intake.about = intake.about || {};
+  if (p.business_name) intake.business_name = p.business_name;
+  if (p.industry) intake.industry = p.industry;
+  if (p.phone) intake.contact_phone = p.phone;
+  if (p.address) intake.about.address = p.address;
+  if (p.hours) intake.about.hours = p.hours;
+  if (p.website) intake.about.current_web = p.website;
+  if (p.place_id) intake.about.google_place_id = p.place_id;
+  queueSave();
+  // reflect into the visible inputs without a full re-render (keeps the search box)
+  const set = (id, v) => { const el = $(id); if (el && v) el.value = v; };
+  set("f-bn", p.business_name); set("f-ind", p.industry); set("f-cp", p.phone);
+  set("f-addr", p.address); set("f-hours", p.hours); set("f-web", p.website);
 }
 
 /* ============================================================
@@ -567,6 +651,8 @@ function buildDocHtml() {
       <dt>Industry</dt><dd>${esc(intake.industry) || "—"}</dd>
       <dt>What they do</dt><dd>${esc(intake.business_description) || "—"}</dd>
       <dt>Contact</dt><dd>${esc(intake.contact_name)} · ${esc(intake.contact_email)} · ${esc(intake.contact_phone)}</dd>
+      <dt>Address</dt><dd>${esc((intake.about || {}).address) || "—"}</dd>
+      <dt>Hours</dt><dd>${esc((intake.about || {}).hours) || "—"}</dd>
       <dt>Service area</dt><dd>${esc((intake.about || {}).service_area) || "—"}</dd>
     </dl>
     <h3>2 · Brand & look</h3>

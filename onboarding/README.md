@@ -43,7 +43,8 @@ onboarding/
    ├─ onb-sign/index.ts     records the e-signature (Verify JWT ON)
    ├─ onb-checkout/index.ts creates the Stripe Checkout Session (Verify JWT ON)
    ├─ onb-webhook/index.ts  Stripe webhook → payment status (Verify JWT OFF)
-   └─ onb-notify/index.ts   emails you when a brief is submitted (Verify JWT ON)
+   ├─ onb-notify/index.ts   emails you when a brief is submitted (Verify JWT ON)
+   └─ onb-lookup/index.ts   Google Places business autofill (Verify JWT ON)
 ```
 
 ---
@@ -74,11 +75,13 @@ Groundwork tables (`001`/`002` gw_portal) also being applied.
 | `onb-checkout` | **ON**  | creates the Stripe Checkout Session |
 | `onb-webhook`  | **OFF** | receives Stripe events (verified by signature instead) |
 | `onb-notify`   | **ON**  | emails you a summary when a client submits a brief |
+| `onb-lookup`   | **ON**  | Google Places business autocomplete/autofill (Step 1) |
 
 CLI: put each at `supabase/functions/<name>/index.ts` then
 `supabase functions deploy onb-sign` /
 `supabase functions deploy onb-checkout` /
 `supabase functions deploy onb-notify` /
+`supabase functions deploy onb-lookup` /
 `supabase functions deploy onb-webhook --no-verify-jwt`.
 
 ### 3. Set the secrets (Project Settings ▸ Edge Functions ▸ Secrets)
@@ -86,10 +89,19 @@ CLI: put each at `supabase/functions/<name>/index.ts` then
 STRIPE_SECRET_KEY      = sk_live_…        # or sk_test_… while testing
 STRIPE_WEBHOOK_SECRET  = whsec_…          # from the webhook you create in step 4
 RESEND_API_KEY         = re_…             # optional: emails the signed agreement
+GOOGLE_PLACES_API_KEY  = AIza…            # optional: Step-1 business autofill (see below)
 ALLOWED_ORIGINS        = https://lostpinescreative.com,https://www.lostpinescreative.com
 OWNER_EMAIL            = desmitdesignz@gmail.com   # signature copies + new-brief notifications
 ```
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
+
+**Business autofill (optional):** to enable Step 1's "Find your business" lookup,
+create a Google Cloud project → enable **Places API (New)** → make an API key,
+restrict it to the Places API, and set it as `GOOGLE_PLACES_API_KEY`. The key
+stays server-side (only `onb-lookup` uses it). Cost is ~a few cents per completed
+lookup (an autocomplete session + one details call), and the wizard sends a
+session token so it bills as one session. Without the key the field simply says
+"lookup isn't set up — just fill in the fields," and everything else works.
 
 ### 4. Create the Stripe webhook
 Stripe Dashboard ▸ Developers ▸ Webhooks ▸ **Add endpoint**:
