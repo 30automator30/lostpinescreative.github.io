@@ -149,7 +149,10 @@ sync and bump `AGREEMENT_VERSION`** (in `config.js`, `app.js`, and
 All the sections, features, brand choices, packages and care plans are data in
 **`spec-template.js`** — add/rename/reorder there and both the wizard and admin
 brief update. Every design and spec item already supports a **"let the designer
-decide"** opt-out.
+decide"** opt-out. The **live estimate** the wizard shows (a soft price *range*
+that updates as the client toggles items — never a binding total; the studio
+still confirms the real quote) is also tuned here via `PACKAGE_BASE` (per-tier
+base range) and `ADDON` (incremental per-item ranges).
 
 ## Data model
 

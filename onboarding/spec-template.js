@@ -131,6 +131,55 @@ export const CARE_PLANS = [
   ["partner", "Partner — digital-ops partner", "Fractional digital-ops partner for higher-volume operations: ongoing integration & automation work, first-call priority & a defined SLA.", null],
 ];
 
+/* ---------- live estimate (indicative, NOT a fixed cart) ----------
+ * The tier is the anchor; toggled items nudge a RANGE. These numbers are
+ * deliberately soft — the studio always confirms the real quote (quote-first).
+ * Tune here. Base ranges start at each tier's floor ("from $X" in the manuals). */
+export const PACKAGE_BASE = {
+  starter: [750, 1200], foundation: [1500, 2800], growth: [3500, 6000],
+  full_build: [6000, 12000], custom: null, // custom → scoped on a call
+};
+// Incremental add-on ranges (the extra customization cost, on top of the tier
+// base — kept modest so the base carries the bulk and we don't double-count).
+export const ADDON = {
+  integrations: {
+    contact_form: [0, 0], online_booking: [150, 400], payments: [150, 400],
+    reviews: [100, 250], newsletter: [75, 200], ai_receptionist: [300, 800],
+    maps: [0, 50], social: [0, 50], analytics: [0, 50],
+  },
+  sections: {
+    // base sections (hero/about/services/contact/footer) are 0 — included in every tier
+    gallery: [75, 200], testimonials: [50, 150], pricing: [75, 200],
+    team: [50, 150], faq: [50, 150], blog: [150, 400], process: [75, 200],
+    booking: [150, 400], service_area: [50, 150],
+  },
+};
+
+/* Compute an indicative estimate from the current intake selections. */
+export function estimate(intake) {
+  const spec = intake.spec || {};
+  const add = [0, 0];
+  const bump = (rng) => { if (rng) { add[0] += rng[0]; add[1] += rng[1]; } };
+  for (const [k, r] of Object.entries(ADDON.integrations)) {
+    const c = (spec.integrations || {})[k] || {};
+    if (c.include || c.dev_decides) bump(r);
+  }
+  for (const [k, r] of Object.entries(ADDON.sections)) {
+    const c = (spec.sections || {})[k] || {};
+    if (c.include || c.dev_decides) bump(r);
+  }
+  const base = PACKAGE_BASE[intake.package] || null; // null = custom / not chosen
+  const care = { essential: 99, growth: 300 }[intake.care_plan] || 0;
+  const annual = intake.billing_cycle === "annual";
+  return {
+    base,
+    addons: add,
+    total: base ? [base[0] + add[0], base[1] + add[1]] : null,
+    care, careAnnual: annual ? care * 10 : null,
+    custom: intake.package === "custom" || !intake.package,
+  };
+}
+
 /* Assemble the per-product spec model the wizard consumes. */
 export function specModel(product) {
   const p = product === "groundwork" ? "groundwork" : "desmit";

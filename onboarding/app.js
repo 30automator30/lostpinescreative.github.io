@@ -8,7 +8,7 @@
  * A draft autosaves the whole way (onb_save_draft RPC).
  * ============================================================ */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
-import { specModel, blankSpec, PACKAGES, CARE_PLANS, DESIGN } from "./spec-template.js";
+import { specModel, blankSpec, PACKAGES, CARE_PLANS, DESIGN, estimate } from "./spec-template.js";
 
 const CFG = window.ONB_CONFIG;
 const P = CFG.PRODUCT;
@@ -21,6 +21,18 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) =>
 // declaration (e.g. an external url()). Anything not a plain hex → neutral.
 const cssColor = (c) => /^#[0-9a-fA-F]{3,8}$/.test(String(c == null ? "" : c).trim())
   ? String(c).trim() : "transparent";
+const money0 = (n) => "$" + Math.round(Number(n) || 0).toLocaleString("en-US");
+// Indicative estimate line (never a binding total — the studio confirms the quote).
+function estimateLine() {
+  const e = estimate(intake);
+  if (!e.total) {
+    const a = e.addons;
+    const extra = a[1] > 0 ? ` Your selected features add about <b>${money0(a[0])}–${money0(a[1])}</b>.` : "";
+    return `Pick a package for a full estimate.${extra}`;
+  }
+  const care = e.care ? ` &nbsp;·&nbsp; care plan <b>${money0(e.careAnnual || e.care)}${e.careAnnual ? "/yr" : "/mo"}</b>` : "";
+  return `Estimated build: <b>${money0(e.total[0])}–${money0(e.total[1])}</b>${care}`;
+}
 
 /* ---------- state ---------- */
 let user = null;
@@ -455,6 +467,10 @@ function renderSpec(root) {
       <div class="field"><label>Must-haves</label><textarea id="f-must" placeholder="Anything that absolutely has to be there.">${esc(spec.must_haves)}</textarea></div>
       <div class="field"><label>Please avoid</label><textarea id="f-avoid" placeholder="Colors, styles, or things you dislike.">${esc(spec.avoid)}</textarea></div>
       <div class="field"><label>Sites you like the look of</label><textarea id="f-insp" placeholder="Paste a few links and what you like about each.">${esc(spec.inspiration)}</textarea></div>
+    </div>
+    <div class="card" style="border-color:var(--accent)">
+      <div style="font-size:1.02rem">${estimateLine()}</div>
+      <p class="muted" style="margin-top:6px">Indicative only — ${esc(P.name)} confirms your exact quote after reviewing your brief. Nothing is charged until you approve it.</p>
     </div>`;
 
   root.querySelectorAll(".spec-item").forEach((el) => {
@@ -499,7 +515,11 @@ function renderPackage(root) {
         </div>
       </div>
     </div>
-    <div class="banner warn">Final amounts (any custom quote / deposit) are confirmed by ${esc(P.name)} before anything is charged. You'll approve the exact numbers on the payment step.</div>`;
+    <div class="card" style="border-color:var(--accent)">
+      <div style="font-size:1.05rem">${estimateLine()}</div>
+      <p class="muted" style="margin-top:6px">Indicative estimate from your selections — not a bill.</p>
+    </div>
+    <div class="banner warn">Final amounts (your exact quote / deposit) are confirmed by ${esc(P.name)} before anything is charged. You'll approve the exact numbers on the payment step.</div>`;
 
   root.querySelectorAll("[data-pkg]").forEach((c) => c.onclick = () => { intake.package = c.dataset.pkg; queueSave(); renderPackage(root); });
   root.querySelectorAll("[data-care]").forEach((c) => c.onclick = () => { intake.care_plan = c.dataset.care; queueSave(); renderPackage(root); });
@@ -572,6 +592,7 @@ function buildDocHtml() {
     <dl>
       <dt>Build</dt><dd>${esc(pkg)}</dd>
       <dt>Care plan</dt><dd>${esc(care)}${["essential", "growth"].includes(intake.care_plan) ? ` · ${esc(intake.billing_cycle || "monthly")}` : ""}</dd>
+      <dt>Estimate</dt><dd>${(() => { const e = estimate(intake); return e.total ? money0(e.total[0]) + "–" + money0(e.total[1]) + (e.care ? " + " + money0(e.careAnnual || e.care) + (e.careAnnual ? "/yr" : "/mo") + " care" : "") + " (indicative — final quote confirmed by the studio)" : "custom — scoped on a call"; })()}</dd>
     </dl>`;
 }
 
