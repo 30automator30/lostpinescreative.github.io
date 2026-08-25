@@ -115,6 +115,7 @@ function detailHtml(it, assets, events) {
         <dt>Hours</dt><dd>${esc((it.about || {}).hours) || "—"}</dd>
         <dt>Service area</dt><dd>${esc((it.about || {}).service_area) || "—"}</dd>
         <dt>Current web</dt><dd>${esc((it.about || {}).current_web) || "—"}</dd>${(it.about || {}).google_place_id ? `<dt>Google Place ID</dt><dd class="muted">${esc(it.about.google_place_id)}</dd>` : ""}
+        <dt>Consent</dt><dd>${(() => { const a = it.about || {}, p = a.privacy_consent || {}, s = a.sms_consent || {}; return p.agreed ? `Privacy ✓ ${fmt(p.at)} · SMS ${s.agreed ? "✓ opted in" : "✗"}` : '<span class="muted">not recorded</span>'; })()}</dd>
       </dl>
       <h3>Brand & look</h3>
       <dl>

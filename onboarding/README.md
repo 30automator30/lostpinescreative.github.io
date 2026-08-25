@@ -198,7 +198,11 @@ From then on, the Groundwork portal/admin is the in-service home; billing state
 
 **Offboard** is the manual **SOP-014 / CHK-014** (in the LPC repo): export the
 client slice, transfer client-owned assets, revoke access, rotate secrets, then
-delete. NOTE (follow-up B, not yet done): SOP-014's export/delete hooks currently
-cover `gw_*`/`dd_*` but **not** `onb_intakes`/`onb_assets`/the `onboarding`
-Storage bucket, and don't cancel the Stripe care-plan subscription — extend them
-before offboarding a client who onboarded through this flow.
+delete. It now covers the onboarding footprint — **Hook E** exports/deletes
+`onb_*` + the uploaded files in the `onboarding` Storage bucket (the blobs do NOT
+cascade with the DB, so E3 removes them explicitly), and **Hook F** cancels the
+Stripe care-plan subscription so billing stops when service does.
+
+**Consent:** the Review step captures a **required privacy consent** (linked to
+`/privacy.html`) plus an **optional SMS opt-in** before the brief can be
+submitted; both are timestamped into `onb_intakes.about` and shown in the admin.

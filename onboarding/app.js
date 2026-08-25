@@ -234,6 +234,18 @@ async function onNext() {
     // Submit the brief for the studio to quote. Stay on Review so the client
     // sees the "we're reviewing" banner; sign & pay unlock once accepted.
     if (intake.status === "draft") {
+      // required privacy consent gate
+      const pc = $("consent-privacy");
+      if (!pc || !pc.checked) {
+        toast("Please agree to the privacy consent to submit.", "err");
+        const b = $("nav-next"); if (b) b.disabled = true;
+        return;
+      }
+      const now = new Date().toISOString();
+      intake.about = intake.about || {};
+      intake.about.privacy_consent = { agreed: true, at: now, version: "v1" };
+      intake.about.sms_consent = { agreed: !!($("consent-sms") && $("consent-sms").checked), at: now };
+      await saveDraft();
       const { error } = await sb.from("onb_intakes").update({ status: "submitted" }).eq("id", intake.id);
       if (error) { toast("Couldn't submit — try again.", "err"); return; }
       intake.status = "submitted";
@@ -622,7 +634,26 @@ function renderReview(root) {
   } else if (isAccepted()) {
     banner = `<div class="banner ok">✓ Approved! Your quote is ready. Continue to sign your agreement and pay your deposit.</div>`;
   }
-  root.innerHTML = banner + `<div class="doc" id="doc">${buildDocHtml()}</div>`;
+  // Consent is captured at submission (only while it's still a draft to submit).
+  let consent = "";
+  if (intake.status === "draft") {
+    const pc = (intake.about || {}).privacy_consent || {};
+    const sc = (intake.about || {}).sms_consent || {};
+    consent = `<div class="card" style="border-color:var(--accent)">
+      <label class="agree-check"><input type="checkbox" id="consent-privacy" ${pc.agreed ? "checked" : ""}>
+        <span>I've read the <a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy</a> and agree to ${esc(P.name)} storing and using this information to prepare my proposal. <span style="color:var(--danger)">*</span></span></label>
+      <label class="agree-check"><input type="checkbox" id="consent-sms" ${sc.agreed ? "checked" : ""}>
+        <span>You may text me about my project and review requests. <span class="muted">(optional)</span></span></label>
+    </div>`;
+  }
+  root.innerHTML = banner + `<div class="doc" id="doc">${buildDocHtml()}</div>` + consent;
+  // Gate the "Submit brief for review" button on the required privacy consent.
+  if (intake.status === "draft") {
+    const pc = $("consent-privacy");
+    const sync = () => { const btn = $("nav-next"); if (btn) btn.disabled = !(pc && pc.checked); };
+    if (pc) pc.onchange = sync;
+    setTimeout(sync, 0); // the nav button renders right after this render
+  }
 }
 function buildDocHtml() {
   const b = intake.brand || {}, spec = intake.spec || {};
