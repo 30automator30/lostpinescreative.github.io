@@ -130,6 +130,13 @@ async function openClient(id) {
   $("cd-biz").value = c.business_name || ""; $("cd-email").value = c.contact_email || "";
   $("cd-plan").value = c.care_plan || "none"; $("cd-status").value = c.status || "onboarding";
   $("cd-phone").value = c.phone || ""; $("cd-error").textContent = "";
+  // Billing state is mirrored from the onboarding intake by the Stripe webhook.
+  const bill = $("cd-billing");
+  if (bill) {
+    bill.textContent = c.pay_status
+      ? "Billing: " + c.pay_status + (c.stripe_subscription_id ? " · care subscription active" : "") + (c.intake_id ? " · linked to onboarding brief" : "")
+      : (c.intake_id ? "Billing: awaiting first payment (linked to onboarding brief)" : "Billing: not linked to an onboarding brief");
+  }
   await Promise.all([loadInts(), loadMsgs(), loadReps(), loadSet()]);
 }
 

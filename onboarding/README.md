@@ -53,15 +53,19 @@ onboarding/
 Everything is built. These steps are the parts only the account owner can do.
 
 ### 1. Apply the schema
-Run **`_backend/010_onboarding.sql`** against the shared project:
+Run **`_backend/010_onboarding.sql`** then **`_backend/011_onboarding_bridge.sql`**
+against the shared project:
 - **Dashboard:** SQL Editor → paste → Run, **or**
 - **Claude + MCP:** point the Supabase MCP at `ekogelnbhggyrychfrta` and
   `apply_migration`.
 
-This creates `onb_intakes`, `onb_assets`, `onb_events`, the **private
+`010` creates `onb_intakes`, `onb_assets`, `onb_events`, the **private
 `onboarding` Storage bucket** with per-user RLS, the `onb_save_draft` RPC, and
-turns on Realtime. It depends on `dd_is_admin()` (already applied by
-`001_dd_portal.sql`).
+turns on Realtime. It depends on `dd_is_admin()` (from `001_dd_portal.sql`).
+
+`011` is the **onboard → in-service bridge**: it adds link/billing columns to
+`gw_clients` and the admin-only `onb_accept_and_provision` RPC. It depends on the
+Groundwork tables (`001`/`002` gw_portal) also being applied.
 
 ### 2. Deploy the three Edge Functions
 | Function | Verify JWT | Purpose |
@@ -157,3 +161,22 @@ decide"** opt-out.
 
 Status flow: `draft → submitted → in_review → accepted` (`declined` any time).
 The client can move `draft → submitted`; everything else is admin-driven.
+
+## Customer lifecycle (onboard → in-service → offboard)
+
+**Onboard (`onb_*`) → in-service (`gw_*`) is bridged.** In the onboarding admin,
+**"Accept & create Groundwork client"** calls `onb_accept_and_provision`, which:
+sets the deposit + accepts the intake, creates a linked `gw_clients` record
+(business, contact, care plan, Stripe customer/subscription ids), **seeds
+`gw_integrations` from the chosen spec** (plus Website + Google Business Profile),
+adds an empty `gw_settings` row, and sets `onb_intakes.project_id = gw_clients.id`.
+It's idempotent — re-clicking returns the existing client, never a duplicate.
+From then on, the Groundwork portal/admin is the in-service home; billing state
+(`pay_status`, subscription id) is kept live on `gw_clients` by the Stripe webhook.
+
+**Offboard** is the manual **SOP-014 / CHK-014** (in the LPC repo): export the
+client slice, transfer client-owned assets, revoke access, rotate secrets, then
+delete. NOTE (follow-up B, not yet done): SOP-014's export/delete hooks currently
+cover `gw_*`/`dd_*` but **not** `onb_intakes`/`onb_assets`/the `onboarding`
+Storage bucket, and don't cancel the Stripe care-plan subscription — extend them
+before offboarding a client who onboarded through this flow.

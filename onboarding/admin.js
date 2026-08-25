@@ -101,8 +101,8 @@ function detailHtml(it, assets, events) {
   const notes = (col, model) => model.filter((s) => ((spec[col] || {})[s.key] || {}).notes)
     .map((s) => `<dt>${esc(s.label)}</dt><dd>${esc(spec[col][s.key].notes)}</dd>`).join("");
   const thumbs = assets.map((a) => a.url && (a.mime || "").startsWith("image/") && a.mime !== "image/svg+xml"
-    ? `<a class="thumb" href="${a.url}" target="_blank"><img src="${a.url}" alt=""><span class="kind">${esc(a.kind)}</span></a>`
-    : `<a class="thumb pdf" href="${a.url || "#"}" target="_blank"><span>${esc(a.filename)}</span><span class="kind">${esc(a.kind)}</span></a>`).join("");
+    ? `<a class="thumb" href="${esc(a.url)}" target="_blank" rel="noopener"><img src="${esc(a.url)}" alt=""><span class="kind">${esc(a.kind)}</span></a>`
+    : `<a class="thumb pdf" href="${esc(a.url || "#")}" target="_blank" rel="noopener"><span>${esc(a.filename)}</span><span class="kind">${esc(a.kind)}</span></a>`).join("");
 
   return `
     <div class="doc">
@@ -163,8 +163,16 @@ function detailHtml(it, assets, events) {
         <div class="field"><label>Status</label><select id="a-status" style="width:170px">
           ${["draft", "submitted", "in_review", "accepted", "declined"].map((s) => `<option value="${s}" ${it.status === s ? "selected" : ""}>${s}</option>`).join("")}
         </select></div>
-        <button class="btn btn-primary" id="a-save">Save</button>
+        <button class="btn btn-ghost" id="a-save">Save deposit / status</button>
       </div>
+      ${it.product === "groundwork" ? (it.project_id
+        ? `<div class="banner ok" style="margin-top:14px">✓ In-service client created — <a href="/groundwork/admin/">open in the Groundwork admin →</a></div>`
+        : (["submitted", "in_review", "accepted"].includes(it.status)
+            ? `<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+                 <button class="btn btn-primary" id="a-provision">Accept &amp; create Groundwork client →</button>
+                 <p class="hint" style="margin-top:6px">Saves the deposit above (leave blank to keep the current one), accepts the brief (unlocking the client's sign &amp; pay), creates their in-service client record, and seeds their integrations from the spec. One click — no re-keying.</p>
+               </div>`
+            : `<p class="hint" style="margin-top:14px">Provisioning unlocks once the client submits their brief.</p>`)) : ""}
       <div class="error-text" id="a-err"></div>
     </div>`;
 }
@@ -179,6 +187,20 @@ function wireDetail(it) {
     if (error) { $("a-err").textContent = error.message; return; }
     toast("Saved.", "ok");
     await sb.from("onb_events").insert({ intake_id: it.id, actor_id: user.id, kind: "admin_update", detail: patch }).catch(() => {});
+    openDetail(it.id);
+  };
+
+  // Accept + provision the in-service Groundwork client in one step.
+  const prov = $("a-provision");
+  if (prov) prov.onclick = async () => {
+    prov.disabled = true; $("a-err").textContent = "";
+    const dep = $("a-deposit").value.trim();
+    const { error } = await sb.rpc("onb_accept_and_provision", {
+      p_intake: it.id, p_deposit: dep === "" ? null : Number(dep),
+    });
+    if (error) { prov.disabled = false; $("a-err").textContent = error.message; return; }
+    toast("Accepted — Groundwork client created & integrations seeded.", "ok");
+    openDetail(it.id); // refresh: shows the linked client + accepted status
   };
 }
 

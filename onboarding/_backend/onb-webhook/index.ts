@@ -67,12 +67,13 @@ Deno.serve(async (req) => {
 
   try {
     let ok = true;
-    if (type === "checkout.session.completed") {
+    if (type === "checkout.session.completed" || type === "checkout.session.async_payment_succeeded") {
       const intakeId = metaIntake(obj) || String(obj.client_reference_id ?? "");
       const mode = String(obj.mode ?? "");
       // A one-time (payment-mode) session can complete while still `unpaid` for
-      // delayed/async payment methods — only mark paid once actually paid. A
-      // later `checkout.session.async_payment_succeeded`/`invoice.paid` confirms.
+      // delayed/async payment methods — only mark paid once actually paid. The
+      // later `checkout.session.async_payment_succeeded` (handled by this same
+      // branch, where payment_status is `paid`) confirms it.
       if (mode === "payment" && obj.payment_status && obj.payment_status !== "paid") {
         return ack();
       }
@@ -82,18 +83,25 @@ Deno.serve(async (req) => {
       if (obj.subscription) patch.stripe_subscription_id = String(obj.subscription);
       if (obj.customer) patch.stripe_customer_id = String(obj.customer);
       ok = await patchIntake(intakeId, obj.customer, patch);
+      if (ok) ok = await syncLinkedClient(intakeId, obj.customer, patch);
       if (ok) await logEvent(intakeId, mode === "subscription" ? "subscription_active" : "deposit_paid", { session: obj.id });
     } else if (type === "invoice.paid") {
       const intakeId = metaIntake(obj);
-      ok = await patchIntake(intakeId, obj.customer, { pay_status: "active" });
+      const patch = { pay_status: "active" };
+      ok = await patchIntake(intakeId, obj.customer, patch);
+      if (ok) ok = await syncLinkedClient(intakeId, obj.customer, patch);
       if (ok) await logEvent(intakeId, "invoice_paid", { invoice: obj.id });
     } else if (type === "invoice.payment_failed") {
       const intakeId = metaIntake(obj);
-      ok = await patchIntake(intakeId, obj.customer, { pay_status: "past_due" });
+      const patch = { pay_status: "past_due" };
+      ok = await patchIntake(intakeId, obj.customer, patch);
+      if (ok) ok = await syncLinkedClient(intakeId, obj.customer, patch);
       if (ok) await logEvent(intakeId, "payment_failed", { invoice: obj.id });
     } else if (type === "customer.subscription.deleted") {
       const intakeId = metaIntake(obj);
-      ok = await patchIntake(intakeId, obj.customer, { pay_status: "canceled" });
+      const patch = { pay_status: "canceled" };
+      ok = await patchIntake(intakeId, obj.customer, patch);
+      if (ok) ok = await syncLinkedClient(intakeId, obj.customer, patch);
       if (ok) await logEvent(intakeId, "subscription_canceled", { subscription: obj.id });
     }
     // A transient write failure must NOT be acknowledged — return 500 so Stripe
@@ -125,6 +133,34 @@ async function patchIntake(intakeId: string, customer: unknown, patch: Record<st
     if (!r.ok) { console.error("patchIntake non-2xx", r.status, await r.text().catch(() => "")); return false; }
     return true;
   } catch (e) { console.error("patchIntake threw", e); return false; }
+}
+// Mirror billing state onto the linked in-service Groundwork client (if the
+// intake has been provisioned to a gw_clients record), so recurring-revenue
+// status is live where the studio manages the client. Returns false on a real
+// failure so the caller can 500 and let Stripe retry (patchIntake is idempotent,
+// so re-processing the event is safe); returns true on success or a legitimate
+// no-op (no linked client yet).
+async function syncLinkedClient(intakeId: string, customer: unknown, patch: Record<string, unknown>): Promise<boolean> {
+  try {
+    const url = intakeId
+      ? `${REST}/onb_intakes?id=eq.${encodeURIComponent(intakeId)}&select=project_id`
+      : customer
+        ? `${REST}/onb_intakes?stripe_customer_id=eq.${encodeURIComponent(String(customer))}&select=project_id`
+        : "";
+    if (!url) return true;
+    const r = await fetch(url, { headers: svc });
+    if (!r.ok) { console.error("syncLinkedClient lookup non-2xx", r.status); return false; }
+    const rows = await r.json();
+    const pid = Array.isArray(rows) && rows[0] ? rows[0].project_id : null;
+    if (!pid) return true; // not provisioned to an in-service client yet
+    // gw_clients shares the pay_status / stripe_* column names, so the same
+    // patch applies. (status — the lifecycle field — is left to the studio.)
+    const pr = await fetch(`${REST}/gw_clients?id=eq.${encodeURIComponent(String(pid))}`, {
+      method: "PATCH", headers: { ...svc, Prefer: "return=minimal" }, body: JSON.stringify(patch),
+    });
+    if (!pr.ok) { console.error("syncLinkedClient gw patch non-2xx", pr.status, await pr.text().catch(() => "")); return false; }
+    return true;
+  } catch (e) { console.error("syncLinkedClient threw", e); return false; }
 }
 async function logEvent(intakeId: string, kind: string, detail: Record<string, unknown>) {
   if (!intakeId) return;
