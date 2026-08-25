@@ -20,14 +20,16 @@ Project: `ekogelnbhggyrychfrta` · Owner-only steps · Companion: `README.md`.
     ('onb_save_draft','onb_accept_and_provision');          -- 2 rows
   ```
 - [ ] **2. Deploy the 5 edge functions** with the right JWT setting:
-  - `onb-sign`, `onb-checkout`, `onb-notify`, `onb-lookup` → **Verify JWT ON**
+  - `onb-sign`, `onb-checkout`, `onb-concierge`, `onb-lookup` → **Verify JWT ON**
   - `onb-webhook` → **Verify JWT OFF** (`--no-verify-jwt`)
+  - (`onb-notify` is superseded by `onb-concierge` — skip it.)
 - [ ] **3. Set secrets** (Project Settings ▸ Edge Functions ▸ Secrets). Start with
   **test** values:
   ```
   STRIPE_SECRET_KEY      = sk_test_…
   STRIPE_WEBHOOK_SECRET  = whsec_…            # from step 4
-  RESEND_API_KEY         = re_…               # optional (emails)
+  RESEND_API_KEY         = re_…               # emails (acks, agreement, concierge)
+  ANTHROPIC_API_KEY      = sk-ant-…           # concierge AI review (same key as the assistants)
   GOOGLE_PLACES_API_KEY  = AIza…              # optional (autofill)
   ALLOWED_ORIGINS        = https://lostpinescreative.com,https://www.lostpinescreative.com
   OWNER_EMAIL            = desmitdesignz@gmail.com
@@ -72,9 +74,14 @@ expiry/CVC/ZIP.
 - [ ] Step 5 (Review): the doc renders; the **privacy checkbox is required** — the
   "Submit brief for review" button is disabled until it's ticked
 - [ ] Tick consent → **Submit** → banner flips to "Submitted — we're reviewing"
+- [ ] **Concierge fired** — the test client's inbox gets an on-brand "We've got
+  your brief" acknowledgement (if Resend set)
 
 **Studio — review & provision**
-- [ ] You receive the **new-brief email** (if Resend set) with a "Review & quote" link
+- [ ] You receive the **concierge email** with the Claude review + a draft reply
+  (reply-to = the client) and an "Open in admin" link
+- [ ] (If `ANTHROPIC_API_KEY` unset) you still get the brief email; review says
+  "AI review unavailable"
 - [ ] `/onboarding/admin.html` lists the intake; open it → brief, uploaded assets
   (thumbnails), consent record all show
 - [ ] Set a **Deposit ($)** and click **"Accept & create Groundwork client"**

@@ -43,7 +43,9 @@ onboarding/
    ├─ onb-sign/index.ts     records the e-signature (Verify JWT ON)
    ├─ onb-checkout/index.ts creates the Stripe Checkout Session (Verify JWT ON)
    ├─ onb-webhook/index.ts  Stripe webhook → payment status (Verify JWT OFF)
-   ├─ onb-notify/index.ts   emails you when a brief is submitted (Verify JWT ON)
+   ├─ onb-concierge/index.ts intake concierge: auto-acks the client + Claude
+   │                        review + draft reply to you (Verify JWT ON)
+   ├─ onb-notify/index.ts   simple submit email — SUPERSEDED by onb-concierge
    └─ onb-lookup/index.ts   Google Places business autofill (Verify JWT ON)
 ```
 
@@ -74,13 +76,17 @@ Groundwork tables (`001`/`002` gw_portal) also being applied.
 | `onb-sign`     | **ON**  | records the click-through e-signature + emails a copy |
 | `onb-checkout` | **ON**  | creates the Stripe Checkout Session |
 | `onb-webhook`  | **OFF** | receives Stripe events (verified by signature instead) |
-| `onb-notify`   | **ON**  | emails you a summary when a client submits a brief |
+| `onb-concierge`| **ON**  | on submit: auto-acks the client + Claude review + draft reply to you |
 | `onb-lookup`   | **ON**  | Google Places business autocomplete/autofill (Step 1) |
+
+(`onb-notify` is the older, simpler "email you on submit" function — **superseded
+by `onb-concierge`**, which does everything it did plus the review. Deploy the
+concierge; you can skip `onb-notify`.)
 
 CLI: put each at `supabase/functions/<name>/index.ts` then
 `supabase functions deploy onb-sign` /
 `supabase functions deploy onb-checkout` /
-`supabase functions deploy onb-notify` /
+`supabase functions deploy onb-concierge` /
 `supabase functions deploy onb-lookup` /
 `supabase functions deploy onb-webhook --no-verify-jwt`.
 
@@ -88,7 +94,9 @@ CLI: put each at `supabase/functions/<name>/index.ts` then
 ```
 STRIPE_SECRET_KEY      = sk_live_…        # or sk_test_… while testing
 STRIPE_WEBHOOK_SECRET  = whsec_…          # from the webhook you create in step 4
-RESEND_API_KEY         = re_…             # optional: emails the signed agreement
+RESEND_API_KEY         = re_…             # emails: acks, signed agreement, owner review
+ANTHROPIC_API_KEY      = sk-ant-…         # concierge AI review/draft (same key the assistants use)
+ANTHROPIC_MODEL        = claude-sonnet-5  # optional override for the concierge model
 GOOGLE_PLACES_API_KEY  = AIza…            # optional: Step-1 business autofill (see below)
 ALLOWED_ORIGINS        = https://lostpinescreative.com,https://www.lostpinescreative.com
 OWNER_EMAIL            = desmitdesignz@gmail.com   # signature copies + new-brief notifications
@@ -206,3 +214,15 @@ Stripe care-plan subscription so billing stops when service does.
 **Consent:** the Review step captures a **required privacy consent** (linked to
 `/privacy.html`) plus an **optional SMS opt-in** before the brief can be
 submitted; both are timestamped into `onb_intakes.about` and shown in the admin.
+
+**Intake concierge (`onb-concierge`):** the moment a client submits, the concierge
+(1) **auto-acknowledges the prospect** with an on-brand "we've got it, here's
+what happens next" email, (2) has **Claude review the brief** — fit, suggested
+scope/deposit, gaps to ask, red flags — and (3) emails **you** that review plus a
+**ready-to-send draft reply** (reply-to set to the client). Human-in-the-loop by
+design: the prospect only ever gets the automatic acknowledgement; the personal
+reply is yours to approve and send. Degrades gracefully — no `ANTHROPIC_API_KEY`
+→ you still get the brief + ack; no `RESEND_API_KEY` → no emails, brief still in
+the admin. It's fired best-effort from the browser on submit; for guaranteed
+firing you can later point a Supabase **Database Webhook** (on `onb_intakes`
+UPDATE → status `submitted`) at it instead.

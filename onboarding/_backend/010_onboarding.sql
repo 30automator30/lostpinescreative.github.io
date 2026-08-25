@@ -250,6 +250,11 @@ create table if not exists public.onb_events (
 );
 alter table public.onb_events enable row level security;
 create index if not exists onb_events_intake_idx on public.onb_events(intake_id);
+-- Idempotency lock for onb-concierge: at most one concierge run per intake. The
+-- function inserts this event FIRST and bails on conflict, so concurrent calls
+-- can't amplify LLM/email cost.
+create unique index if not exists onb_events_concierge_uniq
+  on public.onb_events (intake_id) where kind = 'concierge_reviewed';
 -- clients can read events on their own intake; only admin/service-role writes.
 drop policy if exists onb_events_select on public.onb_events;
 create policy onb_events_select on public.onb_events

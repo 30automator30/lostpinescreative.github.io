@@ -259,14 +259,16 @@ async function onNext() {
   goStep(stepIndex + 1);
 }
 
-// Tell the studio a brief was submitted (so they know to quote it). Best-effort:
-// any failure is swallowed — the submit itself already succeeded server-side.
+// Kick off the intake concierge on submit: it auto-acknowledges the client and
+// emails the studio an AI review + draft reply. Best-effort — any failure is
+// swallowed since the submit itself already succeeded server-side.
 async function notifyStudio() {
-  if (!CFG.NOTIFY_FN) return;
+  const fn = CFG.CONCIERGE_FN || CFG.NOTIFY_FN;
+  if (!fn) return;
   try {
     const { data: sess } = await sb.auth.getSession();
     if (!sess || !sess.session) return;
-    await fetch(CFG.NOTIFY_FN, {
+    await fetch(fn, {
       method: "POST",
       headers: { "Content-Type": "application/json", apikey: CFG.SUPABASE_ANON_KEY,
         Authorization: "Bearer " + sess.session.access_token },
