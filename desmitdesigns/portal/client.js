@@ -198,6 +198,21 @@ export function wireUploader(zoneEl, inputEl, onFiles) {
   });
 }
 
+/* ============================================================
+ * Milestones — studio-managed checklist per project (client reads).
+ * ============================================================ */
+export const CHECK_SVG =
+  '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>';
+
+export async function loadMilestones(projectId) {
+  const { data } = await sb
+    .from("dd_milestones").select("*")
+    .eq("project_id", projectId)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+  return data || [];
+}
+
 /* Email a project's client(s) that a new update was posted, via the
    notify-update Edge Function. Opt-in per update. Returns { ok, sent, error }. */
 export async function notifyClientUpdate(projectId, message) {

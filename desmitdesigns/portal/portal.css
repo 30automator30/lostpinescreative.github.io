@@ -206,3 +206,18 @@ textarea { resize: vertical; min-height: 96px; }
 .thumb.file svg { width: 26px; height: 26px; stroke: var(--text-muted); }
 .thumb.file .ext { text-transform: uppercase; font-weight: 700; letter-spacing: .5px; color: var(--accent-light); font-size: .72rem; }
 .thumb.internal { outline: 1.5px solid rgba(248,113,113,.45); outline-offset: -1.5px; }
+
+/* ---- milestones checklist (shared portal + admin) ---- */
+.mstones { list-style: none; display: flex; flex-direction: column; }
+.mstones li { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.mstones li:last-child { border-bottom: none; }
+.ms-check { width: 21px; height: 21px; flex: 0 0 auto; border-radius: 6px; border: 1.5px solid var(--border);
+  background: transparent; color: transparent; display: grid; place-items: center; padding: 0; }
+.ms-check.done { background: var(--gradient); border-color: transparent; color: #fff; }
+button.ms-check { cursor: pointer; transition: border-color .15s; }
+button.ms-check:hover { border-color: var(--accent); }
+.ms-title { flex: 1; font-size: .92rem; color: var(--text); }
+.mstones li.done .ms-title { color: var(--text-dim); text-decoration: line-through; }
+.ms-del { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; }
+.ms-del:hover { color: var(--danger); }
+.ms-empty { color: var(--text-dim); font-size: .88rem; padding: 6px 0; }

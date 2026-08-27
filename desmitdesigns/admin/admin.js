@@ -6,7 +6,7 @@ import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
   ATTACH_BUCKET, uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
-  notifyClientUpdate,
+  notifyClientUpdate, loadMilestones, CHECK_SVG,
 } from "../portal/client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -16,7 +16,8 @@ let user = null;
 let profiles = {};      // id -> {email, full_name}
 let channel = null;
 let editingId = null;
-let editFiles = [];     // dd_project_files rows for the open editor
+let editFiles = [];       // dd_project_files rows for the open editor
+let editMilestones = [];  // dd_milestones rows for the open editor
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -162,6 +163,8 @@ async function openEditor(id) {
   $("e-name").value = p.title;
   $("e-status").value = p.status;
   $("e-progress").value = p.progress_percent || 0;
+  $("e-progress-auto").checked = !!p.progress_auto;
+  $("e-progress").disabled = !!p.progress_auto;
   $("e-quote").value = p.quote_amount != null ? p.quote_amount : "";
   $("e-service").value = p.service_type || "";
   $("e-quotenotes").value = p.quote_notes || "";
@@ -174,8 +177,77 @@ async function openEditor(id) {
   await loadEditorTimeline(id);
   await loadEditorShares(id);
   loadEditorFiles(id);
+  loadEditorMilestones(id);
   $("edit-modal").classList.add("show");
 }
+
+/* ---------- milestones ---------- */
+async function loadEditorMilestones(id) {
+  if (id !== editingId) return;
+  editMilestones = await loadMilestones(id);
+  if (id !== editingId) return;
+  renderEditorMilestones();
+  syncAutoProgress();
+}
+
+function renderEditorMilestones() {
+  const ul = $("e-milestones");
+  if (!editMilestones.length) {
+    ul.innerHTML = '<li class="ms-empty" style="border:none">No milestones yet — add the first below.</li>';
+    return;
+  }
+  ul.innerHTML = editMilestones.map((m) =>
+    '<li class="' + (m.done ? "done" : "") + '">' +
+    '<button class="ms-check' + (m.done ? " done" : "") + '" data-toggle="' + m.id + '" title="Toggle done">' +
+    (m.done ? CHECK_SVG : "") + "</button>" +
+    '<span class="ms-title">' + escapeHtml(m.title) + "</span>" +
+    '<button class="ms-del" data-del-ms="' + m.id + '" title="Remove">&times;</button></li>').join("");
+  ul.querySelectorAll("[data-toggle]").forEach((b) =>
+    b.addEventListener("click", () => toggleMilestone(b.dataset.toggle)));
+  ul.querySelectorAll("[data-del-ms]").forEach((b) =>
+    b.addEventListener("click", () => deleteMilestone(b.dataset.delMs)));
+}
+
+// When auto is on, reflect the milestone ratio in the (disabled) progress field.
+function syncAutoProgress() {
+  if (!$("e-progress-auto").checked) return;
+  const t = editMilestones.length;
+  const d = editMilestones.filter((m) => m.done).length;
+  $("e-progress").value = t ? Math.round((d / t) * 100) : 0;
+}
+
+async function toggleMilestone(id) {
+  const m = editMilestones.find((x) => x.id === id); if (!m) return;
+  const { error } = await sb.from("dd_milestones").update({ done: !m.done }).eq("id", id);
+  if (error) { toast(error.message, "err"); return; }
+  loadEditorMilestones(editingId); loadProjects(); // trigger may have moved progress
+}
+
+async function deleteMilestone(id) {
+  const { error } = await sb.from("dd_milestones").delete().eq("id", id);
+  if (error) { toast(error.message, "err"); return; }
+  loadEditorMilestones(editingId); loadProjects();
+}
+
+$("ms-add").addEventListener("click", async () => {
+  if (!editingId) return;
+  const title = $("ms-title").value.trim();
+  if (!title) return;
+  const btn = $("ms-add"); btn.disabled = true;
+  const { error } = await sb.from("dd_milestones").insert({
+    project_id: editingId, title, position: editMilestones.length,
+  });
+  btn.disabled = false;
+  if (error) { toast(error.message, "err"); return; }
+  $("ms-title").value = "";
+  loadEditorMilestones(editingId); loadProjects();
+});
+$("ms-title").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("ms-add").click(); } });
+
+$("e-progress-auto").addEventListener("change", () => {
+  $("e-progress").disabled = $("e-progress-auto").checked;
+  syncAutoProgress();
+});
 
 async function loadEditorFiles(id) {
   if (id !== editingId) return;
@@ -251,10 +323,16 @@ $("edit-modal").addEventListener("click", (e) => {
 $("edit-save").addEventListener("click", async () => {
   if (!editingId) return;
   const btn = $("edit-save"); btn.disabled = true; $("edit-error").textContent = "";
+  const auto = $("e-progress-auto").checked;
+  const t = editMilestones.length, d = editMilestones.filter((m) => m.done).length;
+  const progress = auto
+    ? (t ? Math.round((d / t) * 100) : 0)
+    : Math.max(0, Math.min(100, parseInt($("e-progress").value || "0", 10)));
   const patch = {
     title: $("e-name").value.trim(),
     status: $("e-status").value,
-    progress_percent: Math.max(0, Math.min(100, parseInt($("e-progress").value || "0", 10))),
+    progress_percent: progress,
+    progress_auto: auto,
     quote_amount: $("e-quote").value === "" ? null : Number($("e-quote").value),
     service_type: $("e-service").value.trim() || null,
     quote_notes: $("e-quotenotes").value.trim() || null,
@@ -289,10 +367,12 @@ $("edit-post").addEventListener("click", async () => {
   const { error } = await sb.from("dd_project_updates").insert({
     project_id: projectId, body, percent, customer_visible,
   });
-  // If a percent was given, also move the project's headline progress.
+  // A percent typed into an update is a manual signal: set it and drop auto mode.
   if (!error && percent != null) {
-    await sb.from("dd_projects").update({ progress_percent: percent }).eq("id", projectId);
+    await sb.from("dd_projects").update({ progress_percent: percent, progress_auto: false }).eq("id", projectId);
     $("e-progress").value = percent;
+    $("e-progress-auto").checked = false;
+    $("e-progress").disabled = false;
   }
   btn.disabled = false;
   if (error) { $("edit-error").textContent = error.message; return; }
@@ -386,6 +466,7 @@ function subscribe() {
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_projects" }, refresh)
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_project_updates" }, () => { if (editingId && $("edit-modal").classList.contains("show")) loadEditorTimeline(editingId); })
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_project_files" }, () => { if (editingId && $("edit-modal").classList.contains("show")) loadEditorFiles(editingId); })
+    .on("postgres_changes", { event: "*", schema: "public", table: "dd_milestones" }, () => { if (editingId && $("edit-modal").classList.contains("show")) loadEditorMilestones(editingId); })
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_inquiries" }, loadInbox)
     .subscribe();
 }

@@ -94,7 +94,18 @@ via the service worker; reload once.)
 | `dd_projects` | title, service_type, status, quote_amount, progress_percent |
 | `dd_project_updates` | progress timeline + two-way notes (`customer_visible`) |
 | `dd_project_files` | photo/file attachments per project (files in Storage) |
+| `dd_milestones` | studio-managed per-project checklist (client reads) |
 | `dd_inquiries` | public leads captured by the AI assistant |
+
+### Milestones (migration `006_dd_milestones.sql`)
+A per-project checklist the **studio** adds and checks off; the client sees it
+read-only. RLS: admin writes, project members read. New column
+`dd_projects.progress_auto` — when **true**, the progress bar is derived from the
+done/total milestone ratio (a trigger recomputes it on every milestone change);
+when **false**, the studio's manual percent wins. Existing projects were set
+`progress_auto=false` to preserve their manual percent; new projects default to
+auto. In the admin editor, an "auto from milestones" checkbox toggles the mode
+(and typing a percent into a progress update flips it back to manual).
 
 ### Attachments (migration `005_dd_attachments.sql`)
 Adds photo/file uploads to projects. Files live in the private **`dd-attachments`**

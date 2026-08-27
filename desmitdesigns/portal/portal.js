@@ -6,6 +6,7 @@ import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
   uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
+  loadMilestones, CHECK_SVG,
 } from "./client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -118,9 +119,26 @@ async function openProject(id) {
   showView("view-project");
   $("pj-timeline").innerHTML = '<div class="spinner"></div>';
   $("pj-files").innerHTML = "";
+  $("pj-milestones").innerHTML = "";
   await renderProject();
   loadFiles(id);
+  loadMilestonesView(id);
   subscribeProject(id);
+}
+
+async function loadMilestonesView(id) {
+  if (id !== openProjectId) return;
+  const list = await loadMilestones(id);
+  if (id !== openProjectId) return;
+  const card = $("pj-mstones-card");
+  if (!list.length) { card.style.display = "none"; return; }
+  card.style.display = "";
+  const done = list.filter((m) => m.done).length;
+  $("pj-ms-count").textContent = done + " of " + list.length + " complete";
+  $("pj-milestones").innerHTML = list.map((m) =>
+    '<li class="' + (m.done ? "done" : "") + '">' +
+    '<span class="ms-check' + (m.done ? " done" : "") + '">' + (m.done ? CHECK_SVG : "") + "</span>" +
+    '<span class="ms-title">' + escapeHtml(m.title) + "</span></li>").join("");
 }
 
 async function loadFiles(id) {
@@ -243,6 +261,9 @@ function subscribeProject(id) {
     .on("postgres_changes",
       { event: "*", schema: "public", table: "dd_project_files", filter: "project_id=eq." + id },
       () => { if (openProjectId === id) loadFiles(id); })
+    .on("postgres_changes",
+      { event: "*", schema: "public", table: "dd_milestones", filter: "project_id=eq." + id },
+      () => { if (openProjectId === id) loadMilestonesView(id); })
     .subscribe();
 }
 

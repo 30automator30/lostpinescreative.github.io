@@ -138,6 +138,10 @@
         <div class="field"><label for="e-progress">Progress %</label>
           <input type="number" id="e-progress" min="0" max="100" step="5"></div>
       </div>
+      <label class="chk-label" style="margin:-4px 0 14px">
+        <input type="checkbox" id="e-progress-auto" style="width:auto">
+        Set progress automatically from milestones
+      </label>
       <div class="grid-2">
         <div class="field"><label for="e-quote">Quote amount ($)</label>
           <input type="number" id="e-quote" min="0" step="0.01" placeholder="e.g. 250"></div>
@@ -153,6 +157,15 @@
         <button type="button" class="btn btn-danger btn-sm" id="edit-delete" style="margin-right:auto">Delete</button>
         <button type="button" class="btn btn-ghost" id="edit-cancel">Cancel</button>
         <button type="button" class="btn btn-primary" id="edit-save">Save</button>
+      </div>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
+      <h3 class="msec">Milestones</h3>
+      <p class="inline-note">The client sees these as a checklist. When “auto” is on above, checking them off moves the progress bar.</p>
+      <ul class="mstones" id="e-milestones" style="margin-top:8px"></ul>
+      <div class="row" style="gap:8px;margin-top:10px">
+        <input type="text" id="ms-title" placeholder="Add a milestone…" style="flex:1">
+        <button type="button" class="btn btn-primary btn-sm" id="ms-add">Add</button>
       </div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
