@@ -18,6 +18,9 @@ let channel = null;
 let editingId = null;
 let editFiles = [];       // dd_project_files rows for the open editor
 let editMilestones = [];  // dd_milestones rows for the open editor
+let editUpdates = [];     // dd_project_updates rows for the open editor
+let editingUpdateId = null; // update currently being edited inline
+let editingMsId = null;     // milestone currently being renamed inline
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -171,6 +174,7 @@ async function openEditor(id) {
   $("e-desc").value = p.description || "";
   $("e-update").value = ""; $("e-update-pct").value = ""; $("e-update-internal").checked = false;
   $("e-update-email").checked = false; $("e-update-email").disabled = false;
+  editingUpdateId = null; editingMsId = null;
   $("edit-share-email").value = "";
   $("edit-error").textContent = "";
   $("e-files").innerHTML = ""; $("e-file-internal").checked = false;
@@ -196,16 +200,59 @@ function renderEditorMilestones() {
     ul.innerHTML = '<li class="ms-empty" style="border:none">No milestones yet — add the first below.</li>';
     return;
   }
-  ul.innerHTML = editMilestones.map((m) =>
-    '<li class="' + (m.done ? "done" : "") + '">' +
-    '<button class="ms-check' + (m.done ? " done" : "") + '" data-toggle="' + m.id + '" title="Toggle done">' +
-    (m.done ? CHECK_SVG : "") + "</button>" +
-    '<span class="ms-title">' + escapeHtml(m.title) + "</span>" +
-    '<button class="ms-del" data-del-ms="' + m.id + '" title="Remove">&times;</button></li>').join("");
-  ul.querySelectorAll("[data-toggle]").forEach((b) =>
-    b.addEventListener("click", () => toggleMilestone(b.dataset.toggle)));
-  ul.querySelectorAll("[data-del-ms]").forEach((b) =>
-    b.addEventListener("click", () => deleteMilestone(b.dataset.delMs)));
+  const last = editMilestones.length - 1;
+  ul.innerHTML = editMilestones.map((m, i) => {
+    const check = '<button class="ms-check' + (m.done ? " done" : "") + '" data-toggle="' + m.id +
+      '" title="Toggle done">' + (m.done ? CHECK_SVG : "") + "</button>";
+    if (m.id === editingMsId) {
+      return '<li class="' + (m.done ? "done" : "") + '">' + check +
+        '<input class="ms-edit-input" id="ms-edit-input" value="' + escapeHtml(m.title) + '">' +
+        '<button class="btn btn-primary btn-sm" data-ms-save="' + m.id + '">Save</button></li>';
+    }
+    return '<li class="' + (m.done ? "done" : "") + '">' + check +
+      '<span class="ms-title" data-rename="' + m.id + '" title="Click to rename">' + escapeHtml(m.title) + "</span>" +
+      '<button class="ms-move" data-up="' + m.id + '"' + (i === 0 ? " disabled" : "") + ' title="Move up">▲</button>' +
+      '<button class="ms-move" data-down="' + m.id + '"' + (i === last ? " disabled" : "") + ' title="Move down">▼</button>' +
+      '<button class="ms-del" data-del-ms="' + m.id + '" title="Remove">&times;</button></li>';
+  }).join("");
+  ul.querySelectorAll("[data-toggle]").forEach((b) => b.addEventListener("click", () => toggleMilestone(b.dataset.toggle)));
+  ul.querySelectorAll("[data-del-ms]").forEach((b) => b.addEventListener("click", () => deleteMilestone(b.dataset.delMs)));
+  ul.querySelectorAll("[data-rename]").forEach((s) => s.addEventListener("click", () => {
+    editingMsId = s.dataset.rename; renderEditorMilestones();
+    const inp = $("ms-edit-input"); if (inp) { inp.focus(); inp.select(); }
+  }));
+  ul.querySelectorAll("[data-ms-save]").forEach((b) => b.addEventListener("click", () => saveMilestoneTitle(b.dataset.msSave)));
+  ul.querySelectorAll("[data-up]").forEach((b) => b.addEventListener("click", () => moveMilestone(b.dataset.up, -1)));
+  ul.querySelectorAll("[data-down]").forEach((b) => b.addEventListener("click", () => moveMilestone(b.dataset.down, 1)));
+  const inp = $("ms-edit-input");
+  if (inp) inp.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") { e.preventDefault(); saveMilestoneTitle(editingMsId); }
+    else if (e.key === "Escape") { editingMsId = null; renderEditorMilestones(); }
+  });
+}
+
+async function saveMilestoneTitle(id) {
+  const inp = $("ms-edit-input"); if (!inp) return;
+  const title = inp.value.trim();
+  if (!title) { toast("Title can't be empty.", "err"); return; }
+  editingMsId = null;
+  const { error } = await sb.from("dd_milestones").update({ title }).eq("id", id);
+  if (error) toast(error.message, "err");
+  loadEditorMilestones(editingId); loadProjects();
+}
+
+async function moveMilestone(id, delta) {
+  const i = editMilestones.findIndex((m) => m.id === id);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= editMilestones.length) return;
+  const arr = editMilestones.slice();
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  editMilestones = arr;             // optimistic reorder
+  renderEditorMilestones();
+  const results = await Promise.all(arr.map((m, idx) =>
+    m.position === idx ? Promise.resolve({}) : sb.from("dd_milestones").update({ position: idx }).eq("id", m.id)));
+  if (results.some((r) => r && r.error)) toast("Couldn't save the new order.", "err");
+  loadEditorMilestones(editingId);
 }
 
 // When auto is on, reflect the milestone ratio in the (disabled) progress field.
@@ -302,17 +349,57 @@ $("edit-share-add").addEventListener("click", async () => {
 async function loadEditorTimeline(id) {
   const { data: ups } = await sb.from("dd_project_updates").select("*")
     .eq("project_id", id).order("created_at", { ascending: false });
+  editUpdates = ups || [];
+  renderEditorTimeline();
+}
+
+function renderEditorTimeline() {
   const tl = $("edit-timeline");
-  if (!ups || !ups.length) { tl.innerHTML = '<li><div class="t-body subtle">No updates yet.</div></li>'; return; }
-  tl.innerHTML = ups.map((u) => {
+  if (!editUpdates.length) { tl.innerHTML = '<li><div class="t-body subtle">No updates yet.</div></li>'; return; }
+  tl.innerHTML = editUpdates.map((u) => {
     const internal = !u.customer_visible;
     const mine = u.author_id === user.id;
+    if (u.id === editingUpdateId) {
+      return '<li class="' + (internal ? "t-internal" : "") + '"><div class="t-when">' + fmtDateTime(u.created_at) + "</div>" +
+        '<textarea class="up-edit-body" id="up-edit-body">' + escapeHtml(u.body) + "</textarea>" +
+        '<label class="chk-label" style="margin:8px 0"><input type="checkbox" id="up-edit-internal"' + (internal ? " checked" : "") +
+        ' style="width:auto"> Internal only (hide from customer)</label>' +
+        '<div style="display:flex;gap:8px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost btn-sm" data-up-cancel>Cancel</button>' +
+        '<button class="btn btn-primary btn-sm" data-up-save="' + u.id + '">Save</button></div></li>';
+    }
     return '<li class="' + (internal ? "t-internal" : "") + '"><div class="t-when">' +
       fmtDateTime(u.created_at) + (mine ? " · you" : " · customer") +
       (u.percent != null ? " · " + u.percent + "%" : "") +
-      (internal ? '<span class="t-tag">internal</span>' : "") + "</div>" +
-      '<div class="t-body">' + escapeHtml(u.body) + "</div></li>";
+      (internal ? '<span class="t-tag">internal</span>' : "") +
+      '<span class="t-acts">' + (mine ? '<button data-edit-up="' + u.id + '">Edit</button>' : "") +
+      '<button data-del-up="' + u.id + '">Delete</button></span>' +
+      '</div><div class="t-body">' + escapeHtml(u.body) + "</div></li>";
   }).join("");
+  const tl2 = $("edit-timeline");
+  tl2.querySelectorAll("[data-edit-up]").forEach((b) => b.addEventListener("click", () => { editingUpdateId = b.dataset.editUp; renderEditorTimeline(); }));
+  tl2.querySelectorAll("[data-up-cancel]").forEach((b) => b.addEventListener("click", () => { editingUpdateId = null; renderEditorTimeline(); }));
+  tl2.querySelectorAll("[data-up-save]").forEach((b) => b.addEventListener("click", () => saveUpdate(b.dataset.upSave)));
+  tl2.querySelectorAll("[data-del-up]").forEach((b) => b.addEventListener("click", () => deleteUpdate(b.dataset.delUp)));
+}
+
+async function saveUpdate(id) {
+  const bodyEl = $("up-edit-body"), intEl = $("up-edit-internal");
+  if (!bodyEl) return;
+  const body = bodyEl.value.trim();
+  if (!body) { toast("Update can't be empty.", "err"); return; }
+  editingUpdateId = null;
+  const { error } = await sb.from("dd_project_updates").update({ body, customer_visible: !intEl.checked }).eq("id", id);
+  if (error) toast(error.message, "err"); else toast("Update saved.", "ok");
+  loadEditorTimeline(editingId);
+}
+
+async function deleteUpdate(id) {
+  if (!confirm("Delete this update? This can't be undone.")) return;
+  const { error } = await sb.from("dd_project_updates").delete().eq("id", id);
+  if (error) { toast(error.message, "err"); return; }
+  toast("Update deleted.", "ok");
+  loadEditorTimeline(editingId);
 }
 
 $("edit-cancel").addEventListener("click", () => $("edit-modal").classList.remove("show"));

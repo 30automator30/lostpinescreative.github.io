@@ -221,3 +221,14 @@ button.ms-check:hover { border-color: var(--accent); }
 .ms-del { background: none; border: none; color: var(--text-dim); font-size: 1.2rem; line-height: 1; cursor: pointer; padding: 0 4px; }
 .ms-del:hover { color: var(--danger); }
 .ms-empty { color: var(--text-dim); font-size: .88rem; padding: 6px 0; }
+
+/* ---- admin: milestone reorder + timeline actions ---- */
+.ms-move { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 0 2px; font-size: .95rem; line-height: 1; }
+.ms-move:hover:not(:disabled) { color: var(--accent-light); }
+.ms-move:disabled { opacity: .3; cursor: default; }
+.ms-edit-input { flex: 1; padding: 6px 10px !important; font-size: .92rem !important; }
+.t-acts { float: right; display: inline-flex; gap: 10px; }
+.t-acts button { background: none; border: none; color: var(--text-dim); font-size: .68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .6px; cursor: pointer; }
+.t-acts button:hover { color: var(--accent-light); }
+.up-edit-body { min-height: 62px; margin-top: 4px; }
