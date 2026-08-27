@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v24';
+const VERSION = 'v25';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 

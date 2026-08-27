@@ -167,17 +167,35 @@ export function renderAttachments(container, files, opts = {}) {
     b.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); opts.onDelete(b.dataset.del); }));
 }
 
+// A page only receives file `drop` events if the document's default
+// drag-over/drop (which navigates to the dropped file) is suppressed. Do it
+// once per page so a drop that lands even a pixel outside the zone doesn't
+// open the file in the browser.
+let _dropGuardInstalled = false;
+function installDropGuard() {
+  if (_dropGuardInstalled) return;
+  _dropGuardInstalled = true;
+  ["dragover", "drop"].forEach((ev) =>
+    window.addEventListener(ev, (e) => { e.preventDefault(); }, false));
+}
+
 /* Wire a dropzone + hidden file input to an upload handler. */
 export function wireUploader(zoneEl, inputEl, onFiles) {
   if (!zoneEl || !inputEl) return;
+  installDropGuard();
   zoneEl.addEventListener("click", () => inputEl.click());
   zoneEl.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inputEl.click(); } });
   inputEl.addEventListener("change", () => { if (inputEl.files.length) { onFiles(inputEl.files); inputEl.value = ""; } });
   ["dragenter", "dragover"].forEach((ev) =>
-    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.add("drag"); }));
-  ["dragleave", "drop"].forEach((ev) =>
-    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); zoneEl.classList.remove("drag"); }));
-  zoneEl.addEventListener("drop", (e) => { if (e.dataTransfer && e.dataTransfer.files.length) onFiles(e.dataTransfer.files); });
+    zoneEl.addEventListener(ev, (e) => { e.preventDefault(); e.stopPropagation(); zoneEl.classList.add("drag"); }));
+  zoneEl.addEventListener("dragleave", (e) => { e.preventDefault(); zoneEl.classList.remove("drag"); });
+  zoneEl.addEventListener("drop", (e) => {
+    e.preventDefault(); e.stopPropagation();
+    zoneEl.classList.remove("drag");
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (files && files.length) onFiles(files);
+    else toast("No file detected in that drop — try the click option.", "err");
+  });
 }
 
 /* Email a project's client(s) that a new update was posted, via the
