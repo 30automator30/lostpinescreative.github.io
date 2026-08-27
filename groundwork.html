@@ -196,6 +196,32 @@
         .cta-band h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
         .cta-band p { color: var(--text-muted); max-width: 560px; margin: 0 auto 26px; }
 
+        /* Audit request form */
+        .gwform { max-width: 520px; margin: 0 auto; text-align: left; }
+        .gwform .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 520px) { .gwform .row { grid-template-columns: 1fr; } }
+        .gwform label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 6px; }
+        .gwform input, .gwform textarea {
+            width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+            color: var(--text); font: inherit; font-size: 0.95rem; padding: 11px 13px; transition: border-color 0.2s var(--ease);
+        }
+        .gwform input:focus, .gwform textarea:focus { outline: none; border-color: var(--accent); }
+        .gwform textarea { resize: vertical; min-height: 84px; }
+        .gwform .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        .gwform .actions { margin-top: 20px; text-align: center; }
+        .gwform .btn[disabled] { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .gwform .status { min-height: 20px; margin-top: 12px; text-align: center; font-size: 0.9rem; }
+        .gwform .status.err { color: var(--warm); }
+        .gwform .status.ok { color: var(--accent-hover); }
+        .gwform-done { text-align: center; padding: 8px 0; }
+        .gwform-done .check {
+            width: 52px; height: 52px; margin: 0 auto 14px; border-radius: 50%;
+            background: var(--accent-glow); border: 1px solid var(--accent);
+            display: flex; align-items: center; justify-content: center; color: var(--accent-hover); font-size: 1.5rem;
+        }
+        .gwform-done h3 { font-size: 1.2rem; margin-bottom: 8px; }
+        .gwform-done p { color: var(--text-muted); max-width: 460px; margin: 0 auto; }
+
         /* Footer */
         footer { text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.85rem; }
         footer a { color: var(--accent); text-decoration: none; }
@@ -423,10 +449,45 @@
         <section class="rule cta-band" id="start">
             <h2 class="reveal">Let's find what's slowing you down.</h2>
             <p class="reveal">Book a free digital audit. I'll map your tools, show you where the gaps are, and what I'd connect first — no pressure, no jargon.</p>
-            <div class="reveal">
-                <a class="btn btn-primary" href="mailto:desmitdesignz@gmail.com?subject=Groundwork%20%E2%80%94%20free%20digital%20audit&amp;body=Hi%20Daniel%2C%20I'd%20like%20a%20free%20digital%20audit%20for%20my%20business.%0A%0ABusiness%20name%3A%0AWhat%20you%20do%3A%0ABiggest%20headache%20right%20now%3A">Book a free digital audit</a>
+
+            <form class="gwform reveal" id="auditForm" novalidate>
+                <div class="row">
+                    <div>
+                        <label for="gf-name">Your name</label>
+                        <input id="gf-name" name="name" type="text" autocomplete="name" required>
+                    </div>
+                    <div>
+                        <label for="gf-business">Business name</label>
+                        <input id="gf-business" name="business_name" type="text" autocomplete="organization">
+                    </div>
+                </div>
+                <div class="row">
+                    <div>
+                        <label for="gf-email">Email</label>
+                        <input id="gf-email" name="email" type="email" autocomplete="email" required>
+                    </div>
+                    <div>
+                        <label for="gf-phone">Phone <span style="opacity:.6">(optional)</span></label>
+                        <input id="gf-phone" name="phone" type="tel" autocomplete="tel">
+                    </div>
+                </div>
+                <label for="gf-message">Biggest headache right now</label>
+                <textarea id="gf-message" name="message" placeholder="e.g. calls go to voicemail while we're on a job, invoices are a mess…"></textarea>
+                <!-- honeypot: real people leave this empty -->
+                <div class="hp" aria-hidden="true"><label for="gf-company">Company</label><input id="gf-company" name="company" type="text" tabindex="-1" autocomplete="off"></div>
+                <div class="actions">
+                    <button class="btn btn-primary" type="submit" id="gf-submit">Book my free audit</button>
+                    <div class="status" id="gf-status" role="status" aria-live="polite"></div>
+                </div>
+            </form>
+
+            <div class="gwform-done reveal" id="auditDone" hidden>
+                <div class="check" aria-hidden="true">✓</div>
+                <h3>Got it — thank you.</h3>
+                <p>Your request is in. I'll reach out within one business day to set up your free digital audit. Nothing else needed from you right now.</p>
             </div>
-            <p class="micro" style="margin-top:16px;color:var(--text-muted);font-size:0.82rem;">Or email <a href="mailto:desmitdesignz@gmail.com">desmitdesignz@gmail.com</a></p>
+
+            <p class="micro" style="margin-top:16px;color:var(--text-muted);font-size:0.82rem;">Prefer email? <a href="mailto:desmitdesignz@gmail.com?subject=Groundwork%20%E2%80%94%20free%20digital%20audit">desmitdesignz@gmail.com</a></p>
         </section>
 
         <footer class="rule">
@@ -460,6 +521,68 @@
         }
     </script>
     <script src="/groundwork/portal/config.js"></script>
+    <script>
+        /* Free-audit intake → gw_inquiries (owned Supabase table, anon insert). */
+        (function () {
+            var form = document.getElementById('auditForm');
+            if (!form) return;
+            var CFG = window.GW_CONFIG || {};
+            var URL = CFG.SUPABASE_URL || 'https://ekogelnbhggyrychfrta.supabase.co';
+            var KEY = CFG.SUPABASE_ANON_KEY || '';
+            var statusEl = document.getElementById('gf-status');
+            var btn = document.getElementById('gf-submit');
+            var done = document.getElementById('auditDone');
+
+            function setStatus(msg, kind) {
+                statusEl.textContent = msg || '';
+                statusEl.className = 'status' + (kind ? ' ' + kind : '');
+            }
+            function val(n) { var el = form.elements[n]; return el ? el.value.trim() : ''; }
+
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+                // Honeypot: bots fill this; humans never see it. Fake success, send nothing.
+                if (val('company')) { form.hidden = true; done.hidden = false; return; }
+
+                var name = val('name'), email = val('email');
+                if (!name) { setStatus('Please add your name.', 'err'); return; }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setStatus('Please add a valid email.', 'err'); return; }
+                if (!KEY) { setStatus('Form is offline — email desmitdesignz@gmail.com and I’ll jump right on it.', 'err'); return; }
+
+                var payload = {
+                    name: name.slice(0, 120),
+                    email: email.slice(0, 160),
+                    phone: val('phone').slice(0, 40) || null,
+                    business_name: val('business_name').slice(0, 160) || null,
+                    message: val('message').slice(0, 2000) || null,
+                    kind: 'audit',
+                    status: 'new',
+                    meta: { source: 'groundwork', path: location.pathname }
+                };
+
+                btn.disabled = true;
+                setStatus('Sending…');
+                fetch(URL + '/rest/v1/gw_inquiries', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': KEY,
+                        'Authorization': 'Bearer ' + KEY,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(payload)
+                }).then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    form.hidden = true;
+                    done.hidden = false;
+                    done.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }).catch(function () {
+                    btn.disabled = false;
+                    setStatus('Something went wrong. Please email desmitdesignz@gmail.com and I’ll take care of it.', 'err');
+                });
+            });
+        })();
+    </script>
     <script src="/groundwork/assistant.js" defer></script>
 </body>
 </html>
