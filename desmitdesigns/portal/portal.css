@@ -139,6 +139,10 @@ textarea { resize: vertical; min-height: 96px; }
 .quote .amt { font-family: 'Rajdhani', sans-serif; font-size: 2rem; font-weight: 700; color: var(--accent-light); }
 .quote p { color: var(--text-muted); font-size: .9rem; margin-top: 6px; }
 
+/* Honor the line breaks the studio typed (the admin edits these in a textarea,
+   so a run-on paragraph in the portal is just collapsed whitespace). */
+#pj-desc, .quote p { white-space: pre-wrap; }
+
 /* ---- timeline ---- */
 .timeline { list-style: none; margin-top: 8px; }
 .timeline li { position: relative; padding: 0 0 20px 26px; border-left: 2px solid var(--border); }
