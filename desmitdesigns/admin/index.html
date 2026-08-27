@@ -154,8 +154,25 @@
           <input type="checkbox" id="e-update-internal" style="width:auto">
           <label for="e-update-internal" style="margin:0">Internal only (hide from customer)</label></div>
       </div>
+      <label style="display:flex;align-items:center;gap:8px;margin:-4px 0 12px;font-size:.82rem;color:var(--text-muted)">
+        <input type="checkbox" id="e-update-email" style="width:auto">
+        Email the client that a new update was posted
+      </label>
       <div style="text-align:right"><button type="button" class="btn btn-primary btn-sm" id="edit-post">Post update</button></div>
       <ul class="timeline" id="edit-timeline" style="margin-top:16px"></ul>
+
+      <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
+      <h3 style="font-size:1.1rem">Files &amp; photos</h3>
+      <div class="uploader" id="e-uploader" role="button" tabindex="0" style="margin-top:10px">
+        <p>Drop files here, or <b>click to choose</b></p>
+        <p class="sub">Photos, PDFs, 3D models (STL/STEP)… up to 25&nbsp;MB each.</p>
+      </div>
+      <input type="file" id="e-file-input" multiple hidden>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.82rem;color:var(--text-muted)">
+        <input type="checkbox" id="e-file-internal" style="width:auto">
+        Internal only — hide this upload from the client
+      </label>
+      <div class="thumbs" id="e-files" style="margin-top:12px"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
       <h3 style="font-size:1.1rem">Share with a client</h3>

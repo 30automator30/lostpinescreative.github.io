@@ -5,6 +5,8 @@
 import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
+  ATTACH_BUCKET, uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
+  notifyClientUpdate,
 } from "../portal/client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -14,6 +16,7 @@ let user = null;
 let profiles = {};      // id -> {email, full_name}
 let channel = null;
 let editingId = null;
+let editFiles = [];     // dd_project_files rows for the open editor
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -164,11 +167,32 @@ async function openEditor(id) {
   $("e-quotenotes").value = p.quote_notes || "";
   $("e-desc").value = p.description || "";
   $("e-update").value = ""; $("e-update-pct").value = ""; $("e-update-internal").checked = false;
+  $("e-update-email").checked = false; $("e-update-email").disabled = false;
   $("edit-share-email").value = "";
   $("edit-error").textContent = "";
+  $("e-files").innerHTML = ""; $("e-file-internal").checked = false;
   await loadEditorTimeline(id);
   await loadEditorShares(id);
+  loadEditorFiles(id);
   $("edit-modal").classList.add("show");
+}
+
+async function loadEditorFiles(id) {
+  if (id !== editingId) return;
+  editFiles = await loadProjectFiles(id);
+  if (id !== editingId) return;
+  renderAttachments($("e-files"), editFiles, {
+    canDelete: () => true,          // admin may remove any file
+    showInternal: true,
+    onDelete: async (fid) => {
+      const f = editFiles.find((x) => x.id === fid);
+      if (!f || !confirm("Remove " + (f.filename || "this file") + "?")) return;
+      const { ok } = await deleteAttachment(f);
+      if (!ok) { toast("Couldn't remove that file.", "err"); return; }
+      toast("File removed.", "ok");
+      loadEditorFiles(editingId);
+    },
+  });
 }
 
 async function loadEditorShares(id) {
@@ -244,6 +268,14 @@ $("edit-save").addEventListener("click", async () => {
   loadInbox(); loadProjects();
 });
 
+// An internal update has no client to notify — keep the two checkboxes coherent.
+$("e-update-internal").addEventListener("change", () => {
+  const internal = $("e-update-internal").checked;
+  const emailBox = $("e-update-email");
+  emailBox.disabled = internal;
+  if (internal) emailBox.checked = false;
+});
+
 $("edit-post").addEventListener("click", async () => {
   if (!editingId) return;
   const body = $("e-update").value.trim();
@@ -251,25 +283,53 @@ $("edit-post").addEventListener("click", async () => {
   const pctRaw = $("e-update-pct").value;
   const percent = pctRaw === "" ? null : Math.max(0, Math.min(100, parseInt(pctRaw, 10)));
   const customer_visible = !$("e-update-internal").checked;
+  const emailClient = customer_visible && $("e-update-email").checked;
+  const projectId = editingId;
   const btn = $("edit-post"); btn.disabled = true;
   const { error } = await sb.from("dd_project_updates").insert({
-    project_id: editingId, body, percent, customer_visible,
+    project_id: projectId, body, percent, customer_visible,
   });
   // If a percent was given, also move the project's headline progress.
   if (!error && percent != null) {
-    await sb.from("dd_projects").update({ progress_percent: percent }).eq("id", editingId);
+    await sb.from("dd_projects").update({ progress_percent: percent }).eq("id", projectId);
     $("e-progress").value = percent;
   }
   btn.disabled = false;
   if (error) { $("edit-error").textContent = error.message; return; }
   $("e-update").value = ""; $("e-update-pct").value = ""; $("e-update-internal").checked = false;
+  $("e-update-email").checked = false; $("e-update-email").disabled = false;
   toast("Update posted.", "ok");
-  loadEditorTimeline(editingId); loadProjects();
+  loadEditorTimeline(projectId); loadProjects();
+  // Fire-and-report the client email (opt-in). Never blocks the post.
+  if (emailClient) {
+    const { ok, sent, error: e2 } = await notifyClientUpdate(projectId, body);
+    if (ok && sent) toast(sent === 1 ? "Client emailed." : sent + " people emailed.", "ok");
+    else if (ok && !sent) toast("Posted — no client email on file to notify.", "ok");
+    else toast("Posted, but the email didn't send: " + (e2 || "try again"), "err");
+  }
+});
+
+/* ---------- attachments upload ---------- */
+wireUploader($("e-uploader"), $("e-file-input"), async (files) => {
+  if (!editingId) return;
+  const zone = $("e-uploader");
+  const customerVisible = !$("e-file-internal").checked;
+  zone.style.pointerEvents = "none"; zone.style.opacity = ".6";
+  const n = await uploadProjectFiles(editingId, files, { customerVisible });
+  zone.style.pointerEvents = ""; zone.style.opacity = "";
+  if (n) toast(n === 1 ? "File added." : n + " files added.", "ok");
+  loadEditorFiles(editingId);
 });
 
 $("edit-delete").addEventListener("click", async () => {
   if (!editingId) return;
   if (!confirm("Delete this project and its updates? This can't be undone.")) return;
+  // Remove the project's storage objects first — storage.objects has no FK to
+  // dd_projects, so deleting the project would otherwise strand its files.
+  const { data: objs } = await sb.storage.from(ATTACH_BUCKET).list(editingId, { limit: 1000 });
+  if (objs && objs.length) {
+    await sb.storage.from(ATTACH_BUCKET).remove(objs.map((o) => editingId + "/" + o.name));
+  }
   const { error } = await sb.from("dd_projects").delete().eq("id", editingId);
   if (error) { $("edit-error").textContent = error.message; return; }
   toast("Project deleted.", "ok");
@@ -325,6 +385,7 @@ function subscribe() {
   channel = sb.channel("dd-admin")
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_projects" }, refresh)
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_project_updates" }, () => { if (editingId && $("edit-modal").classList.contains("show")) loadEditorTimeline(editingId); })
+    .on("postgres_changes", { event: "*", schema: "public", table: "dd_project_files" }, () => { if (editingId && $("edit-modal").classList.contains("show")) loadEditorFiles(editingId); })
     .on("postgres_changes", { event: "*", schema: "public", table: "dd_inquiries" }, loadInbox)
     .subscribe();
 }

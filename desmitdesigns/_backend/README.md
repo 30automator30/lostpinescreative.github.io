@@ -93,7 +93,20 @@ via the service worker; reload once.)
 | `dd_profiles` | one row/user; `is_admin` flag; auto-created on signup |
 | `dd_projects` | title, service_type, status, quote_amount, progress_percent |
 | `dd_project_updates` | progress timeline + two-way notes (`customer_visible`) |
+| `dd_project_files` | photo/file attachments per project (files in Storage) |
 | `dd_inquiries` | public leads captured by the AI assistant |
+
+### Attachments (migration `005_dd_attachments.sql`)
+Adds photo/file uploads to projects. Files live in the private **`dd-attachments`**
+Storage bucket (25 MB cap); `dd_project_files` holds metadata. Both the client
+(and shared members) and the admin can upload; the admin can mark a file
+**internal-only** (`customer_visible=false`). Access is keyed on **project
+membership** via `dd_can_access_project()` + `customer_visible` — not on uploader
+identity — so the customer can download admin-posted files and vice-versa. Images
+render inline; everything else is signed with `{ download }` (served as an
+attachment, never rendered on the Supabase origin). The bucket + policies are
+created by the migration itself — no dashboard steps. Reviewed via adversarial
+design review before build (2026-08-27).
 
 Project status flow: `requested → quoted → approved → in_progress → review → complete`
 (`cancelled` any time). Customers move `quoted → approved` via **Approve quote**;

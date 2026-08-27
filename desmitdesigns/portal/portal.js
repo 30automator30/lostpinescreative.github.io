@@ -5,6 +5,7 @@
 import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
+  uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
 } from "./client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -15,6 +16,7 @@ let dashChannel = null;   // realtime on all my projects
 let pjChannel = null;     // realtime on the open project's updates
 let openProjectId = null;
 let currentProject = null; // the row for the open project
+let currentFiles = [];     // dd_project_files rows for the open project
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -115,8 +117,28 @@ async function openProject(id) {
   openProjectId = id;
   showView("view-project");
   $("pj-timeline").innerHTML = '<div class="spinner"></div>';
+  $("pj-files").innerHTML = "";
   await renderProject();
+  loadFiles(id);
   subscribeProject(id);
+}
+
+async function loadFiles(id) {
+  if (id !== openProjectId) return;
+  currentFiles = await loadProjectFiles(id);
+  if (id !== openProjectId) return; // guard against a race with a fast back-click
+  renderAttachments($("pj-files"), currentFiles, {
+    canDelete: (a) => a.uploaded_by === user.id,
+    showInternal: false,
+    onDelete: async (fid) => {
+      const f = currentFiles.find((x) => x.id === fid);
+      if (!f || !confirm("Remove " + (f.filename || "this file") + "?")) return;
+      const { ok } = await deleteAttachment(f);
+      if (!ok) { toast("Couldn't remove that file.", "err"); return; }
+      toast("File removed.", "ok");
+      loadFiles(openProjectId);
+    },
+  });
 }
 
 async function renderProject() {
@@ -197,6 +219,17 @@ $("pj-note-send").addEventListener("click", async () => {
   renderProject();
 });
 
+/* ---------- attachments upload ---------- */
+wireUploader($("pj-uploader"), $("pj-file-input"), async (files) => {
+  if (!openProjectId) return;
+  const zone = $("pj-uploader");
+  zone.style.pointerEvents = "none"; zone.style.opacity = ".6";
+  const n = await uploadProjectFiles(openProjectId, files);
+  zone.style.pointerEvents = ""; zone.style.opacity = "";
+  if (n) toast(n === 1 ? "File added." : n + " files added.", "ok");
+  loadFiles(openProjectId);
+});
+
 function subscribeProject(id) {
   teardownProjectChannel();
   pjChannel = sb
@@ -207,6 +240,9 @@ function subscribeProject(id) {
     .on("postgres_changes",
       { event: "UPDATE", schema: "public", table: "dd_projects", filter: "id=eq." + id },
       () => { if (openProjectId === id) renderProject(); })
+    .on("postgres_changes",
+      { event: "*", schema: "public", table: "dd_project_files", filter: "project_id=eq." + id },
+      () => { if (openProjectId === id) loadFiles(id); })
     .subscribe();
 }
 
