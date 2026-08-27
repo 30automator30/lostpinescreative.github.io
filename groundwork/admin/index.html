@@ -108,6 +108,30 @@
       <div style="text-align:right"><button class="btn btn-primary btn-sm" id="cd-save">Save client</button></div>
     </div>
 
+    <!-- activity -->
+    <div class="adm-sect">
+      <h3>Activity</h3>
+      <p class="inline-note">Progress notes the client sees in their portal.</p>
+      <div class="row-line" style="margin-top:8px">
+        <input type="text" id="upd-body" placeholder="Post an update…" style="flex:3">
+        <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:var(--text-muted);white-space:nowrap"><input type="checkbox" id="upd-internal" style="width:auto"> Internal</label>
+        <button class="btn btn-primary btn-sm" id="upd-add">Post</button>
+      </div>
+      <ul class="gw-timeline" id="cd-updates" style="margin-top:12px"></ul>
+    </div>
+
+    <!-- files -->
+    <div class="adm-sect">
+      <h3>Files &amp; photos</h3>
+      <div class="uploader" id="cd-uploader" role="button" tabindex="0" style="margin-top:8px">
+        <p>Drop files here, or <b>click to choose</b></p>
+        <p class="sub">Deliverables, brand assets, greeting audio… up to 25&nbsp;MB each.</p>
+      </div>
+      <input type="file" id="cd-file-input" multiple hidden>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.82rem;color:var(--text-muted)"><input type="checkbox" id="cd-file-internal" style="width:auto"> Internal only — hide from the client</label>
+      <div class="thumbs" id="cd-files" style="margin-top:12px"></div>
+    </div>
+
     <!-- integrations -->
     <div class="adm-sect">
       <h3>Integrations</h3>
@@ -151,6 +175,7 @@
       </div>
       <div class="row-line" style="margin-top:8px">
         <input type="text" id="rep-summary" placeholder="Summary" style="flex:3">
+        <button class="btn btn-ghost btn-sm" id="rep-cancel" style="display:none">Cancel</button>
         <button class="btn btn-primary btn-sm" id="rep-add">Add report</button>
       </div>
     </div>

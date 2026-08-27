@@ -6,6 +6,8 @@
 import {
   sb, CONFIGURED, REDIRECT, CARE_LABEL, STATUS_LABEL, INT_STATUS, MSG_KIND,
   money, fmtDate, fmtDateTime, escapeHtml, toast, showView,
+  loadClientFiles, uploadClientFiles, deleteAttachment, renderAttachments, wireUploader,
+  loadClientUpdates,
 } from "./client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -55,9 +57,45 @@ $("none-out").addEventListener("click", () => sb.auth.signOut());
 async function enterDashboard() {
   showView("view-dash");
   renderPlan();
-  await Promise.all([loadIntegrations(), loadMessages(), loadSettings(), loadReports()]);
+  await Promise.all([loadIntegrations(), loadMessages(), loadSettings(), loadReports(), loadActivity(), loadFiles()]);
   subscribe();
 }
+
+/* ---------- activity timeline (read-only) ---------- */
+async function loadActivity() {
+  const list = await loadClientUpdates(client.id);
+  const sect = $("gw-activity-section");
+  if (!list.length) { sect.style.display = "none"; return; }
+  sect.style.display = "";
+  $("gw-updates").innerHTML = list.map((u) =>
+    '<li><div class="u-when">' + fmtDateTime(u.created_at) + "</div>" +
+    '<div class="u-body">' + escapeHtml(u.body) + "</div></li>").join("");
+}
+
+/* ---------- files (client uploads too) ---------- */
+async function loadFiles() {
+  const files = await loadClientFiles(client.id);
+  renderAttachments($("gw-files"), files, {
+    canDelete: (a) => a.uploaded_by === user.id,
+    showInternal: false,
+    onDelete: async (fid) => {
+      const f = files.find((x) => x.id === fid);
+      if (!f || !confirm("Remove " + (f.filename || "this file") + "?")) return;
+      const { ok } = await deleteAttachment(f);
+      if (!ok) { toast("Couldn't remove that file.", "err"); return; }
+      toast("File removed.", "ok"); loadFiles();
+    },
+  });
+}
+wireUploader(document.getElementById("gw-uploader"), document.getElementById("gw-file-input"), async (files) => {
+  if (!client) return;
+  const zone = $("gw-uploader");
+  zone.style.pointerEvents = "none"; zone.style.opacity = ".6";
+  const n = await uploadClientFiles(client.id, files);
+  zone.style.pointerEvents = ""; zone.style.opacity = "";
+  if (n) toast(n === 1 ? "File added." : n + " files added.", "ok");
+  loadFiles();
+});
 
 function renderPlan() {
   $("pl-biz").textContent = client.business_name;
@@ -161,6 +199,8 @@ function subscribe() {
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_integrations", filter: cid }, loadIntegrations)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_messages", filter: cid }, loadMessages)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_reports", filter: cid }, loadReports)
+    .on("postgres_changes", { event: "*", schema: "public", table: "gw_updates", filter: cid }, loadActivity)
+    .on("postgres_changes", { event: "*", schema: "public", table: "gw_files", filter: cid }, loadFiles)
     .on("postgres_changes", { event: "UPDATE", schema: "public", table: "gw_clients", filter: "id=eq." + client.id },
       async () => { const { data } = await sb.from("gw_clients").select("*").eq("id", client.id).single(); if (data) { client = data; renderPlan(); } })
     .subscribe();
