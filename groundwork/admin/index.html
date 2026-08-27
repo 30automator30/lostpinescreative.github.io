@@ -12,10 +12,19 @@
   <link rel="stylesheet" href="../portal/portal.css">
   <script src="../portal/config.js"></script>
   <style>
-    .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-    .tab { padding:9px 16px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-muted); font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
-    .tab.on { background:var(--gradient); color:#071410; border-color:transparent; }
-    .count { display:inline-block; min-width:20px; text-align:center; font-size:.7rem; font-weight:700; background:var(--danger); color:#fff; border-radius:20px; padding:1px 7px; margin-left:6px; }
+    /* segmented control instead of a flat pill row */
+    .tabs { display:inline-flex; gap:4px; margin-bottom:22px; padding:4px; background:var(--bg-card);
+      border:1px solid var(--border); border-radius:12px; flex-wrap:wrap; }
+    .tab { padding:8px 18px; border-radius:9px; border:none; background:transparent; color:var(--text-muted);
+      font-family:inherit; font-size:.9rem; font-weight:600; cursor:pointer; transition:color .15s, background .15s; }
+    .tab:hover { color:var(--text); }
+    .tab.on { background:var(--gradient); color:#071410; box-shadow:0 4px 14px -6px rgba(74,222,128,.55); }
+    .count { display:inline-block; min-width:18px; text-align:center; font-size:.72rem; font-weight:700;
+      background:var(--danger); color:#fff; border-radius:20px; padding:1px 7px; margin-left:6px; }
+    /* leads: a quiet green wash + eyebrow, not an AI side-tab */
+    .card.inq { background:linear-gradient(180deg, rgba(74,222,128,.06), transparent 62%); border-color:rgba(74,222,128,.28); }
+    .card.inq::before { content:"Lead"; display:block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:1.5px; color:var(--cyan); margin-bottom:8px; }
     .adm-sect { border-top:1px solid var(--border); margin-top:22px; padding-top:18px; }
     .adm-sect h3 { font-size:1.15rem; margin-bottom:12px; }
     .row-line { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }

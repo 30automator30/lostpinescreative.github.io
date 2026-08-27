@@ -83,7 +83,7 @@ async function loadInbox() {
   const list = $("inbox-list");
   if (!data || !data.length) { list.innerHTML = '<div class="empty">Inbox zero.</div>'; return; }
   list.innerHTML = data.map((q) =>
-    '<div class="card inq" style="border-left:3px solid var(--accent)"><div class="row"><h3 style="flex:1">' + escapeHtml(q.name || q.business_name || "Website lead") + "</h3>" +
+    '<div class="card inq"><div class="row"><h3 style="flex:1">' + escapeHtml(q.name || q.business_name || "Website lead") + "</h3>" +
     '<span class="badge new">' + escapeHtml(q.kind || "lead") + "</span></div>" +
     '<div class="meta">' + escapeHtml(q.email || "") + (q.phone ? " · " + escapeHtml(q.phone) : "") + (q.business_name ? " · " + escapeHtml(q.business_name) : "") + " · " + fmtDate(q.created_at) + "</div>" +
     '<p class="subtle">' + escapeHtml(q.message || "") + "</p>" +
