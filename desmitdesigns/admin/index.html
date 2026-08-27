@@ -11,15 +11,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../portal/portal.css">
   <style>
-    .tabs { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
-    .tab { padding:9px 16px; border-radius:20px; border:1px solid var(--border); background:transparent;
-      color:var(--text-muted); font-family:inherit; font-size:.85rem; font-weight:600; cursor:pointer; }
-    .tab.on { background:var(--gradient); color:#fff; border-color:transparent; }
-    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-    .filters select { width:auto; padding:8px 12px; font-size:.85rem; }
-    .inq { border-left:3px solid var(--cyan); }
-    .count { display:inline-block; min-width:20px; text-align:center; font-size:.7rem; font-weight:700;
+    /* segmented control instead of a flat pill row */
+    .tabs { display:inline-flex; gap:4px; margin-bottom:22px; padding:4px; background:var(--bg-card);
+      border:1px solid var(--border); border-radius:12px; }
+    .tab { padding:8px 18px; border-radius:9px; border:none; background:transparent; color:var(--text-muted);
+      font-family:inherit; font-size:.9rem; font-weight:600; cursor:pointer; transition:color .15s, background .15s; }
+    .tab:hover { color:var(--text); }
+    .tab.on { background:var(--gradient); color:#fff; box-shadow:0 4px 14px -6px rgba(59,130,246,.7); }
+    .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .filters select { width:auto; padding:8px 12px; }
+    /* leads: a quiet cyan wash + eyebrow, not an AI side-tab */
+    .card.inq { background:linear-gradient(180deg, rgba(6,182,212,.06), transparent 62%); border-color:rgba(6,182,212,.28); }
+    .card.inq::before { content:"Lead"; display:block; font-size:.72rem; font-weight:700; text-transform:uppercase;
+      letter-spacing:1.5px; color:var(--cyan); margin-bottom:8px; }
+    .count { display:inline-block; min-width:18px; text-align:center; font-size:.72rem; font-weight:700;
       background:var(--danger); color:#fff; border-radius:20px; padding:1px 7px; margin-left:6px; }
+    /* modal subsection eyebrows — a clear step below the modal title */
+    h3.msec { font-size:.74rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px;
+      color:var(--accent-light); margin:0; }
+    .chk-label { display:flex; align-items:center; gap:8px; font-size:.85rem; color:var(--text-muted); }
   </style>
   <script src="/analytics.js"></script>
 </head>
@@ -146,7 +156,7 @@
       </div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
-      <h3 style="font-size:1.1rem">Post a progress update</h3>
+      <h3 class="msec">Post a progress update</h3>
       <div class="field"><textarea id="e-update" placeholder="What you did, next steps…" style="min-height:64px"></textarea></div>
       <div class="grid-2">
         <div class="field"><label for="e-update-pct">Set progress % (optional)</label>
@@ -155,7 +165,7 @@
           <input type="checkbox" id="e-update-internal" style="width:auto">
           <label for="e-update-internal" style="margin:0">Internal only (hide from customer)</label></div>
       </div>
-      <label style="display:flex;align-items:center;gap:8px;margin:-4px 0 12px;font-size:.82rem;color:var(--text-muted)">
+      <label class="chk-label" style="margin:-4px 0 12px">
         <input type="checkbox" id="e-update-email" style="width:auto">
         Email the client that a new update was posted
       </label>
@@ -163,20 +173,20 @@
       <ul class="timeline" id="edit-timeline" style="margin-top:16px"></ul>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
-      <h3 style="font-size:1.1rem">Files &amp; photos</h3>
+      <h3 class="msec">Files &amp; photos</h3>
       <div class="uploader" id="e-uploader" role="button" tabindex="0" style="margin-top:10px">
         <p>Drop files here, or <b>click to choose</b></p>
         <p class="sub">Photos, PDFs, 3D models (STL/STEP)… up to 25&nbsp;MB each.</p>
       </div>
       <input type="file" id="e-file-input" multiple hidden>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.82rem;color:var(--text-muted)">
+      <label class="chk-label" style="margin-top:10px">
         <input type="checkbox" id="e-file-internal" style="width:auto">
         Internal only — hide this upload from the client
       </label>
       <div class="thumbs" id="e-files" style="margin-top:12px"></div>
 
       <hr style="border:none;border-top:1px solid var(--border);margin:22px 0 16px">
-      <h3 style="font-size:1.1rem">Share with a client</h3>
+      <h3 class="msec">Share with a client</h3>
       <p class="inline-note">Give someone access to this quote by email — they sign in with their own link and can view and approve it. Works even before they have an account.</p>
       <div id="edit-shares" style="margin:10px 0"></div>
       <div class="row" style="gap:8px">
