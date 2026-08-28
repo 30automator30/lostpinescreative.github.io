@@ -17,7 +17,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("INVITE_FROM") ?? "Lost Pines Creative <noreply@lostpinescreative.com>";
-const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "desmitdesignz@gmail.com";
+const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "ddesmit@lostpinescreative.com";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ??
   "https://lostpinescreative.com,https://www.lostpinescreative.com")
@@ -30,8 +30,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // Current agreement version — bump when AGREEMENT_TEXT below changes materially.
 // Must stay in step with config.js AGREEMENT_VERSION and app.js buildAgreementText.
 const AGREEMENT_VERSION = "msa-v1";
-const STUDIO = { desmit: { name: "DeSmit Designs", email: "desmitdesignz@gmail.com" },
-                 groundwork: { name: "Groundwork", email: "desmitdesignz@gmail.com" } };
+const STUDIO = { desmit: { name: "DeSmit Designs", email: "ddesmit@lostpinescreative.com" },
+                 groundwork: { name: "Groundwork", email: "ddesmit@lostpinescreative.com" } };
 const PKG_LABEL: Record<string, string> = {
   starter: "Starter", foundation: "Foundation", growth: "Growth", full_build: "Full Build", custom: "Not sure yet",
 };

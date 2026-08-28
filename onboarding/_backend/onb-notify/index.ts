@@ -16,7 +16,7 @@ const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const FROM = Deno.env.get("INVITE_FROM") ?? "Lost Pines Creative <noreply@lostpinescreative.com>";
-const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "desmitdesignz@gmail.com";
+const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "ddesmit@lostpinescreative.com";
 const ADMIN_URL = "https://lostpinescreative.com/onboarding/admin.html";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ??

@@ -221,7 +221,7 @@ WHAT'S TRUE (you may state these):
 - Max FDM print volume ~256 x 256 x 256 mm.
 - Customers can track a project live in the client portal at
   /desmitdesigns/portal/ — where they see status, progress, and their quote.
-- Contact: desmitdesignz@gmail.com, (408) 348-7284. Based in Bastrop, Texas.
+- Contact: ddesmit@lostpinescreative.com, (408) 348-7284. Based in Bastrop, Texas.
 
 RULES:
 - Do NOT invent specifics you weren't told — exact prices, turnaround times, or
@@ -330,7 +330,7 @@ Deno.serve(async (req) => {
   // DEP-05 kill switch.
   if (!(await agentEnabled())) {
     trace({ traceId, outcome: "disabled", ms: Date.now() - t0 });
-    return json({ error: "The assistant is temporarily offline. Please email desmitdesignz@gmail.com." }, 503, cors);
+    return json({ error: "The assistant is temporarily offline. Please email ddesmit@lostpinescreative.com." }, 503, cors);
   }
 
   const body = await req.json().catch(() => null);

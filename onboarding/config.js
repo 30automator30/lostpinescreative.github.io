@@ -19,7 +19,7 @@ const PRODUCTS = {
     portal: "/desmitdesigns/portal/",
     accent: "#3b82f6",
     accent2: "#06b6d4",
-    email: "desmitdesignz@gmail.com",
+    email: "ddesmit@lostpinescreative.com",
   },
   groundwork: {
     key: "groundwork",
@@ -28,7 +28,7 @@ const PRODUCTS = {
     portal: "/groundwork/portal/",
     accent: "#4a9e7e",
     accent2: "#3ba5a1",
-    email: "desmitdesignz@gmail.com",
+    email: "ddesmit@lostpinescreative.com",
   },
 };
 

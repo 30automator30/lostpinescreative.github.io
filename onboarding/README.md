@@ -99,7 +99,7 @@ ANTHROPIC_API_KEY      = sk-ant-…         # concierge AI review/draft (same ke
 ANTHROPIC_MODEL        = claude-sonnet-5  # optional override for the concierge model
 GOOGLE_PLACES_API_KEY  = AIza…            # optional: Step-1 business autofill (see below)
 ALLOWED_ORIGINS        = https://lostpinescreative.com,https://www.lostpinescreative.com
-OWNER_EMAIL            = desmitdesignz@gmail.com   # signature copies + new-brief notifications
+OWNER_EMAIL            = ddesmit@lostpinescreative.com   # signature copies + new-brief notifications
 ```
 `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.
 

@@ -15,7 +15,7 @@
   var ENDPOINT = CFG.ASSISTANT_FN || "";
   var CONFIGURED = ENDPOINT && ENDPOINT.indexOf("REPLACE_ME") === -1;
   var TS_SITEKEY = CFG.TURNSTILE_SITEKEY || ""; // SEC-05: set to activate Turnstile
-  var CONTACT = CFG.CONTACT_EMAIL || "desmitdesignz@gmail.com";
+  var CONTACT = CFG.CONTACT_EMAIL || "ddesmit@lostpinescreative.com";
   // OUT-01: only these hosts become clickable absolute links.
   var LINK_HOSTS = ["lostpinescreative.com", "www.lostpinescreative.com", "blue-plumeria.com", "nomad-core.com"];
 
@@ -201,7 +201,7 @@ font-family:'Open Sans',system-ui,-apple-system,sans-serif}\
     if (!CONFIGURED) {
       input.value = "";
       addMsg("user", text);
-      addMsg("bot", "I'm not connected yet — please email desmitdesignz@gmail.com for now.");
+      addMsg("bot", "I'm not connected yet — please email ddesmit@lostpinescreative.com for now.");
       return;
     }
     input.value = "";

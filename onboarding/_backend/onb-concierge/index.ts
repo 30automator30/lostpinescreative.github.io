@@ -22,7 +22,7 @@ const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const ANTHROPIC_KEY = Deno.env.get("ANTHROPIC_API_KEY") ?? "";
 const MODEL = Deno.env.get("ANTHROPIC_MODEL") ?? "claude-sonnet-5";
 const FROM = Deno.env.get("INVITE_FROM") ?? "Groundwork <noreply@lostpinescreative.com>";
-const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "desmitdesignz@gmail.com";
+const OWNER_EMAIL = Deno.env.get("OWNER_EMAIL") ?? "ddesmit@lostpinescreative.com";
 const ADMIN_URL = "https://lostpinescreative.com/onboarding/admin.html";
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ??

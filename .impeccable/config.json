@@ -1,0 +1,29 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-08-27T20:03:39.990Z",
+        "reason": "Claude: HTML email template — web-safe font required for email-client compatibility; matches existing send-invite email"
+      },
+      {
+        "rule": "overused-font",
+        "value": "open sans",
+        "createdAt": "2026-08-27T20:51:32.424Z",
+        "reason": "Claude: Open Sans is the documented site-wide LPC brand type (paired with Rajdhani) across every portal/admin/site page — intentional brand system"
+      },
+      {
+        "rule": "layout-transition",
+        "value": "*",
+        "files": [
+          "desmitdesigns/portal/portal.css"
+        ],
+        "createdAt": "2026-08-27T21:50:28.378Z",
+        "reason": "Claude: .bar>span is a progress-bar fill — a one-shot width transition on a single small element (canonical legit case); scaleX would distort its gradient + rounded ends"
+      }
+    ]
+  }
+}

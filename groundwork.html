@@ -487,7 +487,7 @@
                 <p>Your request is in. I'll reach out within one business day to set up your free digital audit. Nothing else needed from you right now.</p>
             </div>
 
-            <p class="micro" style="margin-top:16px;color:var(--text-muted);font-size:0.82rem;">Prefer email? <a href="mailto:desmitdesignz@gmail.com?subject=Groundwork%20%E2%80%94%20free%20digital%20audit">desmitdesignz@gmail.com</a></p>
+            <p class="micro" style="margin-top:16px;color:var(--text-muted);font-size:0.82rem;">Prefer email? <a href="mailto:ddesmit@lostpinescreative.com?subject=Groundwork%20%E2%80%94%20free%20digital%20audit">ddesmit@lostpinescreative.com</a></p>
         </section>
 
         <footer class="rule">
@@ -547,7 +547,7 @@
                 var name = val('name'), email = val('email');
                 if (!name) { setStatus('Please add your name.', 'err'); return; }
                 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setStatus('Please add a valid email.', 'err'); return; }
-                if (!KEY) { setStatus('Form is offline — email desmitdesignz@gmail.com and I’ll jump right on it.', 'err'); return; }
+                if (!KEY) { setStatus('Form is offline — email ddesmit@lostpinescreative.com and I’ll jump right on it.', 'err'); return; }
 
                 var payload = {
                     name: name.slice(0, 120),
@@ -578,7 +578,7 @@
                     done.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }).catch(function () {
                     btn.disabled = false;
-                    setStatus('Something went wrong. Please email desmitdesignz@gmail.com and I’ll take care of it.', 'err');
+                    setStatus('Something went wrong. Please email ddesmit@lostpinescreative.com and I’ll take care of it.', 'err');
                 });
             });
         })();

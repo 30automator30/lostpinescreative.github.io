@@ -32,7 +32,7 @@ Project: `ekogelnbhggyrychfrta` · Owner-only steps · Companion: `README.md`.
   ANTHROPIC_API_KEY      = sk-ant-…           # concierge AI review (same key as the assistants)
   GOOGLE_PLACES_API_KEY  = AIza…              # optional (autofill)
   ALLOWED_ORIGINS        = https://lostpinescreative.com,https://www.lostpinescreative.com
-  OWNER_EMAIL            = desmitdesignz@gmail.com
+  OWNER_EMAIL            = ddesmit@lostpinescreative.com
   ```
   (`SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` are injected automatically.)
 - [ ] **4. Create the Stripe webhook** (TEST mode) → endpoint

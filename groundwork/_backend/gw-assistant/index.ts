@@ -332,7 +332,7 @@ Deno.serve(async (req) => {
   // DEP-05 kill switch.
   if (!(await agentEnabled())) {
     trace({ traceId, outcome: "disabled", ms: Date.now() - t0 });
-    return json({ error: "The assistant is temporarily offline. Please email desmitdesignz@gmail.com." }, 503, cors);
+    return json({ error: "The assistant is temporarily offline. Please email ddesmit@lostpinescreative.com." }, 503, cors);
   }
 
   const body = await req.json().catch(() => null);

@@ -17,7 +17,7 @@
   var ENDPOINT = CFG.ASSISTANT_FN || "";
   var CONFIGURED = ENDPOINT && ENDPOINT.indexOf("REPLACE_ME") === -1;
   var TS_SITEKEY = CFG.TURNSTILE_SITEKEY || ""; // SEC-05: set to activate Turnstile
-  var CONTACT = CFG.CONTACT_EMAIL || "desmitdesignz@gmail.com";
+  var CONTACT = CFG.CONTACT_EMAIL || "ddesmit@lostpinescreative.com";
   var history = [];
   var busy = false;
 

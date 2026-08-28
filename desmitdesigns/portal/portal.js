@@ -23,7 +23,7 @@ let currentFiles = [];     // dd_project_files rows for the open project
 if (!CONFIGURED) {
   showView("view-auth");
   $("auth-error").textContent =
-    "The portal isn't connected yet — the studio is finishing setup. Email desmitdesignz@gmail.com in the meantime.";
+    "The portal isn't connected yet — the studio is finishing setup. Email ddesmit@lostpinescreative.com in the meantime.";
   $("auth-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
   initAuth(sb, REDIRECT);

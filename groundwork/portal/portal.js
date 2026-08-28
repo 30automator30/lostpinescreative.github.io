@@ -19,7 +19,7 @@ let channel = null;
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
   showView("view-auth");
-  $("auth-error").textContent = "The portal isn't connected yet — email desmitdesignz@gmail.com in the meantime.";
+  $("auth-error").textContent = "The portal isn't connected yet — email ddesmit@lostpinescreative.com in the meantime.";
   $("auth-form").querySelectorAll("input,button").forEach((el) => (el.disabled = true));
 } else {
   initAuth(sb, REDIRECT);
