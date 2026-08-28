@@ -55,6 +55,15 @@ export function escapeHtml(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/* Escape HTML, then turn http(s) URLs into links (XSS-safe: escape runs first). */
+export function linkify(s) {
+  return escapeHtml(s).replace(/(https?:\/\/[^\s<]+)/g, (m) => {
+    const trail = (m.match(/[.,;:!?)\]]+$/) || [""])[0];
+    const url = m.slice(0, m.length - trail.length);
+    return '<a href="' + url + '" target="_blank" rel="noopener">' + url + "</a>" + trail;
+  });
+}
+
 /* ============================================================
  * Attachments (gw_files / gw-attachments bucket) + activity timeline.
  * Access is keyed on gw_owns_client + client_visible via RLS.

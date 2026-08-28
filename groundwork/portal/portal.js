@@ -7,7 +7,7 @@ import {
   sb, CONFIGURED, REDIRECT, CARE_LABEL, STATUS_LABEL, INT_STATUS, MSG_KIND,
   money, fmtDate, fmtDateTime, escapeHtml, toast, showView,
   loadClientFiles, uploadClientFiles, deleteAttachment, renderAttachments, wireUploader,
-  loadClientUpdates,
+  loadClientUpdates, linkify,
 } from "./client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -69,7 +69,7 @@ async function loadActivity() {
   sect.style.display = "";
   $("gw-updates").innerHTML = list.map((u) =>
     '<li><div class="u-when">' + fmtDateTime(u.created_at) + "</div>" +
-    '<div class="u-body">' + escapeHtml(u.body) + "</div></li>").join("");
+    '<div class="u-body">' + linkify(u.body) + "</div></li>").join("");
 }
 
 /* ---------- files (client uploads too) ---------- */

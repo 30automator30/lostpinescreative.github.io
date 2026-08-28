@@ -51,6 +51,16 @@ export function escapeHtml(s) {
     ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 
+/* Escape HTML, then turn http(s) URLs into links. Escaping runs first, so the
+   output is XSS-safe; trailing sentence punctuation is left outside the link. */
+export function linkify(s) {
+  return escapeHtml(s).replace(/(https?:\/\/[^\s<]+)/g, (m) => {
+    const trail = (m.match(/[.,;:!?)\]]+$/) || [""])[0];
+    const url = m.slice(0, m.length - trail.length);
+    return '<a href="' + url + '" target="_blank" rel="noopener">' + url + "</a>" + trail;
+  });
+}
+
 let toastTimer = null;
 export function toast(msg, kind) {
   const el = document.getElementById("toast");

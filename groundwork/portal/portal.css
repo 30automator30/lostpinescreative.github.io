@@ -226,7 +226,7 @@ textarea { resize: vertical; min-height: 96px; }
 .msg-item .msg-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .msg-item .msg-top b { font-size: .98rem; }
 .msg-item .msg-when { font-size: .74rem; color: var(--text-dim); }
-.msg-item .msg-body { color: var(--text-muted); font-size: .92rem; white-space: pre-wrap; }
+.msg-item .msg-body { color: var(--text-muted); font-size: .92rem; white-space: pre-wrap; overflow-wrap: anywhere; }
 .msg-item.handled { opacity: .6; }
 
 /* metrics row in reports */
@@ -256,7 +256,7 @@ textarea { resize: vertical; min-height: 96px; }
 .gw-timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
 .gw-timeline li::before { content: ""; position: absolute; left: -7px; top: 3px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--bg-dark); }
 .gw-timeline .u-when { font-size: .74rem; color: var(--text-dim); }
-.gw-timeline .u-body { margin-top: 2px; white-space: pre-wrap; }
+.gw-timeline .u-body { margin-top: 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .gw-timeline .u-internal { opacity: .8; }
 .gw-timeline .u-tag { font-size: .62rem; text-transform: uppercase; letter-spacing: 1px; color: var(--warn); margin-left: 8px; }
 .u-acts { float: right; display: inline-flex; gap: 10px; }

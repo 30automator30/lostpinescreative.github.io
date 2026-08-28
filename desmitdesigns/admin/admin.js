@@ -6,7 +6,7 @@ import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
   ATTACH_BUCKET, uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
-  notifyClientUpdate, loadMilestones, CHECK_SVG,
+  notifyClientUpdate, loadMilestones, CHECK_SVG, linkify,
 } from "../portal/client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -374,7 +374,7 @@ function renderEditorTimeline() {
       (internal ? '<span class="t-tag">internal</span>' : "") +
       '<span class="t-acts">' + (mine ? '<button data-edit-up="' + u.id + '">Edit</button>' : "") +
       '<button data-del-up="' + u.id + '">Delete</button></span>' +
-      '</div><div class="t-body">' + escapeHtml(u.body) + "</div></li>";
+      '</div><div class="t-body">' + linkify(u.body) + "</div></li>";
   }).join("");
   const tl2 = $("edit-timeline");
   tl2.querySelectorAll("[data-edit-up]").forEach((b) => b.addEventListener("click", () => { editingUpdateId = b.dataset.editUp; renderEditorTimeline(); }));

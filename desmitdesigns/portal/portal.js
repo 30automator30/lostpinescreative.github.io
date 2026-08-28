@@ -6,7 +6,7 @@ import {
   sb, CONFIGURED, REDIRECT, STATUS_LABEL, money, fmtDate, fmtDateTime,
   escapeHtml, toast, showView, shareInvite,
   uploadProjectFiles, loadProjectFiles, deleteAttachment, renderAttachments, wireUploader,
-  loadMilestones, CHECK_SVG,
+  loadMilestones, CHECK_SVG, linkify,
 } from "./client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -172,7 +172,7 @@ async function renderProject() {
   badge.textContent = STATUS_LABEL[p.status];
   $("pj-bar").style.width = (p.progress_percent || 0) + "%";
   $("pj-pct").textContent = (p.progress_percent || 0) + "%";
-  $("pj-desc").textContent = p.description || "No description yet.";
+  $("pj-desc").innerHTML = linkify(p.description || "No description yet.");
 
   // quote block
   const qw = $("pj-quote-wrap");
@@ -210,7 +210,7 @@ async function renderProject() {
       return '<li><div class="t-when">' + fmtDateTime(u.created_at) +
         (mine ? " · you" : "") +
         (u.percent != null ? " · " + u.percent + "%" : "") + "</div>" +
-        '<div class="t-body ' + (mine ? "t-you" : "") + '">' + escapeHtml(u.body) + "</div></li>";
+        '<div class="t-body ' + (mine ? "t-you" : "") + '">' + linkify(u.body) + "</div></li>";
     }).join("");
   }
 }

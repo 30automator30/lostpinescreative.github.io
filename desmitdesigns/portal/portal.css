@@ -141,7 +141,7 @@ textarea { resize: vertical; min-height: 96px; }
 
 /* Honor the line breaks the studio typed (the admin edits these in a textarea,
    so a run-on paragraph in the portal is just collapsed whitespace). */
-#pj-desc, .quote p { white-space: pre-wrap; }
+#pj-desc, .quote p { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ---- timeline ---- */
 .timeline { list-style: none; margin-top: 8px; }
@@ -152,7 +152,7 @@ textarea { resize: vertical; min-height: 96px; }
   border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--bg-dark);
 }
 .timeline .t-when { font-size: .74rem; color: var(--text-dim); }
-.timeline .t-body { margin-top: 2px; white-space: pre-wrap; }
+.timeline .t-body { margin-top: 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .timeline .t-you { color: var(--text-muted); }
 .timeline .t-internal { opacity: .8; }
 .timeline .t-internal .t-tag {

@@ -7,7 +7,7 @@ import {
   sb, CONFIGURED, REDIRECT, CARE_LABEL, STATUS_LABEL, INT_STATUS, MSG_KIND,
   fmtDate, fmtDateTime, escapeHtml, toast, showView,
   loadClientFiles, uploadClientFiles, deleteAttachment, renderAttachments, wireUploader,
-  loadClientUpdates,
+  loadClientUpdates, linkify,
 } from "../portal/client.js";
 import { initAuth, isRecovering } from "/portal-auth.js";
 
@@ -163,7 +163,7 @@ async function loadUpdates() {
     return '<li class="' + (internal ? "u-internal" : "") + '"><div class="u-when">' + fmtDateTime(u.created_at) +
       (internal ? '<span class="u-tag">internal</span>' : "") +
       '<span class="u-acts"><button data-ue="' + u.id + '">Edit</button><button data-ud="' + u.id + '">Delete</button></span>' +
-      '</div><div class="u-body">' + escapeHtml(u.body) + "</div></li>";
+      '</div><div class="u-body">' + linkify(u.body) + "</div></li>";
   }).join("");
   box.querySelectorAll("[data-ue]").forEach((b) => b.addEventListener("click", () => { editingUpdateId = b.dataset.ue; loadUpdates(); }));
   box.querySelectorAll("[data-uc]").forEach((b) => b.addEventListener("click", () => { editingUpdateId = null; loadUpdates(); }));
