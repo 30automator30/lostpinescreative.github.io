@@ -564,7 +564,7 @@ function renderSpec(root) {
         <textarea id="f-goals" placeholder="e.g. Get more booked jobs / calls / online orders.">${esc(spec.goals)}</textarea></div>
       <div class="field"><label>Must-haves</label><textarea id="f-must" placeholder="Anything that absolutely has to be there.">${esc(spec.must_haves)}</textarea></div>
       <div class="field"><label>Please avoid</label><textarea id="f-avoid" placeholder="Colors, styles, or things you dislike.">${esc(spec.avoid)}</textarea></div>
-      <div class="field"><label>Sites you like the look of</label><textarea id="f-insp" placeholder="Paste a few links and what you like about each.">${esc(spec.inspiration)}</textarea></div>
+      <div class="field"><label>Sites you like — or want yours modeled after</label><textarea id="f-insp" placeholder="Paste any links you love or want yours to work/look like, and what you like about each.">${esc(spec.inspiration)}</textarea></div>
     </div>
     <div class="card" style="border-color:var(--accent)">
       <div style="font-size:1.02rem">${estimateLine()}</div>

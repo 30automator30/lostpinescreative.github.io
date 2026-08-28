@@ -162,6 +162,8 @@ Selected features: ${chosen(spec)}
 Goal: ${spec.goals || "—"}
 Must-haves: ${spec.must_haves || "—"}
 Avoid: ${spec.avoid || "—"}
+Sites they like / want modeled after: ${spec.inspiration || "—"}
+Their current website: ${(it.about || {}).current_web || "—"}
 Contact: ${it.contact_name || "—"} <${it.contact_email || "—"}> ${it.contact_phone || ""}
 Service area: ${(it.about || {}).service_area || "—"}
 
