@@ -111,7 +111,7 @@ const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
 const reset = () => {
   messages = []; sms = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
-  line.enabled = true; line.client.status = "active";
+  line.enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
 };
 
 Deno.test("rejects requests without the Vapi bearer", async () => {
@@ -325,5 +325,16 @@ Deno.test("texts sent by the Text-Back app don't use up the Twilio text-back all
   messages.push({ external_id: "dev:d1:7:textback", kind: "textback", from_phone: "+15125551234",
     created_at: new Date().toISOString(), meta: { via: "gw-device" } });
   await vapi({ type: "end-of-call-report", call: call("call_dev"), artifact: { messages: [] } });
+  assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
+});
+
+Deno.test("owner switched the AI off: caller gets the short message promising a text, and the text-back", async () => {
+  reset();
+  (line as Record<string, unknown>).ai_enabled = false;
+  const r = await (await vapi({ type: "assistant-request", call: call("c_aioff") })).json();
+  assertEquals(r.assistant.name, "Fallback desk");
+  assertMatch(r.assistant.firstMessage, /we'll text you right back/);
+  await vapi({ type: "end-of-call-report", call: call("c_aioff"), endedReason: "customer-ended-call",
+    artifact: { messages: [{ role: "assistant", message: "Thanks for calling" }] }, analysis: {} });
   assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
 });

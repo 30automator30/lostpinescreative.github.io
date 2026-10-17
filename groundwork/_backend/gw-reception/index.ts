@@ -181,6 +181,7 @@ type Line = {
   client_id: string; ai_number: string | null; owner_alert_number: string | null;
   cal_event_type_id: number | null; booking_url: string | null; timezone: string;
   voice_id: string | null; enabled: boolean;
+  ai_enabled?: boolean; // 008: the owner's AI switch; off = fallback + text-back. Absent = on.
   business_name: string; client_status: string; settings: Settings;
 };
 
@@ -422,9 +423,11 @@ async function onAssistantRequest(msg: any, traceId: string, t0: number): Promis
   } catch (e) {
     console.error("assistant-request lookup failed", String(e));
   }
-  if (!line || !line.enabled || line.client_status === "cancelled" || !enabled || !budget) {
+  const aiOff = line?.ai_enabled === false;
+  if (!line || !line.enabled || line.client_status === "cancelled" || aiOff || !enabled || !budget) {
     trace({ traceId, type: "assistant-request", outcome: "fallback",
-      reason: !line ? "no_line" : !line.enabled ? "line_off" : !enabled ? "disabled" : !budget ? "ceiling" : "cancelled",
+      reason: !line ? "no_line" : !line.enabled ? "line_off" : aiOff ? "ai_off_by_owner" : !enabled ? "disabled"
+        : !budget ? "ceiling" : "cancelled",
       ms: Date.now() - t0 });
     return json({ assistant: fallback(line?.business_name ?? null, !!line && lineLive(line)) });
   }

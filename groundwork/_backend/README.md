@@ -23,7 +23,7 @@ Groundwork admin too.
   missed callers from the owner's own number and reports each missed call to
   the inbox. Admin sees and revokes phones on the client's **Phones** card.
   Only missed-call events leave the phone.
-  - Apply `007_gw_devices.sql` (after `006`).
+  - Apply `007_gw_devices.sql` then `008_gw_service_switches.sql` (after `006`).
   - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (phones
     authenticate with their own device token; `/register` checks the owner's
     session itself). No new secrets.
@@ -67,6 +67,7 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_settings` | reception/voicemail setup (1:1 with client, client-editable) |
 | `gw_inquiries` | public leads captured by the gw-assistant |
 | `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
+| `gw_reception_lines.ai_enabled` / `gw_settings.textback_app_enabled` | the owner's own switches, read via `gw_my_services()` and set via `gw_set_service_enabled()` — `008` |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
