@@ -94,7 +94,7 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
    {{ if eq .RedirectTo "https://lostpinescreative.com/auth/app" }}{{ .SiteURL }}/auth/app?token_hash={{ .TokenHash }}&type=TYPE{{ else }}{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=TYPE&next={{ .RedirectTo }}{{ end }}
    ```
 3. **Verification files** (`/.well-known/`, deploy with the site) — replace the placeholders:
-   - `apple-app-site-association`: `REPLACE_WITH_APPLE_TEAM_ID` → your Apple Developer Team ID.
+   - `apple-app-site-association`: done — Team ID `Z36DKWF4D5`.
    - `assetlinks.json`: the SHA-256 signing fingerprints — `eas credentials -p android`
      for each profile (`android-play` upload key, `android-direct`), plus Play
      Console ▸ App integrity ▸ App signing key for the Play build.

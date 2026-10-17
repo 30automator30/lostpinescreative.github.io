@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appIDs": ["REPLACE_WITH_APPLE_TEAM_ID.com.lostpinescreative.client"],
+        "appIDs": ["Z36DKWF4D5.com.lostpinescreative.client"],
         "components": [{ "/": "/auth/app", "comment": "Lost Pines app sign-in links only" }]
       }
     ]
