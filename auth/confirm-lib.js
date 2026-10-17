@@ -10,12 +10,13 @@
 
 export const OTP_TYPES = ["signup", "invite", "magiclink", "recovery", "email_change", "email"];
 const SITE_HOSTS = ["lostpinescreative.com", "www.lostpinescreative.com"];
-export const APP_PREFIX = "lostpines://";
+// The app's one auth entry point. Anything else under the scheme is refused.
+export const APP_TARGET = "lostpines://auth";
 
 /** Where to send the user: {kind: "app"|"web", url} — never another site. */
 export function resolveNext(next, origin) {
   const raw = String(next || "").trim();
-  if (raw.toLowerCase().startsWith(APP_PREFIX)) return { kind: "app", url: raw };
+  if (raw === APP_TARGET) return { kind: "app", url: APP_TARGET };
   if (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) {
     return { kind: "web", url: origin + raw };
   }

@@ -229,17 +229,17 @@ const REQ_STATUS = { new: "New", in_progress: "In progress", done: "Done", decli
 async function loadRequests() {
   const box = $("req-list");
   const { data, error } = await sb.from("lpc_requests")
-    .select("id,user_id,service,kind,body,status,created_at,client:gw_clients(business_name)")
+    .select("id,user_id,requester_email,service,kind,body,status,created_at,client:gw_clients(business_name)")
     .in("status", ["new", "in_progress"]).order("created_at", { ascending: false }).limit(50);
   if (error) { box.innerHTML = '<div class="subtle">Couldn\'t load requests: ' + esc(error.message) + "</div>"; return; }
   if (!data.length) { box.innerHTML = '<div class="subtle">No open requests.</div>'; return; }
-  const ids = [...new Set(data.map((r) => r.user_id))];
+  const ids = [...new Set(data.map((r) => r.user_id).filter(Boolean))];
   const { data: profs } = await sb.from("dd_profiles").select("id,email,full_name").in("id", ids);
   const who = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name ? p.full_name + " · " + p.email : p.email]));
   box.innerHTML = data.map((r) =>
     '<div class="asset"><div class="a-main"><b>' + esc(REQ_KIND[r.kind] || r.kind) + " · " + esc(REQ_BRAND[r.service] || r.service) +
     (r.client && r.client.business_name ? " · " + esc(r.client.business_name) : "") + "</b>" +
-    '<div class="a-sub">' + esc(who[r.user_id] || "customer") + " · " + esc(new Date(r.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })) + "</div>" +
+    '<div class="a-sub">' + esc(who[r.user_id] || r.requester_email || "customer (account deleted)") + " · " + esc(new Date(r.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })) + "</div>" +
     '<div class="a-sub" style="white-space:pre-wrap;margin-top:4px">' + esc(r.body) + "</div></div>" +
     '<div class="a-actions"><label class="subtle" style="font-size:.75rem" for="rq-' + r.id + '">Status</label> ' +
     '<select id="rq-' + r.id + '" data-req="' + r.id + '">' +

@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v37';
+const VERSION = 'v38';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -45,7 +45,8 @@ const PRECACHE_URLS = [
 
 /* Search Console verification must always hit the network. Email-link
    landings carry one-time tokens in the URL — never store those. */
-const NEVER_CACHE = ['/google0f174fbb9e565477.html', '/auth/confirm.html'];
+const NEVER_CACHE = ['/google0f174fbb9e565477.html'];
+const NEVER_CACHE_PREFIX = ['/auth/'];
 
 self.addEventListener('install', event => {
   event.waitUntil(precache().then(() => self.skipWaiting()));
@@ -73,7 +74,7 @@ self.addEventListener('fetch', event => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (NEVER_CACHE.includes(url.pathname)) return;
+  if (NEVER_CACHE.includes(url.pathname) || NEVER_CACHE_PREFIX.some(p => url.pathname.startsWith(p))) return;
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(event));

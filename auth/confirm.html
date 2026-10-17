@@ -35,7 +35,6 @@
     <div id="actions"></div>
   </main>
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
     import { appUrl, parseLink, resolveNext, webUrl } from "/auth/confirm-lib.js";
 
     const $ = (id) => document.getElementById(id);
@@ -51,27 +50,34 @@
     const link = parseLink(location.search);
     // Don't leave the one-time token in history or the address bar.
     history.replaceState(null, "", location.pathname);
-    if (!link) {
-      show("This link doesn't look right", "Request a new email from the sign-in screen and use the newest one.", "/", "Go to lostpinescreative.com");
-    } else {
-      const dest = resolveNext(link.next, location.origin);
-      if (dest.kind === "app") {
-        // The Lost Pines app verifies the token itself.
-        const href = appUrl(dest.url, link.tokenHash, link.type);
-        location.replace(href);
-        show("Opening the Lost Pines app…", "If nothing happens, tap the button. Open this email on the phone that has the app.", href, "Open the app");
+    try {
+      if (!link) {
+        show("This link doesn't look right", "Request a new email from the sign-in screen and use the newest one.", "/", "Go to lostpinescreative.com");
       } else {
-        const cfg = window.GW_CONFIG || {};
-        const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-        const { error } = await sb.auth.verifyOtp({ token_hash: link.tokenHash, type: link.type });
-        if (error) {
-          show("This link has expired or was already used",
-            "Links work once and expire after an hour. Sign in, or request a new email.", dest.url, "Back to sign in");
+        const dest = resolveNext(link.next, location.origin);
+        if (dest.kind === "app") {
+          // The Lost Pines app verifies the token itself.
+          const href = appUrl(dest.url, link.tokenHash, link.type);
+          location.replace(href);
+          show("Opening the Lost Pines app…", "If nothing happens, tap the button. Open this email on the phone that has the app.", href, "Open the app");
         } else {
-          location.replace(webUrl(dest.url, link.type));
-          show("You're signed in", "Taking you to your portal…", webUrl(dest.url, link.type), "Continue");
+          // Loaded here, inside try, so a CDN failure shows a message instead of a stuck spinner.
+          const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
+          const cfg = window.GW_CONFIG || {};
+          const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+          const { error } = await sb.auth.verifyOtp({ token_hash: link.tokenHash, type: link.type });
+          if (error) {
+            show("This link has expired or was already used",
+              "Links work once and expire after an hour. Sign in, or request a new email.", dest.url, "Back to sign in");
+          } else {
+            location.replace(webUrl(dest.url, link.type));
+            show("You're signed in", "Taking you to your portal…", webUrl(dest.url, link.type), "Continue");
+          }
         }
       }
+    } catch (_) {
+      // Script/config failed to load: say so instead of spinning forever.
+      show("Something went wrong", "Please try the link again, or request a new email from the sign-in screen.", "/", "Go to lostpinescreative.com");
     }
   </script>
 </body>

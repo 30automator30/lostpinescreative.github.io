@@ -48,7 +48,10 @@ Groundwork admin too.
   In-app "Delete my account" (Apple 5.1.1(v)) and the web page. Groundwork
   businesses are **detached, not deleted** (owner login removed, phones
   revoked, record/line/inbox kept, studio emailed); the user's own DeSmit
-  projects and their files are deleted. Admin accounts are refused. A failed
+  projects and their files are deleted; onboarding intakes/assets (signed
+  agreement, Stripe ids, brand files) are detached and kept, and the studio
+  email names any live Stripe subscription to cancel by hand; service requests
+  are kept with the requester's email. Admin accounts are refused. A failed
   run returns 503 and is finished by running it again; files Storage refused
   stay in `lpc_storage_purge`.
 

@@ -19,6 +19,7 @@ let requests: Row[] = [];
 let emails: Row[] = [];
 let resendFails = false;
 let authDown = false;
+let globalSent = 0;
 
 const ok = (b: unknown) => new Response(JSON.stringify(b), { status: 200, headers: { "Content-Type": "application/json" } });
 function matches(row: Row, p: URLSearchParams): boolean {
@@ -47,6 +48,9 @@ function fake(input: string | URL | Request, init?: RequestInit): Response {
   const table = url.pathname.replace("/rest/v1/", "");
   const p = url.searchParams;
   if (table === "lpc_requests") {
+    if (h.get("Prefer")?.includes("count=exact")) {
+      return new Response("[]", { status: 200, headers: { "content-range": `0-0/${globalSent}` } });
+    }
     const hit = requests.filter((r) => matches(r, p));
     if (init?.method === "PATCH") { hit.forEach((r) => Object.assign(r, JSON.parse(String(init.body)))); return ok(hit); }
     return ok(hit);
@@ -73,7 +77,7 @@ const call = (jwt: string | null, body: unknown = { request_id: REQ }, origin?: 
 const reset = () => {
   requests = [{ id: REQ, user_id: OWNER, service: "groundwork", kind: "change", client_id: CLIENT,
     body: "Please change my <b>greeting</b>", notified_at: null }];
-  emails = []; resendFails = false; authDown = false;
+  emails = []; resendFails = false; authDown = false; globalSent = 0;
 };
 
 Deno.test("owner's request -> one email to the studio with business, reply-to, escaped body", async () => {
@@ -132,4 +136,12 @@ Deno.test("native app (no Origin) is allowed; a foreign website is not; auth dow
   reset();
   authDown = true;
   assertEquals((await call("jwt-owner")).status, 503);
+});
+
+Deno.test("studio-wide daily email ceiling: many throwaway accounts can't flood the inbox", async () => {
+  reset();
+  globalSent = 50;
+  const r = await call("jwt-owner");
+  assertEquals((await r.json()).capped, true);
+  assertEquals(emails.length, 0);
 });

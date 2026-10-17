@@ -57,7 +57,10 @@ function escapeHtml(s: string) {
   return String(s ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]!));
 }
 
-// Remove queued Storage objects; clear the queue only for what Storage accepted.
+type Intake = { business_name: string | null; pay_status: string | null; stripe_subscription_id: string | null };
+type Deleted = { detached_clients: string[]; deleted_projects: number; detached_intakes?: Intake[] };
+
+// Remove queued Storage objects; clear a bucket's queue only once Storage accepted all of it.
 async function purgeFiles(userId: string): Promise<number> {
   const q = await fetchT(`${REST}/lpc_storage_purge?select=bucket,path&deleted_user_id=eq.${userId}`, { headers: svc });
   if (!q.ok) { console.error("purge queue read failed", q.status); return 0; }
@@ -70,16 +73,23 @@ async function purgeFiles(userId: string): Promise<number> {
       method: "DELETE", headers: svc, body: JSON.stringify({ prefixes: paths }),
     }).catch(() => null);
     if (!del?.ok) { console.error("storage delete failed", bucket, del?.status); continue; }
-    const inList = paths.map((p) => `"${p.replace(/"/g, '\\"')}"`).join(",");
+    // By user + bucket, not a path list: a long in.(…) list can exceed URL limits.
     await fetchT(`${REST}/lpc_storage_purge?bucket=eq.${encodeURIComponent(bucket)}` +
-      `&path=in.(${encodeURIComponent(inList)})`, { method: "DELETE", headers: svc }).catch(() => null);
+      `&deleted_user_id=eq.${userId}`, { method: "DELETE", headers: svc }).catch(() => null);
     removed += paths.length;
   }
   return removed;
 }
 
-async function tellStudio(email: string, detached: string[], projects: number): Promise<void> {
+async function tellStudio(email: string, detached: string[], projects: number, intakes: Intake[]): Promise<void> {
   if (!RESEND_KEY) return;
+  const subs = intakes.length
+    ? "<p><b>Onboarding records kept (detached from the login):</b></p><ul>" + intakes.map((i) =>
+      `<li>${escapeHtml(i.business_name ?? "(no name)")} — payment: ${escapeHtml(i.pay_status ?? "unknown")}` +
+      (i.stripe_subscription_id
+        ? ` — <b>Stripe subscription ${escapeHtml(i.stripe_subscription_id)} is still active until you cancel it</b>`
+        : "") + "</li>").join("") + "</ul>"
+    : "";
   const list = detached.length
     ? `<ul>${detached.map((b) => `<li>${escapeHtml(b)}</li>`).join("")}</ul>` +
       "<p>These Groundwork businesses are kept but no longer have an owner login. Close them out or re-invite an owner.</p>"
@@ -90,7 +100,7 @@ async function tellStudio(email: string, detached: string[], projects: number): 
     body: JSON.stringify({
       from: FROM, to: [TO], subject: "A customer deleted their Lost Pines account",
       html: `<p><b>${escapeHtml(email)}</b> deleted their account.</p>${list}` +
-        `<p>DeSmit Designs projects deleted: ${projects}.</p>`,
+        `${subs}<p>DeSmit Designs projects deleted: ${projects}.</p>`,
     }),
   }).catch((e) => console.error("studio email failed", String(e)));
 }
@@ -117,18 +127,24 @@ Deno.serve(async (req) => {
     const rpc = await fetchT(`${REST}/rpc/lpc_delete_account_data`, {
       method: "POST", headers: svc, body: JSON.stringify({ p_user: userId }),
     });
-    if (rpc.status === 403) {
-      return json({ error: "studio admin accounts can't be deleted here", code: "admin_account" }, 403, c);
+    if (!rpc.ok) {
+      // Only the function's own refusal (SQLSTATE 42501) means "admin account";
+      // any other failure (e.g. a missing grant) must not be reported as that.
+      const err = await rpc.json().catch(() => ({})) as { code?: string };
+      if (err.code === "42501") {
+        return json({ error: "studio admin accounts can't be deleted here", code: "admin_account" }, 403, c);
+      }
+      throw new Error(`data ${rpc.status}`);
     }
-    if (!rpc.ok) throw new Error(`data ${rpc.status}`);
-    const result = await rpc.json() as { detached_clients: string[]; deleted_projects: number };
+    const result = await rpc.json() as Deleted;
 
     const filesRemoved = await purgeFiles(userId);
 
     const del = await fetchT(`${SB_URL}/auth/v1/admin/users/${userId}`, { method: "DELETE", headers: svc });
     if (!del.ok && del.status !== 404) throw new Error(`auth delete ${del.status}`);
 
-    await tellStudio(String(user?.email ?? userId), result.detached_clients ?? [], result.deleted_projects ?? 0);
+    await tellStudio(String(user?.email ?? userId), result.detached_clients ?? [], result.deleted_projects ?? 0,
+      result.detached_intakes ?? []);
     console.log(JSON.stringify({ evt: "account_deleted", detached: result.detached_clients?.length ?? 0,
       projects: result.deleted_projects ?? 0, files: filesRemoved }));
     return json({ ok: true }, 200, c);

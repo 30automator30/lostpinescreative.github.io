@@ -14,6 +14,12 @@ Deno.test("next: our portals and the app are allowed", () => {
   assertEquals(resolveNext("lostpines://auth", O), { kind: "app", url: "lostpines://auth" });
 });
 
+Deno.test("next: only the app's auth entry point gets a token — no other lostpines:// path", () => {
+  for (const bad of ["lostpines://evil", "lostpines://auth/../x", "LOSTPINES://auth", "lostpines://auth?x=1"]) {
+    assertEquals(resolveNext(bad, O), { kind: "web", url: O + "/" }, bad);
+  }
+});
+
 Deno.test("next: anything else falls back to home (no open redirect)", () => {
   for (const bad of [
     "https://evil.example/", "//evil.example/x", "/\\evil.example", "http://lostpinescreative.com/",

@@ -24,6 +24,9 @@ const FROM = Deno.env.get("INVITE_FROM") ?? "Lost Pines Creative <noreply@lostpi
 const TO = Deno.env.get("STUDIO_NOTIFY_EMAIL") ?? "ddesmit@lostpinescreative.com";
 const ADMIN_URL = "https://lostpinescreative.com/admin/#requests";
 const MAX_EMAILS_PER_USER_DAY = 10;
+// Across all customers: throwaway sign-ups can't multiply the per-user cap into
+// an email flood. Past it, requests are still saved and on the admin hub.
+const MAX_EMAILS_PER_DAY = Number(Deno.env.get("RL_REQUEST_EMAILS_DAY") ?? "50");
 const T_EXT = 8000;
 
 const ALLOWED_ORIGINS = (Deno.env.get("ALLOWED_ORIGINS") ??
@@ -119,6 +122,11 @@ Deno.serve(async (req) => {
     const recent = await rows(`${REST}/lpc_requests?select=id&user_id=eq.${callerId}` +
       `&notified_at=gte.${encodeURIComponent(dayAgo)}`);
     if (recent.length >= MAX_EMAILS_PER_USER_DAY) return json({ ok: true, sent: 0, capped: true }, 200, c);
+    const all = await fetchT(`${REST}/lpc_requests?select=id&notified_at=gte.${encodeURIComponent(dayAgo)}`,
+      { headers: { ...svc, Prefer: "count=exact", Range: "0-0" } });
+    if (!all.ok) throw new Error(`count ${all.status}`); // fail closed: no email if we can't count
+    const total = Number((all.headers.get("content-range") ?? "*/0").split("/")[1] || "0") || 0;
+    if (total >= MAX_EMAILS_PER_DAY) return json({ ok: true, sent: 0, capped: true }, 200, c);
 
     const [client] = r.client_id
       ? await rows(`${REST}/gw_clients?select=business_name&id=eq.${r.client_id}`)

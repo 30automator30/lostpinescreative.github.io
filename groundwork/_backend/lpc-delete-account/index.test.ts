@@ -31,15 +31,18 @@ function fake(input: string | URL | Request, init?: RequestInit): Response {
   }
   if (url.pathname === "/rest/v1/rpc/lpc_delete_account_data") {
     if (fail.rpc) return new Response("boom", { status: 500 });
+    if (fail.rpcGrant) return new Response('{"code":"42883","message":"permission denied"}', { status: 403 });
     const { p_user } = JSON.parse(String(init!.body));
     if (p_user === ADMIN) return new Response('{"code":"42501"}', { status: 403 });
     purgeQueue.push({ bucket: "dd-attachments", path: `p1/1-photo.jpg`, deleted_user_id: p_user });
-    return ok({ detached_clients: ["Bastrop <Plumbing>"], deleted_projects: 1 });
+    return ok({ detached_clients: ["Bastrop <Plumbing>"], deleted_projects: 1,
+      detached_intakes: [{ business_name: "Bastrop Plumbing", pay_status: "paid", stripe_subscription_id: "sub_123" }] });
   }
   if (url.pathname === "/rest/v1/lpc_storage_purge") {
     if (m === "DELETE") {
-      const paths = decodeURIComponent(url.searchParams.get("path") ?? "");
-      purgeQueue = purgeQueue.filter((r) => !paths.includes(`"${r.path}"`));
+      const q = url.searchParams;
+      purgeQueue = purgeQueue.filter((r) =>
+        !(`eq.${r.bucket}` === q.get("bucket") && `eq.${r.deleted_user_id}` === q.get("deleted_user_id")));
       return ok([]);
     }
     return ok(purgeQueue.filter((r) => `eq.${r.deleted_user_id}` === url.searchParams.get("deleted_user_id")));
@@ -125,4 +128,19 @@ Deno.test("auth delete fails -> 503; running again finishes", async () => {
   fail.authDelete = false;
   assertEquals((await del("jwt-user")).status, 200);
   assert(deletedUsers.includes(USER));
+});
+
+Deno.test("studio email lists onboarding records kept and any live Stripe subscription", async () => {
+  reset();
+  await del("jwt-user");
+  assertMatch(String(emails[0].html), /Onboarding records kept/);
+  assertMatch(String(emails[0].html), /sub_123/);
+});
+
+Deno.test("a 403 that isn't the admin refusal (e.g. missing grant) is a 503, never 'you are an admin'", async () => {
+  reset();
+  fail.rpcGrant = true;
+  const r = await del("jwt-user");
+  assertEquals(r.status, 503);
+  assertEquals(deletedUsers.length, 0);
 });
