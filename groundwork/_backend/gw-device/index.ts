@@ -8,9 +8,10 @@
 //                 6-digit admin-issued code (gw_create_pairing_code), single
 //                 use, 10 minutes. Rate-limited per IP and globally.
 //   GET  /config  -> {business_name, textback_message, rules}
-//                 The app calls this before every text (D9): 401 means the
-//                 device was revoked -> the app unpairs and does not text.
-//                 Any other failure -> the app texts from its cached config.
+//                 The app calls this before every text (D9). Only a 401 whose
+//                 body has code "device_revoked" means unpair and don't text —
+//                 a gateway 401 (e.g. a redeploy with Verify JWT on) must not
+//                 unpair every phone. Anything else -> text from cached config.
 //   POST /events  [{external_id, kind, from_phone, at, texted}] (max 50)
 //                 One missed_call row per call (+ a textback row if texted)
 //                 in gw_messages, idempotent on external_id.
@@ -47,6 +48,7 @@ const TEXTBACK_PER_NUMBER_HOURS = 24;
 
 // REL-01 timeouts. /config sits in front of every text, so keep it quick.
 const T_DB = 2500;
+const T_LAST_SEEN = 500; // cosmetic write; must not eat the app's 3 s preflight
 
 const REST = `${SB_URL}/rest/v1`;
 const sbHeaders = {
@@ -227,7 +229,7 @@ async function onConfig(dev: Device, req: Request, traceId: string, t0: number):
       method: "PATCH",
       headers: { ...sbHeaders, Prefer: "return=minimal" },
       body: JSON.stringify({ last_seen_at: new Date().toISOString(), ...(v ? { app_version: v } : {}) }),
-    }, T_DB);
+    }, T_LAST_SEEN);
   } catch { /* last-seen is cosmetic */ }
   const message = clip(dev.textback_message, 400) ||
     `Sorry we missed your call at ${dev.business_name}! Reply here with what you need and we'll get right back to you.`;
@@ -315,7 +317,7 @@ Deno.serve(async (req) => {
     let body: any = null;
     if (req.method === "POST") {
       const raw = await req.text().catch(() => "");
-      if (raw.length > MAX_BODY_BYTES) return json({ error: "too large" }, 413); // chunked bodies too
+      if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return json({ error: "too large" }, 413); // chunked bodies too
       try { body = JSON.parse(raw); } catch { return json({ error: "invalid JSON" }, 400); }
     }
     if (route === "pair") return await onPair(body, clientIp(req), traceId, t0);
@@ -323,7 +325,7 @@ Deno.serve(async (req) => {
     const dev = await authDevice(req);
     if (!dev) {
       trace({ traceId, route, outcome: "unauthorized", ms: Date.now() - t0 });
-      return json({ error: "device not paired" }, 401);
+      return json({ error: "device not paired", code: "device_revoked" }, 401);
     }
     if (route === "config") return await onConfig(dev, req, traceId, t0);
     return await onEvents(dev, body, traceId, t0);

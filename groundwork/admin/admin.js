@@ -380,9 +380,10 @@ $("cd-set-save").addEventListener("click", async () => {
 
 /* phones (Text-Back app) — the token hash is never selected */
 async function loadDevs() {
-  const { data } = await sb.from("gw_devices").select("id,label,app_version,last_seen_at,revoked_at,created_at")
+  const { data, error } = await sb.from("gw_devices").select("id,label,app_version,last_seen_at,revoked_at,created_at")
     .eq("client_id", current.id).order("revoked_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false });
   const box = $("cd-devs");
+  if (error) { box.innerHTML = '<div class="inline-note">Couldn\'t load phones.</div>'; toast(error.message, "err"); return; }
   if (!data || !data.length) { box.innerHTML = '<div class="inline-note">No phones paired.</div>'; return; }
   box.innerHTML = data.map((d) =>
     '<div class="msg-item ' + (d.revoked_at ? "handled" : "") + '"><div class="msg-top"><span class="badge ' + (d.revoked_at ? "handled" : "new") + '">' +

@@ -24,6 +24,14 @@ Groundwork admin too.
   - Apply `007_gw_devices.sql` (after `006`).
   - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (the phone
     authenticates with its own device token). No new secrets.
+  - **Verify JWT must stay OFF on every redeploy.** With it on, the gateway
+    answers phones with its own 401; the app ignores that (it unpairs only on
+    the function's `code: "device_revoked"`), so phones keep texting from
+    cache, but nothing syncs and nobody can pair until it's fixed.
+  - "The code won't take" for everyone: after 30 failed pairing attempts in an
+    hour, pairing is locked for all clients until the hour rolls over
+    (brute-force guard). Wait, or clear `ai_call_log` rows with
+    `fn = 'gw-device-pair-fail'`.
   - Tests: `deno test -A groundwork/_backend/gw-device/index.test.ts`
 
 ## Deploy (owner steps)

@@ -202,7 +202,9 @@ Deno.test("config: revoked device, unknown token, or no token -> 401 (D9)", asyn
   reset();
   const { token } = await pair();
   devices[0].revoked_at = new Date().toISOString();
-  assertEquals((await req("config", { method: "GET", token })).status, 401);
+  const revoked = await req("config", { method: "GET", token });
+  assertEquals(revoked.status, 401);
+  assertEquals((await revoked.json()).code, "device_revoked"); // the app unpairs only on this code
   assertEquals((await req("config", { method: "GET", token: "not-a-real-token" })).status, 401);
   assertEquals((await req("config", { method: "GET" })).status, 401);
 });
