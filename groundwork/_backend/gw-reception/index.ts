@@ -56,6 +56,11 @@ const BOOK_MAX_AHEAD_MS = 90 * 86_400_000;
 
 // COST-02: hard daily ceiling on AI-answered calls across all lines.
 const RL_GLOBAL_DAY = Number(Deno.env.get("RL_GLOBAL_DAY") ?? "300");
+// SMS caps: one text-back per destination per day, a daily ceiling across all
+// lines, and a per-number ceiling on forwarded SMS replies (spoofed-caller-ID
+// bombing / cost amplification).
+const RL_SMS_DAY = Number(Deno.env.get("RL_SMS_DAY") ?? "150");
+const RL_REPLY_FWD_HOUR = 5;
 
 // REL-01 timeouts. assistant-request must answer Vapi within 7.5 s end to end.
 const T_DB = 2500;
@@ -126,7 +131,14 @@ function toE164(raw: unknown): string | null {
   if (d.length === 11 && d.startsWith("1")) return `+${d}`;
   return null;
 }
-const isNanp = (n: string | null): n is string => !!n && /^\+1[2-9]\d{9}$/.test(n);
+// +1 also covers Caribbean countries (809/876/…), the classic SMS-pumping
+// destinations, plus premium 900. Text only true US/Canada numbers.
+const NON_US_CA_NPA = new Set([
+  "242", "246", "264", "268", "284", "345", "441", "473", "649", "658", "664",
+  "721", "758", "767", "784", "809", "829", "849", "868", "869", "876", "900",
+]);
+const isNanp = (n: string | null): n is string =>
+  !!n && /^\+1[2-9]\d{2}[2-9]\d{6}$/.test(n) && !NON_US_CA_NPA.has(n.slice(2, 5));
 
 // ── DEP-05: kill switch. When off, calls still get the short fallback + text-back. ──
 async function agentEnabled(): Promise<boolean> {
@@ -174,10 +186,11 @@ type Line = {
 
 // deno-lint-ignore no-explicit-any
 async function lookupLine(msg: any): Promise<Line | null> {
-  const id = clip(msg?.phoneNumber?.id ?? msg?.call?.phoneNumberId, 100);
+  const rawId = clip(msg?.phoneNumber?.id ?? msg?.call?.phoneNumberId, 100);
+  const id = /^[\w-]+$/.test(rawId) ? rawId : ""; // never let an id add PostgREST filter terms
   const num = toE164(msg?.phoneNumber?.number ?? msg?.call?.phoneNumber?.number);
   const ors: string[] = [];
-  if (id) ors.push(`vapi_phone_number_id.eq.${encodeURIComponent(id)}`);
+  if (id) ors.push(`vapi_phone_number_id.eq.${id}`);
   if (num) ors.push(`ai_number.eq.${encodeURIComponent(num)}`);
   if (!ors.length) return null;
   const sel = "*,client:gw_clients(business_name,status,settings:gw_settings(*))";
@@ -319,7 +332,6 @@ function tools(line: Line) {
               start: { type: "string", description: "Slot start, exactly as returned by check_availability." },
               name: { type: "string", description: "Caller's name." },
               phone: { type: "string", description: "Number to reach them, if different from caller ID." },
-              email: { type: "string", description: "Email, only if they offered it." },
               notes: { type: "string", description: "What the appointment is for." },
             },
             required: ["start", "name"],
@@ -335,7 +347,7 @@ function firstMessage(line: Line): string {
   const g = clip(line.settings.greeting, 300) ||
     `Thanks for calling ${line.business_name}! Sorry we couldn't pick up — I'm the virtual assistant and I can help.`;
   // Always disclose AI + recording, even if the owner's greeting doesn't.
-  const disclosed = /\b(ai|virtual|assistant)\b/i.test(g) && /record/i.test(g);
+  const disclosed = /\bAI\b/.test(g) && /\brecord/i.test(g);
   return disclosed ? g : `${g} Just so you know, I'm an AI assistant and this call may be recorded.`;
 }
 
@@ -411,13 +423,13 @@ async function onAssistantRequest(msg: any, traceId: string, t0: number): Promis
 // gw_messages: one row per call, keyed by the Vapi call id.
 // ============================================================
 type MsgRow = {
-  id: string; kind: string; from_name: string | null; from_phone: string | null;
+  id: string; client_id: string; kind: string; from_name: string | null; from_phone: string | null;
   body: string | null; meta: Record<string, unknown> | null;
 };
 
 async function getRow(externalId: string): Promise<MsgRow | null> {
   const r = await fetchT(
-    `${REST}/gw_messages?select=id,kind,from_name,from_phone,body,meta&external_id=eq.${encodeURIComponent(externalId)}`,
+    `${REST}/gw_messages?select=id,client_id,kind,from_name,from_phone,body,meta&external_id=eq.${encodeURIComponent(externalId)}`,
     { headers: sbHeaders }, T_DB,
   );
   if (!r.ok) throw new Error(`getRow ${r.status}`);
@@ -431,6 +443,8 @@ async function upsertCall(
   callId: string, clientId: string, fields: Record<string, unknown>, metaPatch: Record<string, unknown>,
 ): Promise<MsgRow | null> {
   const existing = await getRow(callId);
+  // A call id belongs to one tenant forever — never re-home a row.
+  if (existing && existing.client_id !== clientId) throw new Error("call id tenant mismatch");
   const meta = { ...(existing?.meta ?? {}), via: FN_NAME, vapi_call_id: callId, ...metaPatch };
   const r = await fetchT(`${REST}/gw_messages?on_conflict=external_id`, {
     method: "POST",
@@ -508,19 +522,20 @@ async function bookAppointment(
   }
   const name = clip(args.name, 120);
   if (!name) return "Get the caller's name first.";
-  const phone = toE164(args.phone) ?? caller;
-  const emailRaw = clip(args.email, 200);
-  const email = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw) ? emailRaw : "";
+  // Only US/CA numbers reach Cal.com (it may text reminders); no caller-supplied
+  // email, so a booking can't be used to spam a third party.
+  const given = toE164(args.phone);
+  const phone = isNanp(given) ? given : caller;
   const startIso = new Date(startMs).toISOString();
 
   // Idempotent on retry: same call + same start = already booked.
   const existing = await getRow(callId).catch(() => null);
   const prior = existing?.meta?.booking as { start?: string } | undefined;
   if (prior?.start === startIso) return `Already booked for ${fmtWhen(startIso, line.timezone)}. Confirm it to the caller.`;
+  if (prior?.start) return "One booking per call — it's already booked. Take a message for any change.";
 
   const attendee: Record<string, string> = { name, timeZone: line.timezone };
   if (phone) attendee.phoneNumber = phone;
-  if (email) attendee.email = email;
   const r = await calFetch("/v2/bookings", "2024-08-13", {
     method: "POST",
     body: JSON.stringify({
@@ -618,6 +633,29 @@ async function sendSms(to: string, body: string, from: string | null): Promise<b
   }
 }
 
+async function countRows(params: string): Promise<number> {
+  const r = await fetchT(`${REST}/gw_messages?select=id&${params}`, {
+    headers: { ...sbHeaders, Prefer: "count=exact", Range: "0-0" },
+  }, T_DB);
+  if (!r.ok) throw new Error(`count ${r.status}`);
+  return Number((r.headers.get("content-range") ?? "*/0").split("/")[1] || "0") || 0;
+}
+
+// One text-back per destination per day, under a global daily ceiling. Fails
+// CLOSED: if the counts can't be read, don't text.
+async function textbackAllowed(to: string): Promise<boolean> {
+  const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+  try {
+    const [toThis, total] = await Promise.all([
+      countRows(`kind=eq.textback&from_phone=eq.${encodeURIComponent(to)}&created_at=gte.${dayAgo}`),
+      countRows(`kind=eq.textback&created_at=gte.${dayAgo}`),
+    ]);
+    return toThis === 0 && total < RL_SMS_DAY;
+  } catch {
+    return false;
+  }
+}
+
 // Claim the text-back with an insert-if-absent row so a retried report can't
 // double-text. Returns true only for the first claimant.
 async function claimTextback(line: Line, callId: string, to: string, body: string): Promise<boolean> {
@@ -672,8 +710,8 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     transcript: transcript || null,
     recording_url: recordingUrl,
     ended_reason: clip(msg?.endedReason, 80) || null,
-    started_at: msg?.startedAt ?? null,
-    ended_at: msg?.endedAt ?? null,
+    started_at: clip(msg?.startedAt, 40) || null,
+    ended_at: clip(msg?.endedAt, 40) || null,
   });
 
   // Text-back to the caller.
@@ -691,15 +729,21 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     textback = `Thanks for calling ${biz} — we got your message and will get back to you soon. Reply here anytime.`;
   }
   textback += " Reply STOP to opt out.";
-  let texted = false;
-  if (isNanp(caller) && await claimTextback(line, callId, caller, textback)) {
-    texted = await sendSms(caller, textback, line.ai_number);
+  // A line switched off (gw_reception_lines.enabled=false) sends nothing; the
+  // ai_config kill switch only turns off the AI, so callers still get a text.
+  let texted = false, repeat = false;
+  if (line.enabled && isNanp(caller)) {
+    if (!(await textbackAllowed(caller))) repeat = true;
+    else if (await claimTextback(line, callId, caller, textback)) {
+      texted = await sendSms(caller, textback, line.ai_number);
+    }
   }
 
   // Alert the owner (real calls only — a silent hang-up with no caller ID is noise).
   const alertTo = toE164(line.owner_alert_number) ?? toE164(s.forward_number);
   let alerted = false;
-  if (isNanp(alertTo) && (talked || caller)) {
+  // Repeat silent calls from a number already texted today are noise, not leads.
+  if (line.enabled && isNanp(alertTo) && (talked || (caller && !repeat))) {
     const who = existing?.from_name ? `${existing.from_name} (${existing.from_phone ?? caller ?? "no number"})`
       : (caller ?? "Blocked number");
     const what = booking?.start ? `BOOKED ${fmtWhen(booking.start, line.timezone)}`
@@ -735,15 +779,22 @@ async function onInboundSms(req: Request, traceId: string, t0: number): Promise<
   const alertTo = toE164(line.owner_alert_number) ?? toE164(line.settings.forward_number);
   if (from === alertTo) return twiml(); // owner texting the line — don't loop it back
 
-  await fetchT(`${REST}/gw_messages?on_conflict=external_id`, {
+  // Only forward the first delivery of a message (Twilio retries / replays),
+  // and at most RL_REPLY_FWD_HOUR per sender per hour.
+  const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
+  const recent = await countRows(
+    `client_id=eq.${line.client_id}&from_phone=eq.${encodeURIComponent(from)}&meta->>channel=eq.sms&created_at=gte.${hourAgo}`,
+  ).catch(() => RL_REPLY_FWD_HOUR);
+  const ins = await fetchT(`${REST}/gw_messages?on_conflict=external_id`, {
     method: "POST",
-    headers: { ...sbHeaders, Prefer: "resolution=ignore-duplicates,return=minimal" },
+    headers: { ...sbHeaders, Prefer: "resolution=ignore-duplicates,return=representation" },
     body: JSON.stringify({
       client_id: line.client_id, external_id: `sms:${sid}`, kind: "lead",
       from_phone: from, body: text || "(empty text)", meta: { via: FN_NAME, channel: "sms" },
     }),
-  }, T_DB).catch(() => {});
-  if (isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
+  }, T_DB).catch(() => null);
+  const fresh = !!ins?.ok && ((await ins.json().catch(() => [])) as unknown[]).length > 0;
+  if (line.enabled && fresh && recent < RL_REPLY_FWD_HOUR && isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
     await sendSms(alertTo, `${line.business_name} text from ${from}: ${text.slice(0, 300)}`, line.ai_number);
   }
   trace({ traceId, type: "sms", outcome: "ok", ms: Date.now() - t0 });
@@ -768,7 +819,10 @@ Deno.serve(async (req) => {
     trace({ traceId, outcome: "unauthorized", ms: Date.now() - t0 });
     return json({ error: "unauthorized" }, 401);
   }
-  const body = await req.json().catch(() => null);
+  const raw = await req.text().catch(() => "");
+  if (raw.length > MAX_BODY_BYTES) return json({ error: "too large" }, 413); // chunked bodies too
+  let body: { message?: Record<string, unknown> } | null = null;
+  try { body = JSON.parse(raw); } catch { /* handled below */ }
   const msg = body?.message;
   try {
     switch (msg?.type) {

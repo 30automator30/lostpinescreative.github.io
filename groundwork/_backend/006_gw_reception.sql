@@ -48,7 +48,7 @@ insert into public.ai_config (fn, enabled) values ('gw-reception', true)
 -- To take the receptionist offline (calls still get a text-back):
 --   update public.ai_config set enabled = false where fn = 'gw-reception';
 
--- PRIV-02: strip full call transcripts after 180 days (summary stays in body).
+-- PRIV-02: strip call transcripts + recording links after 180 days (summary stays in body).
 create or replace function public.ai_retention_purge()
 returns void language sql security definer set search_path='' as $$
   delete from public.ai_call_log where created_at < now() - interval '2 days';
@@ -56,7 +56,8 @@ returns void language sql security definer set search_path='' as $$
     where created_at < now() - interval '180 days' and meta ? 'transcript';
   update public.dd_inquiries set meta = meta - 'transcript'
     where created_at < now() - interval '180 days' and meta ? 'transcript';
-  update public.gw_messages set meta = meta - 'transcript'
-    where created_at < now() - interval '180 days' and meta ? 'transcript';
+  update public.gw_messages set meta = meta - 'transcript' - 'recording_url'
+    where created_at < now() - interval '180 days'
+      and (meta ? 'transcript' or meta ? 'recording_url');
 $$;
 revoke execute on function public.ai_retention_purge() from anon, authenticated, public;

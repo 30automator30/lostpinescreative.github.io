@@ -23,9 +23,9 @@ Caller replies by text ─────▶ gw-reception?src=twilio-sms ▸ inbox 
 - Disclosure is enforced: the greeting always says it's an AI and the call may be
   recorded, even if the client's custom greeting doesn't.
 
-Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (8 cases: auth,
+Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (11 cases: auth,
 assistant build, fallback, booked call end-to-end, missed call, retries/idempotency,
-non-US blocking, signed SMS replies).
+non-US/Caribbean blocking, per-number text cap, booking abuse, signed + replayed SMS replies).
 
 ---
 
@@ -142,4 +142,9 @@ client a Cal.com team seat under it, or add per-client keys when client #2 needs
 - **Off switch:** `update public.ai_config set enabled=false where fn='gw-reception';`
 - **Spend ceiling:** `RL_GLOBAL_DAY` (default 300 AI-answered calls/day across all lines).
 - **Logs** are metadata only (`evt: agent_run`) — no numbers, names, or content.
-- **Retention:** full transcripts stripped after 180 days by `ai_retention_purge()`.
+- **Retention:** transcripts + recording links stripped after 180 days by `ai_retention_purge()`.
+  Also set Vapi's call-data retention to ≤180 days so the recordings themselves go too (privacy §7).
+- **Text caps:** one text-back per caller number per day, `RL_SMS_DAY` (default 150) across all
+  lines, ≤5 forwarded replies per sender per hour; only real US/Canada numbers are ever texted.
+- **Two off switches:** `ai_config.enabled=false` turns off the AI (callers still get a text-back);
+  `gw_reception_lines.enabled=false` turns the whole line off, texts included.

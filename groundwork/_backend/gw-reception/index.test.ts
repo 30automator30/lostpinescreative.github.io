@@ -46,8 +46,16 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     }
     if (table === "gw_messages") {
       if (method === "GET") {
-        const ext = (url.searchParams.get("external_id") ?? "").replace(/^eq\./, "");
-        return ok(messages.filter((m) => m.external_id === ext));
+        const eq = (k: string) => url.searchParams.get(k)?.replace(/^eq\./, "");
+        if (new Headers(init?.headers).get("Prefer")?.includes("count=exact")) {
+          const n = messages.filter((m) =>
+            (!eq("kind") || m.kind === eq("kind")) &&
+            (!eq("from_phone") || m.from_phone === eq("from_phone")) &&
+            (!eq("meta->>channel") || (m.meta as Record<string, unknown>)?.channel === eq("meta->>channel"))
+          ).length;
+          return ok([], { "content-range": `0-0/${n}` });
+        }
+        return ok(messages.filter((m) => m.external_id === eq("external_id")));
       }
       const row = JSON.parse(String(init!.body));
       const prefer = new Headers(init!.headers).get("Prefer") ?? "";
@@ -217,6 +225,44 @@ Deno.test("inbound SMS reply: signed -> inbox + forwarded; unsigned -> 403; owne
   assertMatch(sms[0].Body, /text from \+15125551234: Can you do Friday\?/);
   const own = new URLSearchParams({ From: "+14083487284", To: "+15125550100", Body: "ok", MessageSid: "SMb" });
   await send(await twSig(url, own, "twtok"), own);
+  assertEquals(sms.length, 1);
+});
+
+Deno.test("one text-back per number per day; Caribbean +1 numbers never texted", async () => {
+  reset();
+  const missed = (id: string, num: string) => vapi({ type: "end-of-call-report", call: call(id, num),
+    endedReason: "customer-ended-call", artifact: { messages: [] }, analysis: {} });
+  await missed("r1", "+15125551234");
+  await missed("r2", "+15125551234"); // spoofed/repeat caller
+  assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
+  assertEquals(sms.filter((m) => m.To === "+14083487284").length, 1); // repeat silent call: no 2nd alert
+  await missed("r3", "+18095550123"); // Dominican Republic
+  assertEquals(sms.filter((m) => m.To === "+18095550123").length, 0);
+});
+
+Deno.test("booking ignores caller-supplied email and non-US phone; one booking per call", async () => {
+  reset();
+  const book = (start: string) => vapi({ type: "tool-calls", call: call("b1"),
+    toolCallList: [{ id: "t" + start, type: "function", function: { name: "book_appointment",
+      arguments: JSON.stringify({ start, name: "Z", phone: "+447700900123", email: "victim@example.com" }) } }] });
+  await book(SLOT1);
+  const att = calBookings[0].attendee as Record<string, string>;
+  assertEquals(att.phoneNumber, "+15125551234");
+  assertEquals(att.email, undefined);
+  const r = await (await book(SLOT2)).json();
+  assertMatch(r.results[0].result, /One booking per call/);
+  assertEquals(calBookings.length, 1);
+});
+
+Deno.test("replayed SMS webhook forwards to owner only once", async () => {
+  reset();
+  const url = FN + "?src=twilio-sms";
+  const p = new URLSearchParams({ From: "+15125559999", To: "+15125550100", Body: "hi", MessageSid: "SMr" });
+  const sig = await twSig(url, p, "twtok");
+  for (let i = 0; i < 3; i++) {
+    await handler(new Request(url, { method: "POST", headers: { "x-twilio-signature": sig,
+      "content-type": "application/x-www-form-urlencoded" }, body: p.toString() }));
+  }
   assertEquals(sms.length, 1);
 });
 
