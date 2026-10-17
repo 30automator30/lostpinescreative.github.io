@@ -41,7 +41,7 @@ DB-blip retry, switched-off line, missing caller ID, blocked-ID booking).
 ## Setup — DeSmit Designs (line #1)
 
 Rough running cost: Twilio number ~$1–2/mo + ~1–2¢ per text with carrier fees;
-A2P registration ~$20 one-time + a few $/mo; Vapi all-in ~$0.10–0.20 per AI minute
+A2P ~$20 one-time ($4.50 brand + $15 vetting) + $1.50/mo; Vapi all-in ~$0.10–0.20 per AI minute
 (platform + Deepgram + voice + Claude Haiku). _Confirm on each vendor's pricing page._
 
 ### 1. Database
@@ -53,13 +53,20 @@ Apply `../006_gw_reception.sql` (MCP `apply_migration`, SQL editor, or CLI).
 1. Create a Twilio account **in the business's name** (Lost Pines Creative LLC).
 2. Buy a local number (512 / 737).
 3. **Start A2P 10DLC registration now** — US carriers block business texts from
-   unregistered numbers, and approval can take days to a few weeks. Calls work
-   immediately; text-backs won't deliver until approved. Register a Standard brand
-   (LLC + EIN) and a low-volume "Customer Care" campaign. Sample message:
-   _"Sorry we missed your call at DeSmit Designs! Reply here with what you need.
-   Reply STOP to opt out."_ Opt-in description: _"Customers call our business line;
-   if we miss the call we send one text to the calling number. Privacy policy:
-   https://lostpinescreative.com/privacy.html"_ (§7 there covers this).
+   unregistered numbers. Calls work immediately; text-backs fail (error 30034) until
+   the campaign is approved. Console ▸ Messaging ▸ Regulatory Compliance ▸ Onboarding:
+   - **Customer Profile** (LLC, EIN, address, authorized rep) — Twilio review can take 72 h+;
+     you can continue while it's pending.
+   - **Brand: Low-Volume Standard** — $4.50 one-time, for <6,000 texts/day. (Standard is
+     $46; Sole Proprietor is for no-EIN businesses.) Needs a brand contact email for 2FA.
+     List **DeSmit Designs** as the brand/DBA name so it matches the texts.
+   - **Campaign: Low-Volume Mixed** — $15 vetting + **$1.50/mo** (a Standard use case like
+     Customer Care is $10/mo; not needed at this volume). Sample message:
+     _"Sorry we missed your call at DeSmit Designs! Reply here with what you need.
+     Reply STOP to opt out."_ Opt-in description: _"Customers call our business line;
+     if we miss the call we send one text to the calling number. Privacy policy:
+     https://lostpinescreative.com/privacy.html"_ (§7 there covers this).
+   _Fees verified against Twilio's help center 2026-10-17; re-check the console at checkout._
 4. Create a **Messaging Service**, add the number. Set its incoming-message
    webhook to `https://ekogelnbhggyrychfrta.supabase.co/functions/v1/gw-reception?src=twilio-sms` (HTTP POST).
    _(A toll-free number with toll-free verification is the alternative if 10DLC drags.)_
