@@ -112,6 +112,16 @@
     <div class="gw-section">
       <h3>Reception &amp; voicemail setup</h3>
       <p class="subtle">How your AI receptionist and missed-call text-back handle callers. Changes save to your account.</p>
+      <div class="card" id="svc-card" hidden style="margin-bottom:14px">
+        <label class="svc-row" id="svc-ai-row" hidden>
+          <input type="checkbox" id="svc-ai">
+          <span><b>AI receptionist answers calls</b><br><span class="subtle">Off: callers hear a short "we'll text you right back" message and still get your text-back.</span></span>
+        </label>
+        <label class="svc-row">
+          <input type="checkbox" id="svc-textback">
+          <span><b>Text-Back from my Android phone</b><br><span class="subtle">Off: the Lost Pines app on your phone stops texting missed callers (calls are still logged here).</span></span>
+        </label>
+      </div>
       <div class="card">
         <div class="field">
           <label for="set-greeting">Greeting (what callers hear / the AI opens with)</label>
@@ -143,6 +153,28 @@
         <div style="text-align:right">
           <button class="btn btn-primary btn-sm" id="set-save">Save setup</button>
         </div>
+      </div>
+    </div>
+
+    <div class="gw-section">
+      <h3>Request a change</h3>
+      <p class="subtle">New phone number, booking calendar, a new service, a plan change, or anything else — we'll get back to you.</p>
+      <div class="card">
+        <div class="field">
+          <label for="req-kind">What kind of request?</label>
+          <select id="req-kind">
+            <option value="change">Change to my setup</option>
+            <option value="new_service">A new service</option>
+            <option value="support">Something isn't working</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="req-body">Details</label>
+          <textarea id="req-body" maxlength="4000" placeholder="What would you like changed?"></textarea>
+        </div>
+        <div class="error-text" id="req-error"></div>
+        <div style="text-align:right"><button class="btn btn-primary btn-sm" id="req-send">Send request</button></div>
       </div>
     </div>
 

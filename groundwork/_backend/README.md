@@ -71,6 +71,27 @@ Because the Supabase MCP must point at `ekogelnbhggyrychfrta`:
 Front-end config (`groundwork/portal/config.js`) already holds the project URL +
 anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 
+## Email links — one-time dashboard change (needed before the Lost Pines app)
+Both portals and the app share these templates, so switch them together and
+then re-test sign-in on **both** portals in the same sitting.
+
+1. **Authentication ▸ URL Configuration:** Site URL `https://lostpinescreative.com`;
+   add `lostpines://auth` to Redirect URLs (keep the portal URLs).
+2. **Authentication ▸ Email Templates** — replace the link in each template:
+
+   | Template | Link |
+   |---|---|
+   | Confirm signup | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=signup&next={{ .RedirectTo }}` |
+   | Invite user | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=invite&next={{ .RedirectTo }}` |
+   | Magic Link | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=magiclink&next={{ .RedirectTo }}` |
+   | Reset Password | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}` |
+   | Change Email Address | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=email_change&next={{ .RedirectTo }}` |
+3. **Regression check** (both `/groundwork/portal/` and `/desmitdesigns/portal/`):
+   new sign-up confirms and lands signed in; "Forgot password" email opens
+   "Set a new password" and the new password works; an old/used link shows
+   "expired" with a way back. `/auth/confirm.html` only ever sends people to
+   lostpinescreative.com or the app.
+
 ## Data model
 | table | purpose |
 |-------|---------|

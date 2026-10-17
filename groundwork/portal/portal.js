@@ -57,7 +57,7 @@ $("none-out").addEventListener("click", () => sb.auth.signOut());
 async function enterDashboard() {
   showView("view-dash");
   renderPlan();
-  await Promise.all([loadIntegrations(), loadMessages(), loadSettings(), loadReports(), loadActivity(), loadFiles()]);
+  await Promise.all([loadIntegrations(), loadMessages(), loadSettings(), loadServices(), loadReports(), loadActivity(), loadFiles()]);
   subscribe();
 }
 
@@ -174,6 +174,41 @@ $("set-save").addEventListener("click", async () => {
   btn.disabled = false;
   if (error) { $("set-error").textContent = error.message || "Couldn't save."; return; }
   toast("Setup saved.", "ok");
+});
+
+/* ---------- on/off switches (008: gw_my_services / gw_set_service_enabled) ---------- */
+async function loadServices() {
+  const { data, error } = await sb.rpc("gw_my_services", { p_client: client.id });
+  const row = Array.isArray(data) ? data[0] : data;
+  if (error || !row) { $("svc-card").hidden = true; return; } // not deployed yet: hide, don't guess
+  $("svc-card").hidden = false;
+  $("svc-ai-row").hidden = !row.has_line;
+  $("svc-ai").checked = !!row.ai_enabled;
+  $("svc-textback").checked = row.textback_app_enabled !== false;
+}
+[["svc-ai", "receptionist"], ["svc-textback", "textback_app"]].forEach(([id, service]) => {
+  $(id).addEventListener("change", async () => {
+    const box = $(id); box.disabled = true;
+    const { error } = await sb.rpc("gw_set_service_enabled", { p_client: client.id, p_service: service, p_on: box.checked });
+    box.disabled = false;
+    if (error) { box.checked = !box.checked; toast(error.message || "Couldn't change that.", "err"); return; }
+    toast(box.checked ? "Turned on." : "Turned off.", "ok");
+  });
+});
+
+/* ---------- request a change (009: lpc_requests + lpc-request-notify) ---------- */
+$("req-send").addEventListener("click", async () => {
+  const body = $("req-body").value.trim();
+  $("req-error").textContent = "";
+  if (!body) { $("req-error").textContent = "Tell us what you'd like."; return; }
+  const btn = $("req-send"); btn.disabled = true;
+  const { data, error } = await sb.from("lpc_requests")
+    .insert({ service: "groundwork", kind: $("req-kind").value, client_id: client.id, body }).select("id").single();
+  if (error) { btn.disabled = false; $("req-error").textContent = error.message || "Couldn't send."; return; }
+  // The request is saved; the email to the studio is best effort.
+  sb.functions.invoke("lpc-request-notify", { body: { request_id: data.id } }).catch(() => {});
+  btn.disabled = false; $("req-body").value = "";
+  toast("Request sent — we'll be in touch.", "ok");
 });
 
 async function loadReports() {

@@ -55,7 +55,7 @@ async function enterDash() {
   showView("view-dash");
   const first = (user.email || "").split("@")[0];
   $("greeting").textContent = first ? "Signed in as " + user.email : "";
-  await Promise.all([loadSummary(), load()]);
+  await Promise.all([loadSummary(), load(), loadRequests()]);
   subscribe();
 }
 
@@ -221,3 +221,34 @@ function subscribe() {
     .subscribe();
 }
 function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } }
+
+/* ---------- service requests (lpc_requests, both brands) ---------- */
+const REQ_BRAND = { groundwork: "Groundwork", desmit: "DeSmit Designs" };
+const REQ_KIND = { new_service: "New service", change: "Change", support: "Support", other: "Other" };
+const REQ_STATUS = { new: "New", in_progress: "In progress", done: "Done", declined: "Declined" };
+async function loadRequests() {
+  const box = $("req-list");
+  const { data, error } = await sb.from("lpc_requests")
+    .select("id,user_id,service,kind,body,status,created_at,client:gw_clients(business_name)")
+    .in("status", ["new", "in_progress"]).order("created_at", { ascending: false }).limit(50);
+  if (error) { box.innerHTML = '<div class="subtle">Couldn\'t load requests: ' + esc(error.message) + "</div>"; return; }
+  if (!data.length) { box.innerHTML = '<div class="subtle">No open requests.</div>'; return; }
+  const ids = [...new Set(data.map((r) => r.user_id))];
+  const { data: profs } = await sb.from("dd_profiles").select("id,email,full_name").in("id", ids);
+  const who = Object.fromEntries((profs || []).map((p) => [p.id, p.full_name ? p.full_name + " · " + p.email : p.email]));
+  box.innerHTML = data.map((r) =>
+    '<div class="asset"><div class="a-main"><b>' + esc(REQ_KIND[r.kind] || r.kind) + " · " + esc(REQ_BRAND[r.service] || r.service) +
+    (r.client && r.client.business_name ? " · " + esc(r.client.business_name) : "") + "</b>" +
+    '<div class="a-sub">' + esc(who[r.user_id] || "customer") + " · " + esc(new Date(r.created_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })) + "</div>" +
+    '<div class="a-sub" style="white-space:pre-wrap;margin-top:4px">' + esc(r.body) + "</div></div>" +
+    '<div class="a-actions"><label class="subtle" style="font-size:.75rem" for="rq-' + r.id + '">Status</label> ' +
+    '<select id="rq-' + r.id + '" data-req="' + r.id + '">' +
+    Object.entries(REQ_STATUS).map(([k, v]) => '<option value="' + k + '"' + (k === r.status ? " selected" : "") + ">" + v + "</option>").join("") +
+    "</select></div></div>"
+  ).join("");
+  box.querySelectorAll("[data-req]").forEach((sel) => sel.addEventListener("change", async () => {
+    const { error } = await sb.from("lpc_requests").update({ status: sel.value }).eq("id", sel.dataset.req);
+    if (error) { toast(error.message, "err"); return; }
+    toast("Request updated.", "ok"); loadRequests();
+  }));
+}
