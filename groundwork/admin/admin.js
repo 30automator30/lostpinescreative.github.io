@@ -364,11 +364,13 @@ async function loadSet() {
   $("cd-greeting").value = (data && data.greeting) || ""; $("cd-forward").value = (data && data.forward_number) || "";
   $("cd-hours").value = (data && data.hours && data.hours.text) || ""; $("cd-after").value = (data && data.after_hours) || "";
   $("cd-textback").value = (data && data.textback_message) || "";
+  $("cd-knowledge").value = (data && data.knowledge) || "";
 }
 $("cd-set-save").addEventListener("click", async () => {
   const btn = $("cd-set-save"); btn.disabled = true;
   const payload = { client_id: current.id, greeting: $("cd-greeting").value.trim() || null, forward_number: $("cd-forward").value.trim() || null,
-    hours: { text: $("cd-hours").value.trim() || null }, after_hours: $("cd-after").value.trim() || null, textback_message: $("cd-textback").value.trim() || null };
+    hours: { text: $("cd-hours").value.trim() || null }, after_hours: $("cd-after").value.trim() || null, textback_message: $("cd-textback").value.trim() || null,
+    knowledge: $("cd-knowledge").value.trim() || null };
   const { error } = await sb.from("gw_settings").upsert(payload, { onConflict: "client_id" });
   btn.disabled = false;
   if (error) { toast(error.message, "err"); return; }

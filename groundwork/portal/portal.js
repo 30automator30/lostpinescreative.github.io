@@ -157,6 +157,7 @@ async function loadSettings() {
   $("set-hours").value = (data && data.hours && data.hours.text) || "";
   $("set-after").value = (data && data.after_hours) || "";
   $("set-textback").value = (data && data.textback_message) || "";
+  $("set-knowledge").value = (data && data.knowledge) || "";
 }
 $("set-save").addEventListener("click", async () => {
   const btn = $("set-save"); btn.disabled = true; $("set-error").textContent = "";
@@ -167,6 +168,7 @@ $("set-save").addEventListener("click", async () => {
     hours: { text: $("set-hours").value.trim() || null },
     after_hours: $("set-after").value.trim() || null,
     textback_message: $("set-textback").value.trim() || null,
+    knowledge: $("set-knowledge").value.trim() || null,
   };
   const { error } = await sb.from("gw_settings").upsert(payload, { onConflict: "client_id" });
   btn.disabled = false;

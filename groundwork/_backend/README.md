@@ -14,6 +14,9 @@ Groundwork admin too.
   messages, and setup; triage assistant leads.
 - **AI assistant** — `gw-assistant` Edge Function, Groundwork-grounded, captures
   leads into `gw_inquiries`.
+- **AI receptionist + missed-call text-back** — `gw-reception` Edge Function
+  (Vapi + Twilio + Cal.com), one function for every client's phone line, writes
+  calls to `gw_messages`. Setup runbook: [`gw-reception/README.md`](gw-reception/README.md).
 
 ## Deploy (owner steps)
 Because the Supabase MCP must point at `ekogelnbhggyrychfrta`:
@@ -43,6 +46,7 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_messages` | voicemail / missed-call / lead inbox |
 | `gw_settings` | reception/voicemail setup (1:1 with client, client-editable) |
 | `gw_inquiries` | public leads captured by the gw-assistant |
+| `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
 
 RLS: a client owner sees only their own client + children; the client can edit
 their `gw_settings` and mark messages handled (via `gw_set_message_status`).
