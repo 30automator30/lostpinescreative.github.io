@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delete your account — Lost Pines Creative</title>
+  <meta name="description" content="How to delete your Lost Pines Creative / DeSmit Designs account and what happens to your data.">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#0b1210">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <style>
+    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0;
+      --accent:#4a9e7e; --accent-hover:#5fb896; --danger:#e07a6a; --danger-text:#1a0b08; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.7; }
+    .container { max-width:760px; margin:0 auto; padding:0 16px; }
+    header { text-align:center; padding:56px 0 32px; }
+    header a { color:var(--accent); text-decoration:none; font-size:.9rem; }
+    header h1 { font-size:2rem; font-weight:700; margin-top:20px; letter-spacing:-.02em; }
+    .content { padding-bottom:60px; }
+    .content h2 { font-size:1.2rem; margin:34px 0 10px; color:var(--accent); }
+    .content p, .content li { color:var(--text-muted); font-size:.95rem; }
+    .content p { margin-bottom:12px; }
+    .content ul { padding-left:22px; margin-bottom:12px; }
+    .content li { margin-bottom:6px; }
+    .content strong { color:var(--text); }
+    .content a { color:var(--accent); }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:22px 20px; margin-top:16px; }
+    label { display:block; font-size:.85rem; color:var(--text-muted); margin:12px 0 4px; }
+    input { width:100%; min-height:44px; padding:10px 12px; border-radius:8px; border:1px solid var(--border);
+      background:var(--bg); color:var(--text); font-size:1rem; }
+    button { min-height:44px; padding:10px 20px; border-radius:10px; border:0; font-weight:700; font-size:1rem; margin-top:16px; cursor:pointer; }
+    .primary { background:var(--accent); color:#06110d; }
+    .danger { background:var(--danger); color:var(--danger-text); }
+    button:disabled { opacity:.6; cursor:default; }
+    .error { color:var(--danger); font-size:.9rem; margin-top:10px; min-height:1.2em; }
+    .hidden { display:none; }
+    footer { text-align:center; padding:40px 0; border-top:1px solid var(--border); color:var(--text-muted); font-size:.85rem; }
+    footer a { color:var(--accent); text-decoration:none; }
+  </style>
+  <script src="/groundwork/portal/config.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="/">&larr; Back to Lost Pines Creative</a>
+      <h1>Delete your account</h1>
+    </header>
+    <div class="content">
+      <p>This deletes the login you use for the <strong>Lost Pines app</strong>, the <strong>Groundwork</strong> client portal and the <strong>DeSmit Designs</strong> customer portal. It can't be undone.</p>
+
+      <h2>The fastest way: in the app</h2>
+      <p>Open the Lost Pines app → <strong>Account</strong> → <strong>Delete account</strong>, then type DELETE. It's finished right away.</p>
+
+      <h2>What happens to your data</h2>
+      <ul>
+        <li><strong>Your login, profile and service requests</strong> are deleted.</li>
+        <li><strong>DeSmit Designs projects you own</strong> — with their updates, milestones and files — are deleted. You're removed from projects other people shared with you.</li>
+        <li><strong>Groundwork business services</strong> (your phone line, call inbox, reports and setup) are <strong>not</strong> deleted with your login, because they belong to your business and may be under a care plan. Your login is detached from them and any phones running Text-Back stop texting. We'll contact you to close or hand over the service; to have those records deleted too, tell us at <a href="mailto:ddesmit@lostpinescreative.com">ddesmit@lostpinescreative.com</a>.</li>
+        <li>Billing records we're required to keep for tax purposes are kept as the law requires.</li>
+      </ul>
+
+      <h2>Delete it here</h2>
+      <div class="card" id="step-signin">
+        <form id="signin-form">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email" required>
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="current-password" required>
+          <button type="submit" class="primary" id="signin-btn">Sign in to continue</button>
+          <p class="error" id="signin-error" role="alert"></p>
+        </form>
+        <p style="margin-top:10px">Forgot your password? Reset it from the <a href="/groundwork/portal/">Groundwork</a> or <a href="/desmitdesigns/portal/">DeSmit Designs</a> portal first.</p>
+      </div>
+      <div class="card hidden" id="step-confirm">
+        <form id="confirm-form">
+          <p>Signed in as <strong id="who"></strong>. Type <strong>DELETE</strong> to permanently delete this account.</p>
+          <label for="confirm">Type DELETE</label>
+          <input type="text" id="confirm" autocomplete="off" autocapitalize="characters" required>
+          <button type="submit" class="danger" id="delete-btn">Delete my account</button>
+          <p class="error" id="delete-error" role="alert"></p>
+        </form>
+      </div>
+      <div class="card hidden" id="step-done" role="status">
+        <p><strong>Your account has been deleted.</strong> You've been signed out everywhere on this browser. Thanks for working with us.</p>
+      </div>
+    </div>
+    <footer>
+      <p>&copy; 2026 Lost Pines Creative LLC &middot; <a href="/privacy.html">Privacy</a> &middot; <a href="/terms.html">Terms</a></p>
+    </footer>
+  </div>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+    const cfg = window.GW_CONFIG || {};
+    const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+    const FN = cfg.SUPABASE_URL + "/functions/v1/lpc-delete-account";
+    const $ = (id) => document.getElementById(id);
+    const step = (id) => ["step-signin", "step-confirm", "step-done"].forEach((s) => $(s).classList.toggle("hidden", s !== id));
+
+    async function showConfirmIfSignedIn() {
+      const { data } = await sb.auth.getSession();
+      if (data.session) { $("who").textContent = data.session.user.email; step("step-confirm"); }
+    }
+    $("signin-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const b = $("signin-btn"); b.disabled = true; $("signin-error").textContent = "";
+      const { error } = await sb.auth.signInWithPassword({ email: $("email").value.trim(), password: $("password").value });
+      b.disabled = false;
+      if (error) { $("signin-error").textContent = error.message; return; }
+      showConfirmIfSignedIn();
+    });
+    $("confirm-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if ($("confirm").value.trim() !== "DELETE") { $("delete-error").textContent = "Type DELETE in capitals to confirm."; return; }
+      const b = $("delete-btn"); b.disabled = true; $("delete-error").textContent = "";
+      const { data } = await sb.auth.getSession();
+      try {
+        const r = await fetch(FN, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + data.session.access_token, apikey: cfg.SUPABASE_ANON_KEY },
+          body: JSON.stringify({ confirm: "DELETE" }),
+        });
+        const out = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(out.error || "Something went wrong — please try again.");
+        await sb.auth.signOut({ scope: "local" }).catch(() => {});
+        step("step-done");
+      } catch (err) {
+        $("delete-error").textContent = err.message; b.disabled = false;
+      }
+    });
+    showConfirmIfSignedIn();
+  </script>
+</body>
+</html>

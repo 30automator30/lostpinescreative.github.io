@@ -35,6 +35,12 @@ export function initAuth(sb, redirect) {
   sb.auth.onAuthStateChange((evt) => {
     if (evt === "PASSWORD_RECOVERY") { recovering = true; view("view-setpw"); }
   });
+  // token_hash reset links verify on /auth/confirm.html, which then sends the
+  // already-signed-in user here with #lpc-recovery to choose a new password
+  if (location.hash === "#lpc-recovery") {
+    recovering = true; view("view-setpw");
+    history.replaceState(null, "", location.pathname + location.search);
+  }
 
   $("auth-form").addEventListener("submit", async (e) => {
     e.preventDefault();

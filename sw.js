@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v36';
+const VERSION = 'v37';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -43,8 +43,9 @@ const PRECACHE_URLS = [
   '/favicon-16.png',
 ];
 
-/* Search Console verification must always hit the network. */
-const NEVER_CACHE = ['/google0f174fbb9e565477.html'];
+/* Search Console verification must always hit the network. Email-link
+   landings carry one-time tokens in the URL — never store those. */
+const NEVER_CACHE = ['/google0f174fbb9e565477.html', '/auth/confirm.html'];
 
 self.addEventListener('install', event => {
   event.waitUntil(precache().then(() => self.skipWaiting()));

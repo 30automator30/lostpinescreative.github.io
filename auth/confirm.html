@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Signing you in — Lost Pines Creative</title>
+  <meta name="theme-color" content="#0b1210">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <style>
+    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0; --accent:#4a9e7e; --accent-hover:#5fb896; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
+      line-height:1.6; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+    .card { width:100%; max-width:440px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px 24px; text-align:center; }
+    h1 { font-size:1.3rem; margin-bottom:10px; }
+    p { color:var(--text-muted); font-size:.95rem; margin-bottom:14px; }
+    a.btn { display:inline-block; min-height:44px; padding:11px 22px; border-radius:10px; background:var(--accent); color:#06110d;
+      font-weight:700; text-decoration:none; margin-top:6px; }
+    a.btn:hover, a.btn:focus-visible { background:var(--accent-hover); }
+    a.link { color:var(--accent); }
+    .spinner { width:28px; height:28px; margin:6px auto 14px; border:3px solid var(--border); border-top-color:var(--accent);
+      border-radius:50%; animation:spin 1s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation:none; } }
+  </style>
+  <script src="/groundwork/portal/config.js"></script>
+</head>
+<body>
+  <main class="card" aria-live="polite">
+    <div class="spinner" id="spin" aria-hidden="true"></div>
+    <h1 id="title">Signing you in…</h1>
+    <p id="msg">One moment.</p>
+    <div id="actions"></div>
+  </main>
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+    import { appUrl, parseLink, resolveNext, webUrl } from "/auth/confirm-lib.js";
+
+    const $ = (id) => document.getElementById(id);
+    function show(title, msg, href, label) {
+      $("spin").remove(); $("title").textContent = title; $("msg").textContent = msg;
+      if (href) {
+        const a = document.createElement("a");
+        a.className = "btn"; a.href = href; a.textContent = label;
+        $("actions").replaceChildren(a);
+      }
+    }
+
+    const link = parseLink(location.search);
+    // Don't leave the one-time token in history or the address bar.
+    history.replaceState(null, "", location.pathname);
+    if (!link) {
+      show("This link doesn't look right", "Request a new email from the sign-in screen and use the newest one.", "/", "Go to lostpinescreative.com");
+    } else {
+      const dest = resolveNext(link.next, location.origin);
+      if (dest.kind === "app") {
+        // The Lost Pines app verifies the token itself.
+        const href = appUrl(dest.url, link.tokenHash, link.type);
+        location.replace(href);
+        show("Opening the Lost Pines app…", "If nothing happens, tap the button. Open this email on the phone that has the app.", href, "Open the app");
+      } else {
+        const cfg = window.GW_CONFIG || {};
+        const sb = createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+        const { error } = await sb.auth.verifyOtp({ token_hash: link.tokenHash, type: link.type });
+        if (error) {
+          show("This link has expired or was already used",
+            "Links work once and expire after an hour. Sign in, or request a new email.", dest.url, "Back to sign in");
+        } else {
+          location.replace(webUrl(dest.url, link.type));
+          show("You're signed in", "Taking you to your portal…", webUrl(dest.url, link.type), "Continue");
+        }
+      }
+    }
+  </script>
+</body>
+</html>
