@@ -44,6 +44,14 @@ Groundwork admin too.
   portal inserts the request, then calls the function, which emails the studio
   once. Both brands; a DeSmit *new project* still goes to `dd_projects`.
 
+- **Account deletion** — `lpc-delete-account` (**Verify JWT ON**) + `010`.
+  In-app "Delete my account" (Apple 5.1.1(v)) and the web page. Groundwork
+  businesses are **detached, not deleted** (owner login removed, phones
+  revoked, record/line/inbox kept, studio emailed); the user's own DeSmit
+  projects and their files are deleted. Admin accounts are refused. A failed
+  run returns 503 and is finished by running it again; files Storage refused
+  stay in `lpc_storage_purge`.
+
 ## Deploy (owner steps)
 Because the Supabase MCP must point at `ekogelnbhggyrychfrta`:
 
@@ -75,6 +83,7 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
 | `gw_reception_lines.ai_enabled` / `gw_settings.textback_app_enabled` | the owner's own switches, read via `gw_my_services()` and set via `gw_set_service_enabled()` — `008` |
 | `lpc_requests` | service requests from the app/portals, both brands (customer files own, admin manages) — `009` |
+| `lpc_storage_purge` | Storage objects queued for removal after an account deletion (service role only) — `010` |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
