@@ -9,7 +9,7 @@
   <meta name="theme-color" content="#0b1210">
   <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
   <style>
-    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0; --accent:#4a9e7e; --accent-hover:#5fb896; }
+    :root { --danger:#e07a6a; --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0; --accent:#4a9e7e; --accent-hover:#5fb896; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
       line-height:1.6; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
@@ -33,13 +33,20 @@
     <h1 id="title">Signing you in…</h1>
     <p id="msg">One moment.</p>
     <div id="actions"></div>
+    <form id="setpw" hidden>
+      <label for="pw" style="display:block;text-align:left;color:var(--text-muted);font-size:.85rem;margin:10px 0 4px">New password</label>
+      <input id="pw" type="password" autocomplete="new-password" minlength="8" required
+        style="width:100%;min-height:44px;padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:1rem">
+      <p id="pw-error" role="alert" style="color:var(--danger);min-height:1.2em;margin-top:8px"></p>
+      <button type="submit" class="btn" style="border:0;cursor:pointer;font-size:1rem">Save password</button>
+    </form>
   </main>
   <script type="module">
     import { appUrl, parseLink, resolveNext, webUrl } from "/auth/confirm-lib.js";
 
     const $ = (id) => document.getElementById(id);
     function show(title, msg, href, label) {
-      $("spin").remove(); $("title").textContent = title; $("msg").textContent = msg;
+      $("spin")?.remove(); $("title").textContent = title; $("msg").textContent = msg;
       if (href) {
         const a = document.createElement("a");
         a.className = "btn"; a.href = href; a.textContent = label;
@@ -67,6 +74,23 @@
           if (error) {
             show("This link has expired or was already used",
               "Links work once and expire after an hour. Sign in, or request a new email.", dest.url, "Back to sign in");
+          } else if (link.type === "recovery" && dest.url === location.origin + "/") {
+            // No portal to send them to (e.g. an app reset before the email templates were
+            // switched): let them choose the new password right here.
+            show("Set a new password", "Choose a new password for your Lost Pines account.");
+            const form = $("setpw");
+            form.hidden = false;
+            $("pw").focus();
+            form.addEventListener("submit", async (ev) => {
+              ev.preventDefault();
+              const pw = $("pw").value;
+              if (pw.length < 8) { $("pw-error").textContent = "Use at least 8 characters."; return; }
+              const { error: e2 } = await sb.auth.updateUser({ password: pw });
+              if (e2) { $("pw-error").textContent = e2.message; return; }
+              form.hidden = true;
+              $("title").textContent = "Password saved";
+              $("msg").textContent = "Sign in with your new password in the Lost Pines app or your portal.";
+            });
           } else {
             location.replace(webUrl(dest.url, link.type));
             show("You're signed in", "Taking you to your portal…", webUrl(dest.url, link.type), "Continue");
