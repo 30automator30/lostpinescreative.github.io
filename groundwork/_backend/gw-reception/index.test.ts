@@ -9,6 +9,8 @@ Deno.env.set("VAPI_CREDENTIAL_ID", "cred_1");
 Deno.env.set("TWILIO_ACCOUNT_SID", "AC1");
 Deno.env.set("TWILIO_AUTH_TOKEN", "twtok");
 Deno.env.set("CALCOM_API_KEY", "calkey");
+Deno.env.set("RESEND_API_KEY", "re_test");
+Deno.env.set("RL_EMAIL_DAY", "3");
 
 // ---------- fake state ----------
 const CLIENT = "c-1";
@@ -17,11 +19,13 @@ const line = {
   owner_alert_number: null, cal_event_type_id: 42, booking_url: "https://cal.com/desmit",
   timezone: "America/Chicago", voice_id: null, enabled: true,
   client: { business_name: "DeSmit Designs", status: "active",
-    settings: { greeting: null, forward_number: "(408) 348-7284", textback_message: null,
+    contact_email: "owner@desmit.example", owner_email: "login@desmit.example",
+    settings: { email_alerts: true as boolean | undefined, greeting: null, forward_number: "(408) 348-7284", textback_message: null,
       hours: { text: "Mon–Fri 8–5" }, after_hours: null, knowledge: "3D printing and laser cutting." } },
 };
 let messages: Array<Record<string, unknown>> = [];
 let sms: Array<{ To: string; Body: string; From: string | null }> = [];
+let emails: Array<{ to: string[]; subject: string; html: string; text: string }> = [];
 let calBookings: Array<Record<string, unknown>> = [];
 let aiEnabled = true;
 let failNextTextbackClaim = false;
@@ -51,6 +55,8 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
         if (new Headers(init?.headers).get("Prefer")?.includes("count=exact")) {
           const n = messages.filter((m) =>
             (!eq("kind") || m.kind === eq("kind")) &&
+            (!eq("client_id") || m.client_id === eq("client_id")) &&
+            (!eq("meta->>emailed") || String((m.meta as Record<string, unknown>)?.emailed) === eq("meta->>emailed")) &&
             (!eq("from_phone") || m.from_phone === eq("from_phone")) &&
             (!eq("meta->>channel") || (m.meta as Record<string, unknown>)?.channel === eq("meta->>channel")) &&
             (!eq("meta->>via") || (m.meta as Record<string, unknown>)?.via === eq("meta->>via"))
@@ -89,6 +95,11 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
       return ok({ status: "success", data: { uid: "bk_1" } });
     }
   }
+  if (url.host === "api.resend.com") {
+    assertEquals(new Headers(init!.headers).get("Authorization"), "Bearer re_test");
+    emails.push(JSON.parse(String(init!.body)));
+    return ok({ id: "em_1" });
+  }
   if (url.host === "api.twilio.com") {
     const f = new URLSearchParams(String(init!.body));
     sms.push({ To: f.get("To")!, Body: f.get("Body")!, From: f.get("From") });
@@ -110,7 +121,8 @@ const vapi = (message: unknown, auth = "Bearer s3cret") =>
 const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
 const reset = () => {
-  messages = []; sms = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
+  messages = []; sms = []; emails = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
+  line.client.settings.email_alerts = true;
   line.enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
 };
 
@@ -337,4 +349,76 @@ Deno.test("owner switched the AI off: caller gets the short message promising a 
   await vapi({ type: "end-of-call-report", call: call("c_aioff"), endedReason: "customer-ended-call",
     artifact: { messages: [{ role: "assistant", message: "Thanks for calling" }] }, analysis: {} });
   assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
+});
+
+// ---------- lead alert email ----------
+const report = (id: string, opts: { customer?: string; talked?: boolean; summary?: string } = {}) =>
+  vapi({ type: "end-of-call-report", call: call(id, opts.customer), endedReason: "customer-ended-call",
+    artifact: { messages: opts.talked === false ? [] : [{ role: "user", message: "hi" }] },
+    analysis: opts.summary ? { summary: opts.summary } : {} });
+
+Deno.test("a call emails the business's contact email once: who, tappable number, what they need", async () => {
+  reset();
+  await report("e1", { summary: "Jane wants a quote for a website." });
+  assertEquals(emails.length, 1);
+  const e = emails[0];
+  assertEquals(e.to, ["owner@desmit.example"]);
+  assertMatch(e.subject, /^New call for DeSmit Designs: \(512\) 555-1234 — Jane wants a quote/);
+  assertMatch(e.html, /href="tel:\+15125551234"/);
+  assertMatch(e.html, /groundwork\/portal\//);
+  assertMatch(e.text, /What they need: Jane wants a quote for a website\./);
+  assert(!/transcript/i.test(e.html), "the transcript stays in the portal");
+  const row = messages.find((m) => m.external_id === "e1")!;
+  assertEquals((row.meta as Record<string, unknown>).emailed, true);
+  // Vapi retries the report: still one email
+  await report("e1", { summary: "Jane wants a quote for a website." });
+  assertEquals(emails.length, 1);
+});
+
+Deno.test("email goes out even when the text alert can't (no texting yet), and names the caller", async () => {
+  reset();
+  await vapi({ type: "tool-calls", call: call("e2"),
+    toolCallList: [{ id: "t1", type: "function", function: { name: "take_message",
+      arguments: JSON.stringify({ name: "<b>Bo</b>", message: "Call me about 50 keychains", urgent: true }) } }] });
+  await report("e2", { summary: "x" });
+  assertEquals(emails.length, 1);
+  assertMatch(emails[0].subject, /^URGENT: New call for DeSmit Designs: <b>Bo<\/b> · \(512\) 555-1234/);
+  assert(!emails[0].html.includes("<b>Bo</b>"), "caller-supplied text is escaped in the HTML");
+  assertMatch(emails[0].html, /&lt;b&gt;Bo&lt;\/b&gt;/);
+});
+
+Deno.test("no email when alerts are off, the line is off, or there's no valid address", async () => {
+  reset();
+  line.client.settings.email_alerts = false;
+  await report("e3", { summary: "hello" });
+  assertEquals(emails.length, 0);
+  reset();
+  line.enabled = false;
+  await report("e4", { summary: "hello" });
+  assertEquals(emails.length, 0);
+  reset();
+  const saved = line.client.contact_email;
+  line.client.contact_email = "not an email";
+  line.client.owner_email = "";
+  await report("e5", { summary: "hello" });
+  assertEquals(emails.length, 0);
+  line.client.contact_email = saved; line.client.owner_email = "login@desmit.example";
+  // pre-migration settings (no email_alerts column) = on
+  reset();
+  delete line.client.settings.email_alerts;
+  await report("e6", { summary: "hello" });
+  assertEquals(emails.length, 1);
+});
+
+Deno.test("daily email cap per line; a silent hang-up with no caller ID isn't emailed", async () => {
+  reset();
+  for (const id of ["f1", "f2", "f3", "f4"]) {
+    await report(id, { customer: "+1512555" + id.slice(1).padStart(4, "0"), summary: "need help" });
+  }
+  assertEquals(emails.length, 3); // RL_EMAIL_DAY=3 in this file; the 4th is still in the inbox
+  assert(messages.some((m) => m.external_id === "f4"));
+  reset();
+  await vapi({ type: "end-of-call-report", call: { id: "f5", phoneNumberId: "pn_1", customer: {} },
+    endedReason: "customer-ended-call", artifact: { messages: [] }, analysis: {} });
+  assertEquals(emails.length, 0);
 });

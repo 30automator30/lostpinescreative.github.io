@@ -19,6 +19,7 @@
   --ok: #34d399;
   --warn: #fbbf24;
   --danger: #f87171;
+  --on-danger: #1a0606; /* text on --danger, 7:1 */
 }
 
 html { scroll-behavior: smooth; }
@@ -273,3 +274,13 @@ textarea { resize: vertical; min-height: 96px; }
 .svc-row + .svc-row { border-top: 1px solid var(--border); }
 .svc-row input { width: 22px; height: 22px; margin-top: 2px; flex: none; accent-color: var(--accent); }
 .svc-row[hidden], #svc-card[hidden] { display: none; }
+
+/* New-call alerts: count pill, the "you have new calls" banner. */
+.count { display: inline-block; min-width: 18px; text-align: center; font-size: .72rem; font-weight: 700;
+  background: var(--danger); color: var(--on-danger); border-radius: 20px; padding: 1px 7px; margin-left: 6px; }
+.count[hidden], .badge[hidden] { display: none; }
+.new-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px;
+  padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(74,222,128,.35); background: rgba(74,222,128,.08); }
+.new-banner[hidden] { display: none; }
+.new-banner b { flex: 1; min-width: 12rem; }
+.new-banner .btn { min-height: 44px; }

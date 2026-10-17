@@ -69,6 +69,10 @@
   <div class="wrap view" id="view-dash">
     <div class="head-row" style="margin-bottom:14px"><div class="spacer"></div>
       <a class="btn btn-ghost btn-sm" href="/onboarding/?product=groundwork">📋 Update your project brief</a></div>
+    <div class="new-banner" id="new-banner" role="status" aria-live="polite" hidden>
+      <b id="new-banner-text"></b>
+      <a class="btn btn-primary btn-sm" href="#messages">View messages</a>
+    </div>
     <div class="plan-card">
       <div class="row">
         <div style="flex:1">
@@ -102,9 +106,8 @@
       <div class="thumbs" id="gw-files"></div>
     </div>
 
-    <div class="gw-section">
-      <div class="head-row"><h3 style="margin:0">Messages</h3><div class="spacer"></div>
-        <span class="subtle" id="msg-count"></span></div>
+    <div class="gw-section" id="messages">
+      <div class="head-row"><h3 style="margin:0">Messages <span class="count" id="msg-count" hidden></span></h3><div class="spacer"></div></div>
       <p class="subtle">Voicemails, missed calls, and leads captured for you.</p>
       <div id="msg-list"></div>
     </div>
@@ -123,6 +126,10 @@
         </label>
       </div>
       <div class="card">
+        <label class="svc-row" id="set-email-row" hidden style="margin-bottom:10px">
+          <input type="checkbox" id="set-email-alerts">
+          <span><b>Email me new calls</b><br><span class="subtle" id="set-email-to">Who called, their number, and what they need — sent the moment a call ends.</span></span>
+        </label>
         <div class="field">
           <label for="set-greeting">Greeting (what callers hear / the AI opens with)</label>
           <textarea id="set-greeting" placeholder="Thanks for calling [Business] — how can we help?"></textarea>

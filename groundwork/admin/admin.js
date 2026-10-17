@@ -18,6 +18,12 @@ let current = null;    // open client row
 let currentInts = [];  // integrations for the open client (for reorder)
 let editingReportId = null;
 let editingUpdateId = null;
+const BASE_TITLE = document.title;
+// Calls the receptionist logs (a text-back row is our own outgoing text, not news).
+const CALL_KINDS = ["lead", "missed_call", "voicemail"];
+let newByClient = {};  // client id -> unhandled calls
+let bizName = {};      // client id -> business name (for alerts)
+let adminChannel = null;
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -33,7 +39,9 @@ if (!CONFIGURED) {
 async function routeSession(session) {
   if (isRecovering()) return;
   if (!session || !session.user) {
-    user = null; $("signout").style.display = "none"; $("who").textContent = ""; showView("view-auth"); return;
+    user = null; $("signout").style.display = "none"; $("who").textContent = ""; showView("view-auth");
+    if (adminChannel) { sb.removeChannel(adminChannel); adminChannel = null; }
+    document.title = BASE_TITLE; return;
   }
   if (user && user.id === session.user.id) return;
   user = session.user;
@@ -57,7 +65,39 @@ document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () 
 async function enterConsole() {
   showView("view-console");
   await loadProfiles();
+  await loadNewCalls();
   await Promise.all([loadClients(), loadInbox()]);
+  subscribeAdmin();
+}
+
+/* ---------- new calls: count on the Clients tab, a badge per business, the tab title ---------- */
+async function loadNewCalls() {
+  const { data } = await sb.from("gw_messages").select("client_id").eq("status", "new").in("kind", CALL_KINDS);
+  newByClient = {};
+  (data || []).forEach((r) => { newByClient[r.client_id] = (newByClient[r.client_id] || 0) + 1; });
+  const total = (data || []).length;
+  const pill = $("calls-count");
+  pill.hidden = !total; pill.textContent = total; pill.setAttribute("aria-label", total + " new calls");
+  document.title = (total ? "(" + total + ") " : "") + BASE_TITLE;
+  document.querySelectorAll("[data-new-for]").forEach((el) => {
+    const n = newByClient[el.dataset.newFor] || 0;
+    el.hidden = !n; el.textContent = n + " new";
+  });
+}
+
+function subscribeAdmin() {
+  if (adminChannel) return;
+  adminChannel = sb.channel("gw-admin-calls")
+    .on("postgres_changes", { event: "*", schema: "public", table: "gw_messages" }, (p) => {
+      const m = p.new;
+      if (p.eventType === "INSERT" && m && CALL_KINDS.includes(m.kind)) {
+        toast("New call" + (bizName[m.client_id] ? " for " + bizName[m.client_id] : "") + ": " +
+          (m.from_name || m.from_phone || "blocked number") + ".", "ok");
+      }
+      loadNewCalls();
+      if (current) loadMsgs();
+    })
+    .subscribe();
 }
 
 async function loadProfiles() {
@@ -72,9 +112,11 @@ async function loadClients() {
   const { data, error } = await sb.from("gw_clients").select("*").order("created_at", { ascending: false });
   const list = $("client-list");
   if (error) { list.innerHTML = '<div class="empty">Couldn\'t load clients.</div>'; return; }
+  bizName = {}; data.forEach((c) => (bizName[c.id] = c.business_name));
   if (!data.length) { list.innerHTML = '<div class="empty"><p>No clients yet. Click <b>New client</b> to add one.</p></div>'; return; }
   list.innerHTML = '<div class="cards">' + data.map((c) =>
     '<div class="card click" data-id="' + c.id + '"><div class="row"><h3 style="flex:1">' + escapeHtml(c.business_name) + "</h3>" +
+    '<span class="badge new" data-new-for="' + c.id + '"' + (newByClient[c.id] ? "" : " hidden") + ">" + (newByClient[c.id] || 0) + " new</span>" +
     '<span class="badge ' + (c.status === "active" ? "live" : c.status === "paused" ? "paused" : "planned") + '">' + (STATUS_LABEL[c.status] || c.status) + "</span></div>" +
     '<div class="meta">' + escapeHtml(clientEmail(c)) + " · " + (CARE_LABEL[c.care_plan] || CARE_LABEL.none) + "</div></div>"
   ).join("") + "</div>";
@@ -86,7 +128,7 @@ async function loadInbox() {
   const { data } = await sb.from("gw_inquiries").select("*").eq("status", "new").order("created_at", { ascending: false });
   const badge = $("inbox-count"); badge.style.display = (data && data.length) ? "" : "none"; badge.textContent = (data || []).length;
   const list = $("inbox-list");
-  if (!data || !data.length) { list.innerHTML = '<div class="empty">Inbox zero.</div>'; return; }
+  if (!data || !data.length) { list.innerHTML = '<div class="empty">No new website leads.</div>'; return; }
   list.innerHTML = data.map((q) =>
     '<div class="card inq"><div class="row"><h3 style="flex:1">' + escapeHtml(q.name || q.business_name || "Website lead") + "</h3>" +
     '<span class="badge new">' + escapeHtml(q.kind || "lead") + "</span></div>" +
@@ -298,8 +340,8 @@ async function loadMsgs() {
     (m.status === "new" ? '<button class="btn btn-ghost btn-sm" data-mh="' + m.id + '">Mark handled</button>' : "") +
     '<button class="btn btn-danger btn-sm" data-md="' + m.id + '">Delete</button></div></div>'
   ).join("");
-  box.querySelectorAll("[data-mh]").forEach((b) => b.addEventListener("click", async () => { await sb.from("gw_messages").update({ status: "handled" }).eq("id", b.dataset.mh); loadMsgs(); }));
-  box.querySelectorAll("[data-md]").forEach((b) => b.addEventListener("click", async () => { await sb.from("gw_messages").delete().eq("id", b.dataset.md); loadMsgs(); }));
+  box.querySelectorAll("[data-mh]").forEach((b) => b.addEventListener("click", async () => { await sb.from("gw_messages").update({ status: "handled" }).eq("id", b.dataset.mh); loadMsgs(); loadNewCalls(); }));
+  box.querySelectorAll("[data-md]").forEach((b) => b.addEventListener("click", async () => { await sb.from("gw_messages").delete().eq("id", b.dataset.md); loadMsgs(); loadNewCalls(); }));
 }
 $("msg-add").addEventListener("click", async () => {
   const body = $("msg-body").value.trim();

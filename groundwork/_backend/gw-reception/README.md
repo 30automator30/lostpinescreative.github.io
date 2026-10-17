@@ -8,7 +8,7 @@ Caller ─▶ owner's cell ──(no answer / busy / off)──▶ carrier forwa
                                                                           (imported into Vapi)
 Vapi ── assistant-request ──▶ gw-reception  builds the receptionist from gw_settings
      ── tool-calls ─────────▶ gw-reception  take_message · check_availability · book_appointment (Cal.com)
-     ── end-of-call-report ─▶ gw-reception  gw_messages row ▸ text-back to caller ▸ text alert to owner
+     ── end-of-call-report ─▶ gw-reception  gw_messages row ▸ text-back to caller ▸ text + email alert to owner
 Caller replies by text ─────▶ gw-reception?src=twilio-sms ▸ inbox + forwarded to owner
 ```
 
@@ -28,13 +28,21 @@ Caller replies by text ─────▶ gw-reception?src=twilio-sms ▸ inbox 
 - **Caller ID check:** if call forwarding drops caller ID and the call shows your
   own cell, you're never texted a text-back (`cli_missing` in the logs) — fix the
   forwarding code if you see it.
+- **Email alert for every real call** (`011_gw_email_alerts.sql`): who called, their
+  number (tap to call), what they need, and an **Open inbox** link — to the client's
+  contact email (else owner email), once per call, ≤ `RL_EMAIL_DAY` (default 50) per
+  line per day. Works before texting is approved. The owner switches it off in the
+  portal ("Email me new calls"). Needs `RESEND_API_KEY` (already set for the portal
+  emails). The portal and admin also show a new-call count, a banner, the count in
+  the tab title, and a pop-up when a call arrives while they're open.
 - Disclosure is enforced: the greeting always says it's an AI and the call may be
   recorded, even if the client's custom greeting doesn't.
 
-Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (15 cases: auth,
+Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (21 cases: auth,
 assistant build, fallback, booked call end-to-end, missed call, retries/idempotency,
 non-US/Caribbean blocking, per-number text cap, booking abuse, signed + replayed SMS replies,
-DB-blip retry, switched-off line, missing caller ID, blocked-ID booking).
+DB-blip retry, switched-off line, missing caller ID, blocked-ID booking, owner's AI switch,
+Text-Back app allowance, lead emails: once per call, escaping, off switch / no address, daily cap).
 
 ---
 
@@ -95,6 +103,7 @@ supabase secrets set --project-ref ekogelnbhggyrychfrta \
   VAPI_SERVER_SECRET=<the bearer token> VAPI_CREDENTIAL_ID=<cred id> \
   TWILIO_ACCOUNT_SID=<AC...> TWILIO_AUTH_TOKEN=<...> \
   TWILIO_MESSAGING_SERVICE_SID=<MG...> CALCOM_API_KEY=<cal_live_...>
+# RESEND_API_KEY is shared with the portal emails — already set if those work.
 supabase functions deploy gw-reception --project-ref ekogelnbhggyrychfrta --no-verify-jwt
 ```
 (Secrets live only in Supabase — never in this repo.)

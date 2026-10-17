@@ -15,6 +15,9 @@ const $ = (id) => document.getElementById(id);
 let user = null;
 let client = null;      // the user's gw_clients row
 let channel = null;
+const BASE_TITLE = document.title;
+// Calls the receptionist logs (a text-back row is our own outgoing text, not news).
+const CALL_KINDS = new Set(["lead", "missed_call", "voicemail"]);
 
 /* ---------- boot ---------- */
 if (!CONFIGURED) {
@@ -126,7 +129,7 @@ async function loadMessages() {
     .order("created_at", { ascending: false });
   const list = $("msg-list");
   const nNew = (data || []).filter((m) => m.status === "new").length;
-  $("msg-count").textContent = nNew ? nNew + " new" : "";
+  showNewCount(nNew);
   if (!data || !data.length) { list.innerHTML = '<div class="empty">No messages yet.</div>'; return; }
   list.innerHTML = data.map((m) => {
     const who = m.from_name || m.from_phone || m.from_email || "Unknown";
@@ -150,6 +153,24 @@ async function loadMessages() {
     }));
 }
 
+/* New messages are impossible to miss: count on Messages, a banner at the top,
+   and the browser tab title. */
+function showNewCount(n) {
+  const pill = $("msg-count");
+  pill.hidden = !n; pill.textContent = n; pill.setAttribute("aria-label", n + " new");
+  $("new-banner").hidden = !n;
+  $("new-banner-text").textContent = n === 1 ? "You have 1 new message." : "You have " + n + " new messages.";
+  document.title = (n ? "(" + n + ") " : "") + BASE_TITLE;
+}
+
+function onMessageChange(payload) {
+  const m = payload && payload.new;
+  if (payload && payload.eventType === "INSERT" && m && CALL_KINDS.has(m.kind)) {
+    toast("New call from " + (m.from_name || m.from_phone || "a blocked number") + ".", "ok");
+  }
+  loadMessages();
+}
+
 async function loadSettings() {
   const { data } = await sb.from("gw_settings").select("*").eq("client_id", client.id).maybeSingle();
   $("set-greeting").value = (data && data.greeting) || "";
@@ -158,7 +179,20 @@ async function loadSettings() {
   $("set-after").value = (data && data.after_hours) || "";
   $("set-textback").value = (data && data.textback_message) || "";
   $("set-knowledge").value = (data && data.knowledge) || "";
+  // 011: hide the switch until the column exists (a settings row without it = not deployed).
+  const row = $("set-email-row");
+  row.hidden = !!data && !("email_alerts" in data);
+  $("set-email-alerts").checked = !data || data.email_alerts !== false;
+  const to = client.contact_email || client.owner_email;
+  if (to) $("set-email-to").textContent = "Sent to " + to + " — who called, their number, and what they need, the moment a call ends.";
 }
+$("set-email-alerts").addEventListener("change", async () => {
+  const box = $("set-email-alerts"); box.disabled = true;
+  const { error } = await sb.from("gw_settings").upsert({ client_id: client.id, email_alerts: box.checked }, { onConflict: "client_id" });
+  box.disabled = false;
+  if (error) { box.checked = !box.checked; toast("Couldn't change that.", "err"); return; }
+  toast(box.checked ? "Call emails on." : "Call emails off.", "ok");
+});
 $("set-save").addEventListener("click", async () => {
   const btn = $("set-save"); btn.disabled = true; $("set-error").textContent = "";
   const payload = {
@@ -234,7 +268,7 @@ function subscribe() {
   const cid = "client_id=eq." + client.id;
   channel = sb.channel("gw-portal-" + client.id)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_integrations", filter: cid }, loadIntegrations)
-    .on("postgres_changes", { event: "*", schema: "public", table: "gw_messages", filter: cid }, loadMessages)
+    .on("postgres_changes", { event: "*", schema: "public", table: "gw_messages", filter: cid }, onMessageChange)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_reports", filter: cid }, loadReports)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_updates", filter: cid }, loadActivity)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_files", filter: cid }, loadFiles)
@@ -242,4 +276,4 @@ function subscribe() {
       async () => { const { data } = await sb.from("gw_clients").select("*").eq("id", client.id).single(); if (data) { client = data; renderPlan(); } })
     .subscribe();
 }
-function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } }
+function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } document.title = BASE_TITLE; }
