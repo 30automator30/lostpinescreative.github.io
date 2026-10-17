@@ -78,22 +78,35 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 Both portals and the app share these templates, so switch them together and
 then re-test sign-in on **both** portals in the same sitting.
 
-1. **Authentication ▸ URL Configuration:** Site URL `https://lostpinescreative.com`;
-   add `lostpines://auth` to Redirect URLs (keep the portal URLs).
-2. **Authentication ▸ Email Templates** — replace the link in each template:
+Links for the **app** go straight to its verified link
+`https://lostpinescreative.com/auth/app` (Android App Links / iOS Universal
+Links — only the signed Lost Pines app can open it; a custom `lostpines://`
+scheme is never used for tokens, since any app can claim one). Everything
+else goes through `/auth/confirm.html`, which signs into the right portal.
 
-   | Template | Link |
-   |---|---|
-   | Confirm signup | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=signup&next={{ .RedirectTo }}` |
-   | Invite user | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=invite&next={{ .RedirectTo }}` |
-   | Magic Link | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=magiclink&next={{ .RedirectTo }}` |
-   | Reset Password | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}` |
-   | Change Email Address | `{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=email_change&next={{ .RedirectTo }}` |
-3. **Regression check** (both `/groundwork/portal/` and `/desmitdesigns/portal/`):
+1. **Authentication ▸ URL Configuration:** Site URL `https://lostpinescreative.com`;
+   add `https://lostpinescreative.com/auth/app` to Redirect URLs (keep the portal URLs).
+2. **Authentication ▸ Email Templates** — the link in each template, with TYPE =
+   `signup` (Confirm signup), `invite` (Invite user), `magiclink` (Magic Link),
+   `recovery` (Reset Password), `email_change` (Change Email Address):
+
+   ```
+   {{ if eq .RedirectTo "https://lostpinescreative.com/auth/app" }}{{ .SiteURL }}/auth/app?token_hash={{ .TokenHash }}&type=TYPE{{ else }}{{ .SiteURL }}/auth/confirm.html?token_hash={{ .TokenHash }}&type=TYPE&next={{ .RedirectTo }}{{ end }}
+   ```
+3. **Verification files** (`/.well-known/`, deploy with the site) — replace the placeholders:
+   - `apple-app-site-association`: `REPLACE_WITH_APPLE_TEAM_ID` → your Apple Developer Team ID.
+   - `assetlinks.json`: the SHA-256 signing fingerprints — `eas credentials -p android`
+     for each profile (`android-play` upload key, `android-direct`), plus Play
+     Console ▸ App integrity ▸ App signing key for the Play build.
+   - Check: `https://lostpinescreative.com/.well-known/assetlinks.json` and
+     Google's Statement List tester; Apple's CDN fetch via
+     `https://app-site-association.cdn-apple.com/a/v1/lostpinescreative.com`.
+4. **Regression check** (both `/groundwork/portal/` and `/desmitdesigns/portal/`):
    new sign-up confirms and lands signed in; "Forgot password" email opens
    "Set a new password" and the new password works; an old/used link shows
    "expired" with a way back. `/auth/confirm.html` only ever sends people to
-   lostpinescreative.com or the app.
+   lostpinescreative.com; app links open the app (or `/auth/app`'s "open this on
+   your phone" page, which never uses the token).
 
 ## Data model
 | table | purpose |

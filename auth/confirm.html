@@ -56,10 +56,8 @@
       } else {
         const dest = resolveNext(link.next, location.origin);
         if (dest.kind === "app") {
-          // The Lost Pines app verifies the token itself.
-          const href = appUrl(dest.url, link.tokenHash, link.type);
-          location.replace(href);
-          show("Opening the Lost Pines app…", "If nothing happens, tap the button. Open this email on the phone that has the app.", href, "Open the app");
+          // The app's verified link (same site). It verifies the token itself.
+          location.replace(appUrl(dest.url, link.tokenHash, link.type));
         } else {
           // Loaded here, inside try, so a CDN failure shows a message instead of a stuck spinner.
           const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");

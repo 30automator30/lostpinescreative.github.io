@@ -6,17 +6,24 @@
  * `next` is the redirect the app/portal asked for. Only our own site and the
  * Lost Pines app may receive the user — anything else falls back to the home
  * page, so the link can't be used as an open redirect.
+ *
+ * The app is reached only through its verified link APP_LINK (Android App
+ * Links / iOS Universal Links, see /.well-known/), never a custom scheme: any
+ * app can claim `lostpines://`, but only our signed app can open APP_LINK.
+ * Emails for the app normally link to APP_LINK directly (email templates);
+ * this page only forwards to it if an older link lands here.
  * ============================================================ */
 
 export const OTP_TYPES = ["signup", "invite", "magiclink", "recovery", "email_change", "email"];
 const SITE_HOSTS = ["lostpinescreative.com", "www.lostpinescreative.com"];
-// The app's one auth entry point. Anything else under the scheme is refused.
-export const APP_TARGET = "lostpines://auth";
+// The app's one verified auth entry point.
+export const APP_LINK = "https://lostpinescreative.com/auth/app";
+const APP_LINK_ALIASES = [APP_LINK, "https://www.lostpinescreative.com/auth/app"];
 
 /** Where to send the user: {kind: "app"|"web", url} — never another site. */
 export function resolveNext(next, origin) {
   const raw = String(next || "").trim();
-  if (raw === APP_TARGET) return { kind: "app", url: APP_TARGET };
+  if (APP_LINK_ALIASES.includes(raw)) return { kind: "app", url: APP_LINK };
   if (raw.startsWith("/") && !raw.startsWith("//") && !raw.startsWith("/\\")) {
     return { kind: "web", url: origin + raw };
   }
@@ -28,7 +35,7 @@ export function resolveNext(next, origin) {
   return { kind: "web", url: origin + "/" };
 }
 
-/** The app verifies the one-time token itself, so hand it over untouched. */
+/** The app verifies the one-time token itself, so hand it over untouched (same site only). */
 export function appUrl(appTarget, tokenHash, type) {
   const sep = appTarget.includes("?") ? "&" : "?";
   return appTarget + sep + "token_hash=" + encodeURIComponent(tokenHash) + "&type=" + encodeURIComponent(type);

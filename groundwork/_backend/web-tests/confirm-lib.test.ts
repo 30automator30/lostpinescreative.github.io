@@ -11,11 +11,13 @@ Deno.test("next: our portals and the app are allowed", () => {
     { kind: "web", url: "https://lostpinescreative.com/groundwork/portal/" });
   assertEquals(resolveNext("https://www.lostpinescreative.com/desmitdesigns/portal/", O).kind, "web");
   assertEquals(resolveNext("/desmitdesigns/portal/", O), { kind: "web", url: O + "/desmitdesigns/portal/" });
-  assertEquals(resolveNext("lostpines://auth", O), { kind: "app", url: "lostpines://auth" });
+  assertEquals(resolveNext("https://lostpinescreative.com/auth/app", O),
+    { kind: "app", url: "https://lostpinescreative.com/auth/app" });
+  assertEquals(resolveNext("https://www.lostpinescreative.com/auth/app", O).kind, "app");
 });
 
-Deno.test("next: only the app's auth entry point gets a token — no other lostpines:// path", () => {
-  for (const bad of ["lostpines://evil", "lostpines://auth/../x", "LOSTPINES://auth", "lostpines://auth?x=1"]) {
+Deno.test("next: a custom scheme never receives a token (any app can claim lostpines://)", () => {
+  for (const bad of ["lostpines://auth", "lostpines://evil", "LOSTPINES://auth", "lostpines://auth?x=1"]) {
     assertEquals(resolveNext(bad, O), { kind: "web", url: O + "/" }, bad);
   }
 });
@@ -33,8 +35,8 @@ Deno.test("next: localhost only when the page itself is on localhost", () => {
 });
 
 Deno.test("app hand-off carries the token untouched; recovery opens the set-password view", () => {
-  assertEquals(appUrl("lostpines://auth", "abc123", "recovery"), "lostpines://auth?token_hash=abc123&type=recovery");
-  assertEquals(appUrl("lostpines://auth?x=1", "abc123", "signup"), "lostpines://auth?x=1&token_hash=abc123&type=signup");
+  assertEquals(appUrl("https://lostpinescreative.com/auth/app", "abc123", "recovery"),
+    "https://lostpinescreative.com/auth/app?token_hash=abc123&type=recovery");
   assertEquals(webUrl(O + "/groundwork/portal/#old", "recovery"), O + "/groundwork/portal/#lpc-recovery");
   assertEquals(webUrl(O + "/groundwork/portal/", "magiclink"), O + "/groundwork/portal/");
 });
