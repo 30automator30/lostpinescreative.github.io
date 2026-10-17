@@ -352,7 +352,12 @@ function firstMessage(line: Line): string {
 }
 
 function vapiServer() {
-  return { url: FN_URL, credentialId: VAPI_CREDENTIAL_ID, timeoutSeconds: 20 };
+  // Vapi does not retry by default; without a backoff plan one DB blip at
+  // hang-up would lose the call. Every handler below is safe to re-run.
+  return {
+    url: FN_URL, credentialId: VAPI_CREDENTIAL_ID, timeoutSeconds: 20,
+    backoffPlan: { type: "exponential", maxRetries: 3, baseDelaySeconds: 1 },
+  };
 }
 
 function receptionist(line: Line, caller: string | null) {
@@ -379,11 +384,15 @@ function receptionist(line: Line, caller: string | null) {
 
 // Used when the agent is off, over its ceiling, or the line can't be resolved.
 // The caller still hears a human-sounding apology; end-of-call still texts back.
-function fallback(name: string | null) {
+// Only promise a text when end-of-call will actually send one.
+function fallback(name: string | null, willText: boolean) {
   const who = name ? `${name}` : "us";
   return {
     name: "Fallback desk",
-    firstMessage: `Thanks for calling ${who}. Sorry we missed you — we'll text you right back at this number. Goodbye!`,
+    firstMessage: willText
+      ? `Thanks for calling ${who}. Sorry we missed you — we'll text you right back at this number. Goodbye!`
+      : `Thanks for calling ${who}. Sorry we missed you — please try again a little later. Goodbye!`,
+    endCallPhrases: ["Goodbye"],
     model: {
       provider: "anthropic",
       model: MODEL,
@@ -395,9 +404,13 @@ function fallback(name: string | null) {
     transcriber: { provider: "deepgram", model: "nova-3", language: "en" },
     server: vapiServer(),
     serverMessages: ["end-of-call-report"],
-    maxDurationSeconds: 30,
+    maxDurationSeconds: 20,
   };
 }
+
+// A cancelled/paused client or a switched-off line costs nothing: no texts, no alerts.
+const lineLive = (line: Line) => line.enabled && line.client_status !== "cancelled" &&
+  line.client_status !== "paused";
 
 // deno-lint-ignore no-explicit-any
 async function onAssistantRequest(msg: any, traceId: string, t0: number): Promise<Response> {
@@ -413,7 +426,7 @@ async function onAssistantRequest(msg: any, traceId: string, t0: number): Promis
     trace({ traceId, type: "assistant-request", outcome: "fallback",
       reason: !line ? "no_line" : !line.enabled ? "line_off" : !enabled ? "disabled" : !budget ? "ceiling" : "cancelled",
       ms: Date.now() - t0 });
-    return json({ assistant: fallback(line?.business_name ?? null) });
+    return json({ assistant: fallback(line?.business_name ?? null, !!line && lineLive(line)) });
   }
   trace({ traceId, type: "assistant-request", outcome: "ok", booking: canBook(line), ms: Date.now() - t0 });
   return json({ assistant: receptionist(line, caller) });
@@ -496,7 +509,8 @@ async function checkAvailability(line: Line, args: Record<string, unknown>): Pro
     let perDay = 0;
     for (const s of slots) {
       const iso = typeof s === "string" ? s : s?.start;
-      if (!iso || Date.parse(iso) < now + BOOK_MIN_LEAD_MS) continue;
+      const t = iso ? Date.parse(iso) : NaN;
+      if (isNaN(t) || t < now + BOOK_MIN_LEAD_MS || t > now + BOOK_MAX_AHEAD_MS) continue;
       picks.push(`${fmtWhen(iso, line.timezone)} [start=${iso}]`);
       if (++perDay >= (day ? 6 : 3) || picks.length >= 8) break;
     }
@@ -526,6 +540,7 @@ async function bookAppointment(
   // email, so a booking can't be used to spam a third party.
   const given = toE164(args.phone);
   const phone = isNanp(given) ? given : caller;
+  if (!phone) return "Get a callback number first (caller ID is blocked), then book.";
   const startIso = new Date(startMs).toISOString();
 
   // Idempotent on retry: same call + same start = already booked.
@@ -641,19 +656,16 @@ async function countRows(params: string): Promise<number> {
   return Number((r.headers.get("content-range") ?? "*/0").split("/")[1] || "0") || 0;
 }
 
-// One text-back per destination per day, under a global daily ceiling. Fails
-// CLOSED: if the counts can't be read, don't text.
+// One text-back per destination per day, under a global daily ceiling. If the
+// counts can't be read this THROWS (-> 500 -> Vapi retries); after the retries
+// run out nothing is sent, so it still fails closed.
 async function textbackAllowed(to: string): Promise<boolean> {
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
-  try {
-    const [toThis, total] = await Promise.all([
-      countRows(`kind=eq.textback&from_phone=eq.${encodeURIComponent(to)}&created_at=gte.${dayAgo}`),
-      countRows(`kind=eq.textback&created_at=gte.${dayAgo}`),
-    ]);
-    return toThis === 0 && total < RL_SMS_DAY;
-  } catch {
-    return false;
-  }
+  const [toThis, total] = await Promise.all([
+    countRows(`kind=eq.textback&from_phone=eq.${encodeURIComponent(to)}&created_at=gte.${dayAgo}`),
+    countRows(`kind=eq.textback&created_at=gte.${dayAgo}`),
+  ]);
+  return toThis === 0 && total < RL_SMS_DAY;
 }
 
 // Claim the text-back with an insert-if-absent row so a retried report can't
@@ -667,7 +679,7 @@ async function claimTextback(line: Line, callId: string, to: string, body: strin
       from_phone: to, body, status: "handled", meta: { via: FN_NAME, vapi_call_id: callId },
     }),
   }, T_DB);
-  if (!r.ok) return false;
+  if (!r.ok) throw new Error(`claimTextback ${r.status}`); // retryable, not "already sent"
   const rows = await r.json().catch(() => []);
   return Array.isArray(rows) && rows.length > 0;
 }
@@ -695,7 +707,8 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     return json({});
   }
   const booking = existing?.meta?.booking as { start?: string } | undefined;
-  const missed = !talked && !existing;
+  // "hello?" then a hang-up, with no message and no summary, is still a missed call.
+  const missed = !existing && (!talked || !summary);
   const kind = missed ? "missed_call" : "lead";
   const body = existing?.body || summary ||
     (missed ? "Missed call — hung up before leaving details." : "Call ended without a message.");
@@ -705,7 +718,6 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     from_phone: existing?.from_phone ?? caller,
     body,
   }, {
-    reported: true,
     summary: summary || null,
     transcript: transcript || null,
     recording_url: recordingUrl,
@@ -731,19 +743,22 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
   textback += " Reply STOP to opt out.";
   // A line switched off (gw_reception_lines.enabled=false) sends nothing; the
   // ai_config kill switch only turns off the AI, so callers still get a text.
+  // Forwarding that drops caller ID shows the owner's own cell — never text the
+  // owner a text-back (a STOP reply would silence every future lead alert).
+  const alertTo = toE164(line.owner_alert_number) ?? toE164(s.forward_number);
+  const live = lineLive(line);
   let texted = false, repeat = false;
-  if (line.enabled && isNanp(caller)) {
+  if (live && isNanp(caller) && caller !== alertTo) {
     if (!(await textbackAllowed(caller))) repeat = true;
     else if (await claimTextback(line, callId, caller, textback)) {
       texted = await sendSms(caller, textback, line.ai_number);
     }
   }
 
-  // Alert the owner (real calls only — a silent hang-up with no caller ID is noise).
-  const alertTo = toE164(line.owner_alert_number) ?? toE164(s.forward_number);
+  // Alert the owner (real calls only — a silent hang-up with no caller ID is noise;
+  // so are repeat silent calls from a number already texted today).
   let alerted = false;
-  // Repeat silent calls from a number already texted today are noise, not leads.
-  if (line.enabled && isNanp(alertTo) && (talked || (caller && !repeat))) {
+  if (live && isNanp(alertTo) && (talked || (caller && !repeat && caller !== alertTo))) {
     const who = existing?.from_name ? `${existing.from_name} (${existing.from_phone ?? caller ?? "no number"})`
       : (caller ?? "Blocked number");
     const what = booking?.start ? `BOOKED ${fmtWhen(booking.start, line.timezone)}`
@@ -753,7 +768,12 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
       line.ai_number);
   }
 
+  // Mark done LAST, so a retry after a failed send still texts (the text-back
+  // claim row keeps the caller from ever getting two).
+  await upsertCall(callId, line.client_id, {}, { reported: true });
+
   trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted,
+    cli_missing: !!caller && caller === alertTo,
     ms: Date.now() - t0 });
   return json({});
 }
@@ -794,7 +814,7 @@ async function onInboundSms(req: Request, traceId: string, t0: number): Promise<
     }),
   }, T_DB).catch(() => null);
   const fresh = !!ins?.ok && ((await ins.json().catch(() => [])) as unknown[]).length > 0;
-  if (line.enabled && fresh && recent < RL_REPLY_FWD_HOUR && isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
+  if (lineLive(line) && fresh && recent < RL_REPLY_FWD_HOUR && isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
     await sendSms(alertTo, `${line.business_name} text from ${from}: ${text.slice(0, 300)}`, line.ai_number);
   }
   trace({ traceId, type: "sms", outcome: "ok", ms: Date.now() - t0 });
@@ -835,7 +855,7 @@ Deno.serve(async (req) => {
     console.error("reception error", msg?.type, String(e));
     trace({ traceId, type: msg?.type, outcome: "error", ms: Date.now() - t0 });
     // assistant-request must still get an answer or the caller hears dead air.
-    if (msg?.type === "assistant-request") return json({ assistant: fallback(null) });
-    return json({}, 500); // non-2xx lets Vapi retry the report; writes are idempotent
+    if (msg?.type === "assistant-request") return json({ assistant: fallback(null, false) });
+    return json({}, 500); // non-2xx -> Vapi retries (backoffPlan); handlers are idempotent
   }
 });

@@ -18,14 +18,23 @@ Caller replies by text ─────▶ gw-reception?src=twilio-sms ▸ inbox 
 - A hang-up before saying anything is logged as `missed_call`; anything else is a
   `lead` in the portal inbox with summary, transcript, and recording link.
 - **Degrades honestly:** no Cal.com event type → takes messages only. Kill switch
-  off, daily ceiling hit, or DB blip → a 10-second "sorry we missed you, texting
-  you now" and the text-back still goes out.
+  off, daily ceiling hit, or DB blip → a short "sorry we missed you, texting you
+  now" and the text-back still goes out. A line that's switched off, or a paused /
+  cancelled client, sends no texts and the fallback doesn't promise one.
+- **Retry-safe:** Vapi is told to retry failed reports (backoff ×3); every step is
+  idempotent and the call is only marked done after the texts go out. A caller
+  never gets two text-backs. (A Twilio-side send failure is not retried; the miss
+  shows in the inbox.)
+- **Caller ID check:** if call forwarding drops caller ID and the call shows your
+  own cell, you're never texted a text-back (`cli_missing` in the logs) — fix the
+  forwarding code if you see it.
 - Disclosure is enforced: the greeting always says it's an AI and the call may be
   recorded, even if the client's custom greeting doesn't.
 
-Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (11 cases: auth,
+Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (15 cases: auth,
 assistant build, fallback, booked call end-to-end, missed call, retries/idempotency,
-non-US/Caribbean blocking, per-number text cap, booking abuse, signed + replayed SMS replies).
+non-US/Caribbean blocking, per-number text cap, booking abuse, signed + replayed SMS replies,
+DB-blip retry, switched-off line, missing caller ID, blocked-ID booking).
 
 ---
 

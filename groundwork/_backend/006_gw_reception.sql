@@ -16,7 +16,7 @@
 create table if not exists public.gw_reception_lines (
   client_id            uuid primary key references public.gw_clients(id) on delete cascade,
   vapi_phone_number_id text unique,          -- Vapi phone-number id the call arrives on
-  ai_number            text unique,          -- the same number in E.164 (+15125550123)
+  ai_number            text not null unique, -- the same number in E.164 (+15125550123); SMS replies route on it
   owner_alert_number   text,                 -- where lead alerts are texted (defaults to gw_settings.forward_number)
   cal_event_type_id    integer,              -- Cal.com event type to book; null = take messages only
   booking_url          text,                 -- public booking link included in text-backs

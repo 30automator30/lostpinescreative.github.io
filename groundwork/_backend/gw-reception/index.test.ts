@@ -24,6 +24,7 @@ let messages: Array<Record<string, unknown>> = [];
 let sms: Array<{ To: string; Body: string; From: string | null }> = [];
 let calBookings: Array<Record<string, unknown>> = [];
 let aiEnabled = true;
+let failNextTextbackClaim = false;
 
 const future = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
 const SLOT1 = future(24), SLOT2 = future(26);
@@ -58,6 +59,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
         return ok(messages.filter((m) => m.external_id === eq("external_id")));
       }
       const row = JSON.parse(String(init!.body));
+      if (failNextTextbackClaim && String(row.external_id).endsWith(":textback")) {
+        failNextTextbackClaim = false;
+        return new Response("boom", { status: 503 });
+      }
       const prefer = new Headers(init!.headers).get("Prefer") ?? "";
       const i = messages.findIndex((m) => m.external_id === row.external_id);
       if (i >= 0) {
@@ -103,7 +108,10 @@ const vapi = (message: unknown, auth = "Bearer s3cret") =>
     body: JSON.stringify({ message }) }));
 const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
-const reset = () => { messages = []; sms = []; calBookings = []; aiEnabled = true; };
+const reset = () => {
+  messages = []; sms = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
+  line.enabled = true; line.client.status = "active";
+};
 
 Deno.test("rejects requests without the Vapi bearer", async () => {
   assertEquals((await vapi({ type: "assistant-request" }, "Bearer nope")).status, 401);
@@ -264,6 +272,49 @@ Deno.test("replayed SMS webhook forwards to owner only once", async () => {
       "content-type": "application/x-www-form-urlencoded" }, body: p.toString() }));
   }
   assertEquals(sms.length, 1);
+});
+
+Deno.test("DB blip at hang-up: 500 so Vapi retries, and the retry still texts exactly once", async () => {
+  reset();
+  const report = { type: "end-of-call-report", call: call("f1"), endedReason: "customer-ended-call",
+    artifact: { messages: [{ role: "user", message: "need a quote" }] }, analysis: { summary: "Wants a quote" } };
+  const a = await (await vapi({ type: "assistant-request", call: call("f1") })).json();
+  assertEquals(a.assistant.server.backoffPlan.maxRetries, 3);
+  failNextTextbackClaim = true;
+  assertEquals((await vapi(report)).status, 500);
+  assertEquals(sms.filter((m) => m.To === "+15125551234").length, 0);
+  assertEquals((await vapi(report)).status, 200);
+  await vapi(report);
+  assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
+});
+
+Deno.test("switched-off line or cancelled client: no texts, and the fallback doesn't promise one", async () => {
+  reset();
+  line.enabled = false;
+  const a = await (await vapi({ type: "assistant-request", call: call("d1") })).json();
+  assertMatch(a.assistant.firstMessage, /try again/);
+  await vapi({ type: "end-of-call-report", call: call("d1"), endedReason: "customer-ended-call",
+    artifact: { messages: [] }, analysis: {} });
+  line.enabled = true; line.client.status = "cancelled";
+  await vapi({ type: "end-of-call-report", call: call("d2"), endedReason: "customer-ended-call",
+    artifact: { messages: [] }, analysis: {} });
+  assertEquals(sms.length, 0);
+});
+
+Deno.test("caller ID = owner's cell (forwarding dropped CLI): owner is never texted a text-back", async () => {
+  reset();
+  await vapi({ type: "end-of-call-report", call: call("o1", "+14083487284"), endedReason: "customer-ended-call",
+    artifact: { messages: [] }, analysis: {} });
+  assertEquals(sms.length, 0);
+});
+
+Deno.test("blocked caller ID: booking asks for a number instead of looping on Cal.com", async () => {
+  reset();
+  const r = await (await vapi({ type: "tool-calls", call: { id: "n1", phoneNumberId: "pn_1", customer: {} },
+    toolCallList: [{ id: "t1", type: "function", function: { name: "book_appointment",
+      arguments: JSON.stringify({ start: SLOT1, name: "Q" }) } }] })).json();
+  assertMatch(r.results[0].result, /callback number first/);
+  assertEquals(calBookings.length, 0);
 });
 
 globalThis.addEventListener("unload", () => { globalThis.fetch = realFetch; });
