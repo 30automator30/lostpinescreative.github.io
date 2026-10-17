@@ -4,9 +4,13 @@
 // The client's own Android phone texts missed callers from the owner's number
 // (no Twilio cost) and talks to this function:
 //
-//   POST /pair    {code, label?, app_version?} -> {device_id, token}
-//                 6-digit admin-issued code (gw_create_pairing_code), single
-//                 use, 10 minutes. Rate-limited per IP and globally.
+//   POST /register {client_id, label?, app_version?} + Bearer <owner's Supabase JWT>
+//                 -> {device_id, token}. The owner signs into the Lost Pines app;
+//                 ownership is checked by reading gw_clients WITH THE OWNER'S JWT
+//                 (RLS / gw_owns_client decides). Admin accounts are refused so a
+//                 studio-wide session never ends up on a customer's phone;
+//                 cancelled clients are refused. The token is what the app's
+//                 headless worker uses from then on (it can't refresh a session).
 //   GET  /config  -> {business_name, textback_message, rules: {enabled, disabled_reason, per_number_hours}}
 //                 The app calls this before every text (D9). Only a 401 whose
 //                 body has code "device_revoked" means unpair and don't text —
@@ -18,31 +22,26 @@
 //
 // Only missed-call events leave the phone — never the call log or contacts (D7).
 //
-// Agent Build Standard v1.2 controls: SEC-01 (hashed device token, fail
-// closed), REL-01 (timeouts), REL-04 (caps), COST-01 (pairing rate limits,
-// fail closed), OBS-01 (metadata-only trace), PRIV-01.
+// Agent Build Standard v1.2 controls: SEC-01 (owner JWT for /register, hashed
+// device token after, fail closed), REL-01 (timeouts), REL-04 (caps, active
+// phones per client), OBS-01 (metadata-only trace), PRIV-01.
 //
-// Injected: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+// Injected: SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
 // Deploy with Verify JWT OFF (called by the phone with a device token).
 // ============================================================
 
 const SB_URL = Deno.env.get("SUPABASE_URL")!;
 const SB_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SB_ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 
 const FN_NAME = "gw-device";
-const RL_PAIR = `${FN_NAME}-pair`;          // ai_call_log.fn for every pairing attempt
-const RL_PAIR_FAIL = `${FN_NAME}-pair-fail`; // ai_call_log.fn for failed attempts
 
 // REL-04 caps.
 const MAX_BODY_BYTES = 64_000;
 const MAX_EVENTS = 50;
 const MAX_EVENT_AGE_MS = 30 * 86_400_000;
 const MAX_CLOCK_SKEW_MS = 5 * 60_000;
-
-// COST-01: pairing attempts. 1,000,000 codes, 10-minute life — a global
-// failure ceiling makes guessing hopeless even from rotating IPs.
-const RL_PAIR_PER_IP_HOUR = 5;
-const RL_PAIR_FAIL_HOUR = Number(Deno.env.get("RL_PAIR_FAIL_HOUR") ?? "30");
+const MAX_ACTIVE_PHONES = 5; // per client; revoke one in admin to add another
 
 const TEXTBACK_PER_NUMBER_HOURS = 24;
 
@@ -70,7 +69,7 @@ async function fetchT(url: string, opts: RequestInit, ms: number): Promise<Respo
 const json = (obj: unknown, status = 200) =>
   new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json" } });
 
-// OBS-01: metadata only — never phone numbers, codes, or tokens.
+// OBS-01: metadata only — never phone numbers, emails, or tokens.
 function trace(o: Record<string, unknown>) {
   try { console.log(JSON.stringify({ evt: "agent_run", fn: FN_NAME, ...o })); } catch (_e) { /* noop */ }
 }
@@ -87,11 +86,6 @@ function newToken(): string {
   let s = "";
   for (const x of b) s += String.fromCharCode(x);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-function clientIp(req: Request): string {
-  const xff = req.headers.get("x-forwarded-for") ?? "";
-  return xff.split(",")[0].trim() || req.headers.get("x-real-ip") || "unknown";
 }
 
 // ── Phone helpers — same rules as gw-reception (and the app's PhoneNumbers.kt). ──
@@ -111,65 +105,56 @@ const isNanp = (n: string | null): n is string =>
   !!n && /^\+1[2-9]\d{2}[2-9]\d{6}$/.test(n) && !NON_US_CA_NPA.has(n.slice(2, 5));
 
 // ============================================================
-// /pair
+// /register
 // ============================================================
-async function countLog(params: string): Promise<number> {
-  const r = await fetchT(`${REST}/ai_call_log?select=id&${params}`, {
-    headers: { ...sbHeaders, Prefer: "count=exact", Range: "0-0" },
-  }, T_DB);
-  if (!r.ok) throw new Error(`count ${r.status}`);
-  return Number((r.headers.get("content-range") ?? "*/0").split("/")[1] || "0") || 0;
-}
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-async function logAttempt(fn: string, ip: string): Promise<void> {
-  try {
-    await fetchT(`${REST}/ai_call_log`, {
-      method: "POST",
-      headers: { ...sbHeaders, Prefer: "return=minimal" },
-      body: JSON.stringify({ fn, ip }),
-    }, T_DB);
-  } catch { /* best effort; the ceilings fail closed on read */ }
-}
-
-// Fails CLOSED: if the ledger can't be read, nobody pairs.
-async function pairAllowed(ip: string): Promise<boolean> {
-  const hourAgo = new Date(Date.now() - 3_600_000).toISOString();
-  try {
-    const [perIp, failed] = await Promise.all([
-      countLog(`fn=eq.${RL_PAIR}&ip=eq.${encodeURIComponent(ip)}&created_at=gte.${hourAgo}`),
-      countLog(`fn=eq.${RL_PAIR_FAIL}&created_at=gte.${hourAgo}`),
-    ]);
-    return perIp < RL_PAIR_PER_IP_HOUR && failed < RL_PAIR_FAIL_HOUR;
-  } catch {
-    return false;
-  }
+// The signed-in user, or null for a bad/expired session. Throws if Auth is down.
+async function sessionUser(jwt: string): Promise<{ id: string } | null> {
+  const r = await fetchT(`${SB_URL}/auth/v1/user`,
+    { headers: { apikey: SB_ANON, Authorization: `Bearer ${jwt}` } }, T_DB);
+  if (r.status === 401 || r.status === 403) return null;
+  if (!r.ok) throw new Error(`auth ${r.status}`);
+  const u = await r.json();
+  return u?.id ? { id: String(u.id) } : null;
 }
 
 // deno-lint-ignore no-explicit-any
-async function onPair(body: any, ip: string, traceId: string, t0: number): Promise<Response> {
-  if (!(await pairAllowed(ip))) {
-    trace({ traceId, route: "pair", outcome: "rate_limited", ms: Date.now() - t0 });
-    return json({ error: "too many attempts — try again later" }, 429);
-  }
-  await logAttempt(RL_PAIR, ip);
-  const code = String(body?.code ?? "").trim();
-  if (!/^\d{6}$/.test(code)) return json({ error: "code must be 6 digits" }, 400);
+async function onRegister(req: Request, body: any, traceId: string, t0: number): Promise<Response> {
+  const done = (outcome: string, res: Response) => {
+    trace({ traceId, route: "register", outcome, ms: Date.now() - t0 });
+    return res;
+  };
+  const m = /^Bearer\s+(\S{20,4096})$/.exec(req.headers.get("authorization") ?? "");
+  const user = m ? await sessionUser(m[1]) : null;
+  if (!m || !user) return done("no_session", json({ error: "sign in again", code: "not_signed_in" }, 401));
+  const clientId = String(body?.client_id ?? "");
+  if (!UUID.test(clientId)) return done("bad_request", json({ error: "client_id required" }, 400));
 
-  // Claim atomically: only an unused, unexpired code flips to used.
-  const now = new Date().toISOString();
-  const q = `code_hash=eq.${await sha256Hex(code)}&used_at=is.null&expires_at=gt.${encodeURIComponent(now)}`;
-  const r = await fetchT(`${REST}/gw_pairing_codes?${q}&select=client_id`, {
-    method: "PATCH",
-    headers: { ...sbHeaders, Prefer: "return=representation" },
-    body: JSON.stringify({ used_at: now }),
-  }, T_DB);
-  if (!r.ok) throw new Error(`claim ${r.status}`);
-  const rows = await r.json();
-  const clientId = Array.isArray(rows) && rows.length ? String(rows[0].client_id) : "";
-  if (!clientId) {
-    await logAttempt(RL_PAIR_FAIL, ip);
-    trace({ traceId, route: "pair", outcome: "bad_code", ms: Date.now() - t0 });
-    return json({ error: "that code is wrong or has expired" }, 401);
+  // Admins can see every client, so they must never register one (D14).
+  const pr = await fetchT(`${REST}/dd_profiles?select=is_admin&id=eq.${user.id}`, { headers: sbHeaders }, T_DB);
+  if (!pr.ok) throw new Error(`profile ${pr.status}`);
+  const prof = (await pr.json())[0];
+  if (prof?.is_admin) {
+    return done("admin_refused", json({ error: "sign in with the business owner's account", code: "admin_account" }, 403));
+  }
+
+  // Ownership: the owner's own JWT reads gw_clients, so RLS (gw_owns_client) decides.
+  const cr = await fetchT(`${REST}/gw_clients?select=id,status&id=eq.${clientId}`,
+    { headers: { apikey: SB_ANON, Authorization: `Bearer ${m[1]}` } }, T_DB);
+  if (!cr.ok) throw new Error(`client ${cr.status}`);
+  const client = (await cr.json())[0];
+  if (!client) return done("not_owner", json({ error: "this account doesn't own that business", code: "not_owner" }, 403));
+  if (client.status === "cancelled") {
+    return done("cancelled", json({ error: "this service has ended", code: "client_cancelled" }, 409));
+  }
+
+  const ar = await fetchT(`${REST}/gw_devices?select=id&client_id=eq.${clientId}&revoked_at=is.null`,
+    { headers: { ...sbHeaders, Prefer: "count=exact", Range: "0-0" } }, T_DB);
+  if (!ar.ok) throw new Error(`count ${ar.status}`);
+  const active = Number((ar.headers.get("content-range") ?? "*/0").split("/")[1] || "0") || 0;
+  if (active >= MAX_ACTIVE_PHONES) {
+    return done("too_many", json({ error: "too many phones — remove one first", code: "too_many_phones" }, 409));
   }
 
   const token = newToken();
@@ -178,16 +163,16 @@ async function onPair(body: any, ip: string, traceId: string, t0: number): Promi
     headers: { ...sbHeaders, Prefer: "return=representation" },
     body: JSON.stringify({
       client_id: clientId,
+      registered_by: user.id,
       token_hash: await sha256Hex(token),
       label: clip(body?.label, 60) || null,
       app_version: clip(body?.app_version, 20) || null,
-      last_seen_at: now,
+      last_seen_at: new Date().toISOString(),
     }),
   }, T_DB);
-  if (!ins.ok) throw new Error(`device insert ${ins.status}`); // code is burnt; admin issues a new one
+  if (!ins.ok) throw new Error(`device insert ${ins.status}`);
   const dev = (await ins.json())[0];
-  trace({ traceId, route: "pair", outcome: "paired", ms: Date.now() - t0 });
-  return json({ device_id: dev.id, token });
+  return done("registered", json({ device_id: dev.id, token }));
 }
 
 // ============================================================
@@ -196,16 +181,18 @@ async function onPair(body: any, ip: string, traceId: string, t0: number): Promi
 type Device = {
   id: string; client_id: string; business_name: string; client_status: string;
   textback_message: string | null;
+  switched_off: boolean;   // the owner turned Text-Back off (absent settings row = on)
   twilio_line_on: boolean; // gw-reception already texts this client's missed callers
 };
 
 // null = revoked or unknown (-> 401). A paused or cancelled client keeps its
-// pairing (texting is switched off in /config), so reactivating needs no re-pair. Throws on a DB failure (-> 503), so a
-// blip never looks like a revocation and the app keeps texting from cache.
+// registration (texting is switched off in /config), so reactivating needs no
+// new sign-in. Throws on a DB failure (-> 503), so a blip never looks like a
+// revocation and the app keeps texting from cache.
 async function authDevice(req: Request): Promise<Device | null> {
   const m = /^Bearer\s+([\w-]{20,200})$/.exec(req.headers.get("authorization") ?? "");
   if (!m) return null;
-  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message),line:gw_reception_lines(enabled))";
+  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message,textback_app_enabled),line:gw_reception_lines(enabled))";
   const r = await fetchT(`${REST}/gw_devices?select=${sel}&token_hash=eq.${await sha256Hex(m[1])}&limit=1`,
     { headers: sbHeaders }, T_DB);
   if (!r.ok) throw new Error(`device lookup ${r.status}`);
@@ -218,6 +205,7 @@ async function authDevice(req: Request): Promise<Device | null> {
     id: row.id, client_id: row.client_id,
     business_name: row.client.business_name, client_status: row.client.status,
     textback_message: s?.textback_message ?? null,
+    switched_off: s?.textback_app_enabled === false,
     twilio_line_on: one(row.client.line)?.enabled === true,
   };
 }
@@ -244,8 +232,9 @@ async function onConfig(dev: Device, req: Request, traceId: string, t0: number):
     rules: {
       // One text per missed caller: when the Twilio receptionist line is on, it
       // sends the text-back and the phone only reports the missed call.
-      enabled: !off && !dev.twilio_line_on,
-      disabled_reason: off ? dev.client_status : dev.twilio_line_on ? "twilio_line" : null,
+      enabled: !off && !dev.switched_off && !dev.twilio_line_on,
+      disabled_reason: off ? dev.client_status : dev.switched_off ? "switched_off"
+        : dev.twilio_line_on ? "twilio_line" : null,
       per_number_hours: TEXTBACK_PER_NUMBER_HOURS,
     },
   });
@@ -314,7 +303,7 @@ Deno.serve(async (req) => {
   const traceId = crypto.randomUUID();
   const t0 = Date.now();
   const route = new URL(req.url).pathname.split("/").filter(Boolean).pop();
-  const want: Record<string, string> = { pair: "POST", config: "GET", events: "POST" };
+  const want: Record<string, string> = { register: "POST", config: "GET", events: "POST" };
   if (!route || !want[route]) return json({ error: "not found" }, 404);
   if (req.method !== want[route]) return json({ error: "method not allowed" }, 405);
   if (Number(req.headers.get("content-length") ?? "0") > MAX_BODY_BYTES) return json({ error: "too large" }, 413);
@@ -327,7 +316,7 @@ Deno.serve(async (req) => {
       if (new TextEncoder().encode(raw).length > MAX_BODY_BYTES) return json({ error: "too large" }, 413); // chunked bodies too
       try { body = JSON.parse(raw); } catch { return json({ error: "invalid JSON" }, 400); }
     }
-    if (route === "pair") return await onPair(body, clientIp(req), traceId, t0);
+    if (route === "register") return await onRegister(req, body, traceId, t0);
 
     const dev = await authDevice(req);
     if (!dev) {

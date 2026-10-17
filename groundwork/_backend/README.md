@@ -17,24 +17,25 @@ Groundwork admin too.
 - **AI receptionist + missed-call text-back** — `gw-reception` Edge Function
   (Vapi + Twilio + Cal.com), one function for every client's phone line, writes
   calls to `gw_messages`. Setup runbook: [`gw-reception/README.md`](gw-reception/README.md).
-- **Text-Back Android app backend** — `gw-device` Edge Function. A paired
-  phone texts missed callers from the owner's own number and reports each
-  missed call to the inbox. Admin pairs/revokes phones on the client's
-  **Phones** card. Only missed-call events leave the phone.
+- **Text-Back backend** (`gw-device`) for the Lost Pines app's Android
+  direct build. The owner signs into the app; the phone registers itself
+  (`/register`, owner's session — admin accounts are refused), then texts
+  missed callers from the owner's own number and reports each missed call to
+  the inbox. Admin sees and revokes phones on the client's **Phones** card.
+  Only missed-call events leave the phone.
   - Apply `007_gw_devices.sql` (after `006`).
-  - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (the phone
-    authenticates with its own device token). No new secrets.
-  - The phone stops texting (but stays paired) while the client is paused or
-    cancelled, or while their Twilio receptionist line is on — one text per
-    missed caller. Revoke on the Phones card to cut a phone off for good.
+  - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (phones
+    authenticate with their own device token; `/register` checks the owner's
+    session itself). No new secrets.
+  - The phone stops texting (but stays registered) while the client is paused
+    or cancelled, while the owner has switched Text-Back off, or while their
+    Twilio receptionist line is on — one text per missed caller. Revoke on the
+    Phones card kills that phone's token; the owner can sign in again to
+    register a new one.
   - **Verify JWT must stay OFF on every redeploy.** With it on, the gateway
     answers phones with its own 401; the app ignores that (it unpairs only on
     the function's `code: "device_revoked"`), so phones keep texting from
-    cache, but nothing syncs and nobody can pair until it's fixed.
-  - "The code won't take" for everyone: after 30 failed pairing attempts in an
-    hour, pairing is locked for all clients until the hour rolls over
-    (brute-force guard). Wait, or clear `ai_call_log` rows with
-    `fn = 'gw-device-pair-fail'`.
+    cache, but nothing syncs and nobody can register until it's fixed.
   - Tests: `deno test -A groundwork/_backend/gw-device/index.test.ts`
 
 ## Deploy (owner steps)
@@ -66,8 +67,7 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_settings` | reception/voicemail setup (1:1 with client, client-editable) |
 | `gw_inquiries` | public leads captured by the gw-assistant |
 | `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
-| `gw_devices` | paired Text-Back phones (token hash only, last seen, revoked_at) — admin-only, `007` |
-| `gw_pairing_codes` | single-use 10-minute pairing codes (hash only) — admin-only, `007` |
+| `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
 their `gw_settings` and mark messages handled (via `gw_set_message_status`).

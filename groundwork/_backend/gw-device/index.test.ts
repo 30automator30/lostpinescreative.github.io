@@ -4,6 +4,7 @@ import { assert, assertEquals } from "jsr:@std/assert@1";
 
 Deno.env.set("SUPABASE_URL", "https://proj.supabase.co");
 Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "srk");
+Deno.env.set("SUPABASE_ANON_KEY", "anon");
 
 const sha256 = async (s: string) =>
   [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))]
@@ -11,14 +12,22 @@ const sha256 = async (s: string) =>
 
 // ---------- fake state ----------
 type Row = Record<string, unknown>;
-const CLIENT = "c-1";
+const CLIENT = "11111111-1111-4111-8111-111111111111";
+const OTHER_CLIENT = "22222222-2222-4222-8222-222222222222";
+// Supabase sessions: JWT -> user. The fake applies gw_clients RLS for user JWTs.
+const OWNER_JWT = "jwt-owner-xxxxxxxxxxxxxxxxxxxx";
+const STRANGER_JWT = "jwt-stranger-xxxxxxxxxxxxxxxxx";
+const ADMIN_JWT = "jwt-admin-xxxxxxxxxxxxxxxxxxxxx";
+const sessions: Record<string, { id: string; admin: boolean }> = {
+  [OWNER_JWT]: { id: "u-owner", admin: false },
+  [STRANGER_JWT]: { id: "u-stranger", admin: false },
+  [ADMIN_JWT]: { id: "u-admin", admin: true },
+};
 let clients: Row[] = [];
 let settings: Row[] = [];
 let lines: Row[] = [];
-let codes: Row[] = [];
 let devices: Row[] = [];
 let messages: Row[] = [];
-let callLog: Row[] = [];
 let failDb = false;
 
 const ok = (body: unknown, headers: Record<string, string> = {}) =>
@@ -48,15 +57,19 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Response 
   const p = url.searchParams;
   const body = init?.body ? JSON.parse(String(init.body)) : null;
 
-  if (table === "ai_call_log") {
-    if (method === "POST") { callLog.push({ ...body, created_at: new Date().toISOString() }); return ok([]); }
-    const n = callLog.filter((r) => matches(r, p)).length;
-    return ok([], { "content-range": `0-0/${n}` });
+  const bearer = (new Headers(init?.headers).get("Authorization") ?? "").replace(/^Bearer /, "");
+  if (url.pathname === "/auth/v1/user") {
+    const u = sessions[bearer];
+    return u ? ok({ id: u.id }) : new Response("{}", { status: 401 });
   }
-  if (table === "gw_pairing_codes" && method === "PATCH") {
-    const hit = codes.filter((r) => matches(r, p));
-    hit.forEach((r) => Object.assign(r, body));
-    return ok(hit.map((r) => ({ client_id: r.client_id })));
+  if (table === "dd_profiles") {
+    return ok(Object.values(sessions).filter((u) => `eq.${u.id}` === p.get("id")).map((u) => ({ is_admin: u.admin })));
+  }
+  if (table === "gw_clients") {
+    const u = sessions[bearer]; // user JWT -> RLS: owner or admin only
+    assert(u, "gw_clients must be read with the user's JWT, not the service role");
+    return ok(clients.filter((c) => matches(c, p) && (u.admin || c.owner_id === u.id))
+      .map((c) => ({ id: c.id, status: c.status })));
   }
   if (table === "gw_devices") {
     if (method === "POST") {
@@ -67,6 +80,9 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Response 
     if (method === "PATCH") {
       devices.filter((r) => matches(r, p)).forEach((r) => Object.assign(r, body));
       return ok([]);
+    }
+    if (prefer.includes("count=exact")) {
+      return ok([], { "content-range": `0-0/${devices.filter((r) => matches(r, p)).length}` });
     }
     const rows = devices.filter((r) => matches(r, p)).map((d) => {
       const c = clients.find((x) => x.id === d.client_id);
@@ -95,85 +111,92 @@ let handler!: (r: Request) => Promise<Response>;
 await import("./index.ts");
 
 const FN = "https://proj.supabase.co/functions/v1/gw-device";
-const req = (path: string, opts: { method?: string; body?: unknown; token?: string; ip?: string } = {}) =>
+const req = (path: string, opts: { method?: string; body?: unknown; token?: string } = {}) =>
   handler(new Request(`${FN}/${path}`, {
     method: opts.method ?? "POST",
     headers: {
       "content-type": "application/json",
-      "x-forwarded-for": opts.ip ?? "1.2.3.4",
       ...(opts.token ? { authorization: `Bearer ${opts.token}` } : {}),
     },
     body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
   }));
 
 const reset = () => {
-  clients = [{ id: CLIENT, business_name: "DeSmit Designs", status: "active" }];
+  clients = [
+    { id: CLIENT, owner_id: "u-owner", business_name: "DeSmit Designs", status: "active" },
+    { id: OTHER_CLIENT, owner_id: "u-stranger", business_name: "Someone Else", status: "active" },
+  ];
   settings = [{ client_id: CLIENT, textback_message: "Sorry we missed you! Text us what you need." }];
-  lines = []; codes = []; devices = []; messages = []; callLog = []; failDb = false;
+  lines = []; devices = []; messages = []; failDb = false;
 };
-const addCode = async (code: string, minutes = 10, used = false) => {
-  codes.push({
-    code_hash: await sha256(code), client_id: CLIENT,
-    expires_at: new Date(Date.now() + minutes * 60_000).toISOString(),
-    used_at: used ? new Date().toISOString() : null,
-  });
-};
-const pair = async (code = "123456") => {
-  await addCode(code);
-  const r = await req("pair", { body: { code, label: "Pixel 8", app_version: "1.0.0" } });
+const register = (jwt: string | null, body: unknown = { client_id: CLIENT, label: "Pixel 8", app_version: "1.0.0" }) =>
+  handler(new Request(`${FN}/register`, {
+    method: "POST",
+    headers: { "content-type": "application/json", ...(jwt ? { authorization: `Bearer ${jwt}` } : {}) },
+    body: JSON.stringify(body),
+  }));
+const pair = async () => {
+  const r = await register(OWNER_JWT);
   assertEquals(r.status, 200);
   return await r.json() as { device_id: string; token: string };
 };
 
-// ---------- pair ----------
-Deno.test("pair: good code -> token; only the token's hash is stored", async () => {
+// ---------- register ----------
+Deno.test("register: signed-in owner -> token; only its hash is stored, with who registered it", async () => {
   reset();
   const { device_id, token } = await pair();
   assert(device_id && token.length >= 40);
   assertEquals(devices.length, 1);
   assertEquals(devices[0].token_hash, await sha256(token));
   assertEquals(devices[0].client_id, CLIENT);
+  assertEquals(devices[0].registered_by, "u-owner");
   assertEquals(devices[0].label, "Pixel 8");
   assert(!JSON.stringify(devices).includes(token));
 });
 
-Deno.test("pair: a code works once; reused, expired, wrong or malformed -> 401", async () => {
+Deno.test("register: someone else's business, no session or a bad session -> refused", async () => {
   reset();
-  await pair("111111");
-  assertEquals((await req("pair", { body: { code: "111111" }, ip: "9.9.9.1" })).status, 401); // reused
-  await addCode("222222", -1);
-  assertEquals((await req("pair", { body: { code: "222222" }, ip: "9.9.9.2" })).status, 401); // expired
-  await addCode("333333", 10, true);
-  assertEquals((await req("pair", { body: { code: "333333" }, ip: "9.9.9.3" })).status, 401); // already used
-  assertEquals((await req("pair", { body: { code: "999999" }, ip: "9.9.9.4" })).status, 401); // never issued
-  assertEquals((await req("pair", { body: { code: "12ab" }, ip: "9.9.9.5" })).status, 400);
-  assertEquals(devices.length, 1);
+  const r = await register(STRANGER_JWT);
+  assertEquals(r.status, 403);
+  assertEquals((await r.json()).code, "not_owner");
+  assertEquals((await register("jwt-expired-xxxxxxxxxxxxxxxxxx")).status, 401);
+  assertEquals((await register(null)).status, 401);
+  assertEquals((await register(OWNER_JWT, { client_id: "c-1" })).status, 400);
+  assertEquals(devices.length, 0);
 });
 
-Deno.test("pair: 6th attempt from one IP in an hour -> 429, even with a good code", async () => {
+Deno.test("register: admin accounts are refused even though they can see every client", async () => {
   reset();
-  for (let i = 0; i < 5; i++) {
-    assertEquals((await req("pair", { body: { code: "000000" }, ip: "5.5.5.5" })).status, 401);
-  }
-  await addCode("654321");
-  assertEquals((await req("pair", { body: { code: "654321" }, ip: "5.5.5.5" })).status, 429);
-  assertEquals((await req("pair", { body: { code: "654321" }, ip: "6.6.6.6" })).status, 200);
+  const r = await register(ADMIN_JWT);
+  assertEquals(r.status, 403);
+  assertEquals((await r.json()).code, "admin_account");
+  assertEquals(devices.length, 0);
 });
 
-Deno.test("pair: global failed-attempt ceiling stops IP-rotating brute force", async () => {
+Deno.test("register: cancelled client -> 409; paused client may register", async () => {
   reset();
-  for (let i = 0; i < 30; i++) {
-    await req("pair", { body: { code: "000000" }, ip: `10.0.0.${i}` });
-  }
-  await addCode("654321");
-  assertEquals((await req("pair", { body: { code: "654321" }, ip: "7.7.7.7" })).status, 429);
+  clients[0].status = "cancelled";
+  const r = await register(OWNER_JWT);
+  assertEquals(r.status, 409);
+  assertEquals((await r.json()).code, "client_cancelled");
+  clients[0].status = "paused";
+  assertEquals((await register(OWNER_JWT)).status, 200);
 });
 
-Deno.test("pair: rate-limit ledger unreadable -> fail closed (429)", async () => {
+Deno.test("register: at most 5 active phones per business; revoked ones don't count", async () => {
   reset();
-  await addCode("654321");
+  for (let i = 0; i < 5; i++) await pair();
+  assertEquals((await register(OWNER_JWT)).status, 409);
+  devices[0].revoked_at = new Date().toISOString();
+  assertEquals((await register(OWNER_JWT)).status, 200);
+});
+
+Deno.test("register: backend down -> 503 (the app retries; nothing half-registered)", async () => {
+  reset();
   failDb = true;
-  assertEquals((await req("pair", { body: { code: "654321" } })).status, 429);
+  assertEquals((await register(OWNER_JWT)).status, 503);
+  failDb = false;
+  assertEquals(devices.length, 0);
 });
 
 // ---------- config ----------
@@ -223,6 +246,17 @@ Deno.test("config: paused or cancelled client -> texting off but still paired; r
     assertEquals(cfg.rules.disabled_reason, status);
   }
   clients[0].status = "active";
+  assertEquals((await (await req("config", { method: "GET", token })).json()).rules.enabled, true);
+});
+
+Deno.test("config: owner switched Text-Back off -> texting off, still registered", async () => {
+  reset();
+  const { token } = await pair();
+  settings[0].textback_app_enabled = false;
+  const cfg = await (await req("config", { method: "GET", token })).json();
+  assertEquals(cfg.rules.enabled, false);
+  assertEquals(cfg.rules.disabled_reason, "switched_off");
+  settings[0].textback_app_enabled = true;
   assertEquals((await (await req("config", { method: "GET", token })).json()).rules.enabled, true);
 });
 
@@ -307,5 +341,6 @@ Deno.test("events: more than 50 -> 413; revoked device -> 401; non-array -> 400"
 Deno.test("unknown route -> 404; wrong method -> 405", async () => {
   reset();
   assertEquals((await req("nope", { body: {} })).status, 404);
-  assertEquals((await req("pair", { method: "GET" })).status, 405);
+  assertEquals((await req("pair", { body: { code: "123456" } })).status, 404); // pairing codes are gone
+  assertEquals((await req("register", { method: "GET" })).status, 405);
 });
