@@ -52,7 +52,8 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
           const n = messages.filter((m) =>
             (!eq("kind") || m.kind === eq("kind")) &&
             (!eq("from_phone") || m.from_phone === eq("from_phone")) &&
-            (!eq("meta->>channel") || (m.meta as Record<string, unknown>)?.channel === eq("meta->>channel"))
+            (!eq("meta->>channel") || (m.meta as Record<string, unknown>)?.channel === eq("meta->>channel")) &&
+            (!eq("meta->>via") || (m.meta as Record<string, unknown>)?.via === eq("meta->>via"))
           ).length;
           return ok([], { "content-range": `0-0/${n}` });
         }
@@ -318,3 +319,11 @@ Deno.test("blocked caller ID: booking asks for a number instead of looping on Ca
 });
 
 globalThis.addEventListener("unload", () => { globalThis.fetch = realFetch; });
+
+Deno.test("texts sent by the Text-Back app don't use up the Twilio text-back allowance", async () => {
+  reset();
+  messages.push({ external_id: "dev:d1:7:textback", kind: "textback", from_phone: "+15125551234",
+    created_at: new Date().toISOString(), meta: { via: "gw-device" } });
+  await vapi({ type: "end-of-call-report", call: call("call_dev"), artifact: { messages: [] } });
+  assertEquals(sms.filter((m) => m.To === "+15125551234").length, 1);
+});

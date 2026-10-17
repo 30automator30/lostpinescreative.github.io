@@ -659,11 +659,14 @@ async function countRows(params: string): Promise<number> {
 // One text-back per destination per day, under a global daily ceiling. If the
 // counts can't be read this THROWS (-> 500 -> Vapi retries); after the retries
 // run out nothing is sent, so it still fails closed.
+// Only this function's Twilio texts count — the Text-Back app (gw-device) sends
+// from the owner's own phone and must not eat this budget.
 async function textbackAllowed(to: string): Promise<boolean> {
   const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+  const mine = `kind=eq.textback&meta->>via=eq.${FN_NAME}&created_at=gte.${dayAgo}`;
   const [toThis, total] = await Promise.all([
-    countRows(`kind=eq.textback&from_phone=eq.${encodeURIComponent(to)}&created_at=gte.${dayAgo}`),
-    countRows(`kind=eq.textback&created_at=gte.${dayAgo}`),
+    countRows(`${mine}&from_phone=eq.${encodeURIComponent(to)}`),
+    countRows(mine),
   ]);
   return toThis === 0 && total < RL_SMS_DAY;
 }
