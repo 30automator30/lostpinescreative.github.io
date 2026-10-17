@@ -24,6 +24,9 @@ Groundwork admin too.
   - Apply `007_gw_devices.sql` (after `006`).
   - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (the phone
     authenticates with its own device token). No new secrets.
+  - The phone stops texting (but stays paired) while the client is paused or
+    cancelled, or while their Twilio receptionist line is on — one text per
+    missed caller. Revoke on the Phones card to cut a phone off for good.
   - **Verify JWT must stay OFF on every redeploy.** With it on, the gateway
     answers phones with its own 401; the app ignores that (it unpairs only on
     the function's `code: "device_revoked"`), so phones keep texting from

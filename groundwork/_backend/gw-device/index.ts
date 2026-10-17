@@ -7,7 +7,7 @@
 //   POST /pair    {code, label?, app_version?} -> {device_id, token}
 //                 6-digit admin-issued code (gw_create_pairing_code), single
 //                 use, 10 minutes. Rate-limited per IP and globally.
-//   GET  /config  -> {business_name, textback_message, rules}
+//   GET  /config  -> {business_name, textback_message, rules: {enabled, disabled_reason, per_number_hours}}
 //                 The app calls this before every text (D9). Only a 401 whose
 //                 body has code "device_revoked" means unpair and don't text —
 //                 a gateway 401 (e.g. a redeploy with Verify JWT on) must not
@@ -196,26 +196,29 @@ async function onPair(body: any, ip: string, traceId: string, t0: number): Promi
 type Device = {
   id: string; client_id: string; business_name: string; client_status: string;
   textback_message: string | null;
+  twilio_line_on: boolean; // gw-reception already texts this client's missed callers
 };
 
-// null = not a live device (-> 401). Throws on a DB failure (-> 503), so a
+// null = revoked or unknown (-> 401). A paused or cancelled client keeps its
+// pairing (texting is switched off in /config), so reactivating needs no re-pair. Throws on a DB failure (-> 503), so a
 // blip never looks like a revocation and the app keeps texting from cache.
 async function authDevice(req: Request): Promise<Device | null> {
   const m = /^Bearer\s+([\w-]{20,200})$/.exec(req.headers.get("authorization") ?? "");
   if (!m) return null;
-  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message))";
+  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message),line:gw_reception_lines(enabled))";
   const r = await fetchT(`${REST}/gw_devices?select=${sel}&token_hash=eq.${await sha256Hex(m[1])}&limit=1`,
     { headers: sbHeaders }, T_DB);
   if (!r.ok) throw new Error(`device lookup ${r.status}`);
   const rows = await r.json();
   const row = Array.isArray(rows) ? rows[0] : null;
   if (!row?.client || row.revoked_at) return null;
-  if (row.client.status === "cancelled") return null;
-  const s = Array.isArray(row.client.settings) ? row.client.settings[0] : row.client.settings;
+  const one = (v: unknown) => Array.isArray(v) ? v[0] : v;
+  const s = one(row.client.settings);
   return {
     id: row.id, client_id: row.client_id,
     business_name: row.client.business_name, client_status: row.client.status,
     textback_message: s?.textback_message ?? null,
+    twilio_line_on: one(row.client.line)?.enabled === true,
   };
 }
 
@@ -233,12 +236,16 @@ async function onConfig(dev: Device, req: Request, traceId: string, t0: number):
   } catch { /* last-seen is cosmetic */ }
   const message = clip(dev.textback_message, 400) ||
     `Sorry we missed your call at ${dev.business_name}! Reply here with what you need and we'll get right back to you.`;
+  const off = dev.client_status === "paused" || dev.client_status === "cancelled";
   trace({ traceId, route: "config", outcome: "ok", ms: Date.now() - t0 });
   return json({
     business_name: dev.business_name,
     textback_message: message,
     rules: {
-      enabled: dev.client_status !== "paused",
+      // One text per missed caller: when the Twilio receptionist line is on, it
+      // sends the text-back and the phone only reports the missed call.
+      enabled: !off && !dev.twilio_line_on,
+      disabled_reason: off ? dev.client_status : dev.twilio_line_on ? "twilio_line" : null,
       per_number_hours: TEXTBACK_PER_NUMBER_HOURS,
     },
   });

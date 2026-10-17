@@ -14,6 +14,7 @@ type Row = Record<string, unknown>;
 const CLIENT = "c-1";
 let clients: Row[] = [];
 let settings: Row[] = [];
+let lines: Row[] = [];
 let codes: Row[] = [];
 let devices: Row[] = [];
 let messages: Row[] = [];
@@ -69,7 +70,8 @@ function fakeFetch(input: string | URL | Request, init?: RequestInit): Response 
     }
     const rows = devices.filter((r) => matches(r, p)).map((d) => {
       const c = clients.find((x) => x.id === d.client_id);
-      return { ...d, client: c && { ...c, settings: settings.filter((s) => s.client_id === c.id) } };
+      return { ...d, client: c && { ...c, settings: settings.filter((s) => s.client_id === c.id),
+        line: lines.find((l) => l.client_id === c.id) ?? null } };
     });
     return ok(rows);
   }
@@ -107,7 +109,7 @@ const req = (path: string, opts: { method?: string; body?: unknown; token?: stri
 const reset = () => {
   clients = [{ id: CLIENT, business_name: "DeSmit Designs", status: "active" }];
   settings = [{ client_id: CLIENT, textback_message: "Sorry we missed you! Text us what you need." }];
-  codes = []; devices = []; messages = []; callLog = []; failDb = false;
+  lines = []; codes = []; devices = []; messages = []; callLog = []; failDb = false;
 };
 const addCode = async (code: string, minutes = 10, used = false) => {
   codes.push({
@@ -209,13 +211,32 @@ Deno.test("config: revoked device, unknown token, or no token -> 401 (D9)", asyn
   assertEquals((await req("config", { method: "GET" })).status, 401);
 });
 
-Deno.test("config: paused client -> texting disabled; cancelled client -> 401", async () => {
+Deno.test("config: paused or cancelled client -> texting off but still paired; reactivating needs no re-pair", async () => {
   reset();
   const { token } = await pair();
-  clients[0].status = "paused";
-  assertEquals((await (await req("config", { method: "GET", token })).json()).rules.enabled, false);
-  clients[0].status = "cancelled";
-  assertEquals((await req("config", { method: "GET", token })).status, 401);
+  for (const status of ["paused", "cancelled"]) {
+    clients[0].status = status;
+    const r = await req("config", { method: "GET", token });
+    assertEquals(r.status, 200);
+    const cfg = await r.json();
+    assertEquals(cfg.rules.enabled, false);
+    assertEquals(cfg.rules.disabled_reason, status);
+  }
+  clients[0].status = "active";
+  assertEquals((await (await req("config", { method: "GET", token })).json()).rules.enabled, true);
+});
+
+Deno.test("config: client's Twilio receptionist line is on -> phone doesn't text (no double text)", async () => {
+  reset();
+  const { token } = await pair();
+  lines = [{ client_id: CLIENT, enabled: true }];
+  let cfg = await (await req("config", { method: "GET", token })).json();
+  assertEquals(cfg.rules.enabled, false);
+  assertEquals(cfg.rules.disabled_reason, "twilio_line");
+  lines[0].enabled = false;
+  cfg = await (await req("config", { method: "GET", token })).json();
+  assertEquals(cfg.rules.enabled, true);
+  assertEquals(cfg.rules.disabled_reason, null);
 });
 
 Deno.test("config: DB down -> 503, never 401 (the app must keep texting, not unpair)", async () => {
