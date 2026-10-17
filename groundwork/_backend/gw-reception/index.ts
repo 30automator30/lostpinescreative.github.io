@@ -10,7 +10,7 @@
 //                          gw_settings; booking if a Cal.com event type is set)
 //   tool-calls          -> take_message / check_availability / book_appointment
 //   end-of-call-report  -> one gw_messages row per call + text-back to the
-//                          caller + text alert to the owner
+//                          caller + text and email alert to the owner
 //
 // It also takes Twilio's inbound-SMS webhook (?src=twilio-sms) so replies to a
 // text-back land in the inbox and reach the owner instead of a dead end.
@@ -25,6 +25,8 @@
 //           TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
 //           (optional) TWILIO_MESSAGING_SERVICE_SID   A2P-registered sender
 //           (optional) CALCOM_API_KEY                 enables booking
+//           RESEND_API_KEY (shared with the portal emails) — lead alert emails;
+//           (optional) INVITE_FROM sender, RL_EMAIL_DAY per-line daily cap
 // Injected: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 // Deploy with Verify JWT OFF (called by Vapi and Twilio, not a signed-in user).
 // ============================================================
@@ -37,6 +39,9 @@ const TW_SID = Deno.env.get("TWILIO_ACCOUNT_SID") ?? "";
 const TW_TOKEN = Deno.env.get("TWILIO_AUTH_TOKEN") ?? "";
 const TW_MSG_SERVICE = Deno.env.get("TWILIO_MESSAGING_SERVICE_SID") ?? "";
 const CAL_KEY = Deno.env.get("CALCOM_API_KEY") ?? "";
+const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
+const EMAIL_FROM = Deno.env.get("INVITE_FROM") ?? "Lost Pines Creative <noreply@lostpinescreative.com>";
+const PORTAL_URL = "https://lostpinescreative.com/groundwork/portal/";
 
 const FN_NAME = "gw-reception";
 const FN_URL = `${SB_URL}/functions/v1/${FN_NAME}`;
@@ -61,6 +66,8 @@ const RL_GLOBAL_DAY = Number(Deno.env.get("RL_GLOBAL_DAY") ?? "300");
 // bombing / cost amplification).
 const RL_SMS_DAY = Number(Deno.env.get("RL_SMS_DAY") ?? "150");
 const RL_REPLY_FWD_HOUR = 5;
+// Lead alert emails per line per day (a robocall burst can't flood the inbox).
+const RL_EMAIL_DAY = Number(Deno.env.get("RL_EMAIL_DAY") ?? "50");
 
 // REL-01 timeouts. assistant-request must answer Vapi within 7.5 s end to end.
 const T_DB = 2500;
@@ -176,6 +183,7 @@ async function underCeiling(): Promise<boolean> {
 type Settings = {
   greeting?: string | null; after_hours?: string | null; forward_number?: string | null;
   textback_message?: string | null; hours?: { text?: string | null } | null; knowledge?: string | null;
+  email_alerts?: boolean | null; // 011: absent (pre-migration) = on
 };
 type Line = {
   client_id: string; ai_number: string | null; owner_alert_number: string | null;
@@ -183,6 +191,7 @@ type Line = {
   voice_id: string | null; enabled: boolean;
   ai_enabled?: boolean; // 008: the owner's AI switch; off = fallback + text-back. Absent = on.
   business_name: string; client_status: string; settings: Settings;
+  alert_email: string | null; // the client's contact email (else owner email) for lead alerts
 };
 
 // deno-lint-ignore no-explicit-any
@@ -194,7 +203,7 @@ async function lookupLine(msg: any): Promise<Line | null> {
   if (id) ors.push(`vapi_phone_number_id.eq.${id}`);
   if (num) ors.push(`ai_number.eq.${encodeURIComponent(num)}`);
   if (!ors.length) return null;
-  const sel = "*,client:gw_clients(business_name,status,settings:gw_settings(*))";
+  const sel = "*,client:gw_clients(business_name,status,contact_email,owner_email,settings:gw_settings(*))";
   const r = await fetchT(`${REST}/gw_reception_lines?select=${sel}&or=(${ors.join(",")})&limit=1`,
     { headers: sbHeaders }, T_DB);
   if (!r.ok) throw new Error(`lookup ${r.status}`);
@@ -207,6 +216,7 @@ async function lookupLine(msg: any): Promise<Line | null> {
     business_name: row.client.business_name,
     client_status: row.client.status,
     settings: s ?? {},
+    alert_email: row.client.contact_email || row.client.owner_email || null,
   };
 }
 
@@ -690,6 +700,70 @@ async function claimTextback(line: Line, callId: string, to: string, body: strin
   return Array.isArray(rows) && rows.length > 0;
 }
 
+// ── Lead alert email (Resend). Says who called and what they want, so the
+// owner can call back from the email; the transcript and recording stay in
+// the portal. Never logged.
+const EMAIL_RE = /^[^\s@<>"',;]+@[^\s@<>"',;]+\.[^\s@<>"',;]+$/;
+const esc = (v: unknown) => String(v ?? "").replace(/[&<>"']/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+const oneLine = (v: unknown, n: number) => clip(String(v ?? "").replace(/\s+/g, " "), n);
+function fmtPhone(n: string | null): string {
+  if (!n) return "Blocked number";
+  const m = /^\+1(\d{3})(\d{3})(\d{4})$/.exec(n);
+  return m ? `(${m[1]}) ${m[2]}-${m[3]}` : n;
+}
+
+async function emailAllowed(clientId: string): Promise<boolean> {
+  const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+  try {
+    const n = await countRows(
+      `client_id=eq.${encodeURIComponent(clientId)}&meta->>emailed=eq.true&created_at=gte.${dayAgo}`,
+    );
+    return n < RL_EMAIL_DAY;
+  } catch {
+    return false; // can't count -> don't send (the call is still in the inbox)
+  }
+}
+
+type LeadEmail = {
+  biz: string; name: string | null; phone: string | null; what: string;
+  urgent: boolean; texted: boolean; when: string;
+};
+function leadEmail(e: LeadEmail): { subject: string; html: string; text: string } {
+  const who = e.name ? `${e.name} · ${fmtPhone(e.phone)}` : fmtPhone(e.phone);
+  const subject = oneLine(`${e.urgent ? "URGENT: " : ""}New call for ${e.biz}: ${who} — ${e.what}`, 160);
+  const tel = e.phone ? `<a href="tel:${esc(e.phone)}" style="color:#2f7a5b">${esc(fmtPhone(e.phone))}</a>` : "Blocked number";
+  const html = `<div style="font-family:-apple-system,Segoe UI,Roboto,sans-serif;max-width:520px;color:#1a2421">
+<p style="margin:0 0 4px;font-size:13px;color:#5b6b66">${esc(e.biz)} · ${esc(e.when)}</p>
+<h2 style="margin:0 0 12px;font-size:20px">${e.urgent ? "Urgent: " : ""}New call${e.name ? " from " + esc(e.name) : ""}</h2>
+<p style="margin:0 0 6px"><b>Phone:</b> ${tel}</p>
+<p style="margin:0 0 16px"><b>What they need:</b> ${esc(e.what)}</p>
+${e.texted ? '<p style="margin:0 0 16px;color:#5b6b66">We already texted them back from your line.</p>' : ""}
+<p style="margin:0 0 20px"><a href="${PORTAL_URL}" style="display:inline-block;background:#2f7a5b;color:#fff;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600">Open inbox</a></p>
+<p style="margin:0;font-size:12px;color:#5b6b66">You get these because call alerts are on for ${esc(e.biz)}. Turn them off in the portal under Reception &amp; voicemail setup.</p>
+</div>`;
+  const text = `${e.urgent ? "URGENT: " : ""}New call for ${e.biz} (${e.when})\n` +
+    `${who}\nWhat they need: ${e.what}\n` + (e.texted ? "We already texted them back.\n" : "") +
+    `\nOpen inbox: ${PORTAL_URL}\n\nTurn these off in the portal under Reception & voicemail setup.`;
+  return { subject, html, text };
+}
+
+async function sendEmail(to: string, m: { subject: string; html: string; text: string }): Promise<boolean> {
+  if (!RESEND_KEY) return false;
+  try {
+    const r = await fetchT("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject: m.subject, html: m.html, text: m.text }),
+    }, T_EXT);
+    if (!r.ok) console.error("resend error", r.status);
+    return r.ok;
+  } catch (e) {
+    console.error("resend send failed", String(e));
+    return false;
+  }
+}
+
 // deno-lint-ignore no-explicit-any
 async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Response> {
   const callId = clip(msg?.call?.id, 100);
@@ -774,11 +848,27 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
       line.ai_number);
   }
 
+  // Email the owner too — works before texting is set up, and is easy to miss
+  // nothing in. Same calls as the text alert; once per call (meta.emailed).
+  let emailed = existing?.meta?.emailed === true;
+  const emailTo = clip(line.alert_email, 254);
+  if (live && !emailed && s.email_alerts !== false && EMAIL_RE.test(emailTo) &&
+      (talked || (caller && !repeat && caller !== alertTo)) && await emailAllowed(line.client_id)) {
+    const what = booking?.start ? `Booked ${fmtWhen(booking.start, line.timezone)}`
+      : missed ? "Missed call — hung up before leaving a message." : oneLine(body, 300);
+    emailed = await sendEmail(emailTo, leadEmail({
+      biz, name: existing?.from_name ? oneLine(existing.from_name, 80) : null,
+      phone: existing?.from_phone ?? caller, what, urgent: existing?.meta?.urgent === true,
+      texted, when: fmtNow(line.timezone),
+    }));
+    if (emailed) await upsertCall(callId, line.client_id, {}, { emailed: true });
+  }
+
   // Mark done LAST, so a retry after a failed send still texts (the text-back
   // claim row keeps the caller from ever getting two).
   await upsertCall(callId, line.client_id, {}, { reported: true });
 
-  trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted,
+  trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted, emailed,
     cli_missing: !!caller && caller === alertTo,
     ms: Date.now() - t0 });
   return json({});

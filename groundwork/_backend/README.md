@@ -121,6 +121,7 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
 | `gw_reception_lines.ai_enabled` / `gw_settings.textback_app_enabled` | the owner's own switches, read via `gw_my_services()` and set via `gw_set_service_enabled()` — `008` |
 | `lpc_requests` | service requests from the app/portals, both brands (customer files own, admin manages) — `009` |
 | `lpc_storage_purge` | Storage objects queued for removal after an account deletion (service role only) — `010` |
+| `gw_settings.email_alerts` | the owner's "Email me new calls" switch for receptionist call emails — `011` |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
