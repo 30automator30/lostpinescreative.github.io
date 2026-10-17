@@ -17,6 +17,14 @@ Groundwork admin too.
 - **AI receptionist + missed-call text-back** — `gw-reception` Edge Function
   (Vapi + Twilio + Cal.com), one function for every client's phone line, writes
   calls to `gw_messages`. Setup runbook: [`gw-reception/README.md`](gw-reception/README.md).
+- **Text-Back Android app backend** — `gw-device` Edge Function. A paired
+  phone texts missed callers from the owner's own number and reports each
+  missed call to the inbox. Admin pairs/revokes phones on the client's
+  **Phones** card. Only missed-call events leave the phone.
+  - Apply `007_gw_devices.sql` (after `006`).
+  - Deploy `gw-device/index.ts` as `gw-device`, **Verify JWT OFF** (the phone
+    authenticates with its own device token). No new secrets.
+  - Tests: `deno test -A groundwork/_backend/gw-device/index.test.ts`
 
 ## Deploy (owner steps)
 Because the Supabase MCP must point at `ekogelnbhggyrychfrta`:
@@ -47,6 +55,8 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_settings` | reception/voicemail setup (1:1 with client, client-editable) |
 | `gw_inquiries` | public leads captured by the gw-assistant |
 | `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
+| `gw_devices` | paired Text-Back phones (token hash only, last seen, revoked_at) — admin-only, `007` |
+| `gw_pairing_codes` | single-use 10-minute pairing codes (hash only) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
 their `gw_settings` and mark messages handled (via `gw_set_message_status`).

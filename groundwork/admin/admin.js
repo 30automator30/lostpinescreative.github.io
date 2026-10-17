@@ -144,7 +144,8 @@ async function openClient(id) {
   }
   editingReportId = null; editingUpdateId = null;
   $("rep-cancel").style.display = "none"; $("rep-add").textContent = "Add report";
-  await Promise.all([loadInts(), loadMsgs(), loadReps(), loadSet(), loadUpdates(), loadFiles()]);
+  $("pair-code").innerHTML = ""; $("pair-new").textContent = "Pair a phone";
+  await Promise.all([loadInts(), loadMsgs(), loadReps(), loadSet(), loadUpdates(), loadFiles(), loadDevs()]);
 }
 
 /* ---------- activity timeline (studio posts; edit/delete) ---------- */
@@ -375,4 +376,37 @@ $("cd-set-save").addEventListener("click", async () => {
   btn.disabled = false;
   if (error) { toast(error.message, "err"); return; }
   toast("Setup saved.", "ok");
+});
+
+/* phones (Text-Back app) — the token hash is never selected */
+async function loadDevs() {
+  const { data } = await sb.from("gw_devices").select("id,label,app_version,last_seen_at,revoked_at,created_at")
+    .eq("client_id", current.id).order("revoked_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false });
+  const box = $("cd-devs");
+  if (!data || !data.length) { box.innerHTML = '<div class="inline-note">No phones paired.</div>'; return; }
+  box.innerHTML = data.map((d) =>
+    '<div class="msg-item ' + (d.revoked_at ? "handled" : "") + '"><div class="msg-top"><span class="badge ' + (d.revoked_at ? "handled" : "new") + '">' +
+    (d.revoked_at ? "Revoked" : "Active") + "</span><b>" + escapeHtml(d.label || "Android phone") + "</b>" +
+    '<span class="spacer" style="flex:1"></span><span class="msg-when">' +
+    (d.revoked_at ? "revoked " + fmtDateTime(d.revoked_at) : "last seen " + (d.last_seen_at ? fmtDateTime(d.last_seen_at) : "never")) + "</span></div>" +
+    '<div class="msg-body">Paired ' + fmtDate(d.created_at) + (d.app_version ? " · app " + escapeHtml(d.app_version) : "") + "</div>" +
+    (d.revoked_at ? "" : '<div class="row" style="margin-top:8px;gap:6px"><button class="btn btn-danger btn-sm" data-dv="' + d.id + '">Revoke</button></div>') +
+    "</div>"
+  ).join("");
+  box.querySelectorAll("[data-dv]").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm("Revoke this phone? It stops texting missed callers on its next call.")) return;
+    const { error } = await sb.from("gw_devices").update({ revoked_at: new Date().toISOString() }).eq("id", b.dataset.dv);
+    if (error) { toast(error.message, "err"); return; }
+    toast("Phone revoked.", "ok"); loadDevs();
+  }));
+}
+$("pair-new").addEventListener("click", async () => {
+  const btn = $("pair-new"); btn.disabled = true;
+  const { data: code, error } = await sb.rpc("gw_create_pairing_code", { p_client: current.id });
+  btn.disabled = false;
+  if (error || !code) { toast((error && error.message) || "Couldn't create a code.", "err"); return; }
+  const until = new Date(Date.now() + 10 * 60_000).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  $("pair-code").innerHTML = 'Enter in the app: <b style="font-size:1.4rem;letter-spacing:.15em;font-variant-numeric:tabular-nums">' +
+    escapeHtml(code) + '</b> <span class="inline-note" style="border:none;display:inline">expires ' + until + ' · single use</span>';
+  btn.textContent = "New code";
 });
