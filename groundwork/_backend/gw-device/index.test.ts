@@ -344,3 +344,15 @@ Deno.test("unknown route -> 404; wrong method -> 405", async () => {
   assertEquals((await req("pair", { body: { code: "123456" } })).status, 404); // pairing codes are gone
   assertEquals((await req("register", { method: "GET" })).status, 405);
 });
+
+Deno.test("unregister: the phone's token is retired, frees a slot, and can't be used again", async () => {
+  reset();
+  const a = await pair();
+  for (let i = 0; i < 4; i++) await pair();
+  assertEquals((await register(OWNER_JWT)).status, 409); // 5 active: full
+  assertEquals((await req("unregister", { body: {}, token: a.token })).status, 200);
+  assert(devices.find((d) => d.token_hash === devices[0].token_hash)?.revoked_at);
+  assertEquals((await req("config", { method: "GET", token: a.token })).status, 401);
+  assertEquals((await register(OWNER_JWT)).status, 200); // a slot opened up
+  assertEquals((await req("unregister", { body: {}, token: a.token })).status, 200); // repeat: no-op
+});

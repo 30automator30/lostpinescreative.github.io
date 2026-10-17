@@ -16,6 +16,9 @@
 //                 body has code "device_revoked" means unpair and don't text —
 //                 a gateway 401 (e.g. a redeploy with Verify JWT on) must not
 //                 unpair every phone. Anything else -> text from cached config.
+//   POST /unregister  (device token) -> the owner turned Text-Back off on this
+//                 phone: retire its token (revoked_at) so it stops counting
+//                 toward the 5-phone limit and can never be used again.
 //   POST /events  [{external_id, kind, from_phone, at, texted}] (max 50)
 //                 One missed_call row per call (+ a textback row if texted)
 //                 in gw_messages, idempotent on external_id.
@@ -241,6 +244,20 @@ async function onConfig(dev: Device, req: Request, traceId: string, t0: number):
 }
 
 // ============================================================
+// /unregister
+// ============================================================
+async function onUnregister(dev: Device, traceId: string, t0: number): Promise<Response> {
+  const r = await fetchT(`${REST}/gw_devices?id=eq.${dev.id}&revoked_at=is.null`, {
+    method: "PATCH",
+    headers: { ...sbHeaders, Prefer: "return=minimal" },
+    body: JSON.stringify({ revoked_at: new Date().toISOString() }),
+  }, T_DB);
+  if (!r.ok) throw new Error(`unregister ${r.status}`);
+  trace({ traceId, route: "unregister", outcome: "ok", ms: Date.now() - t0 });
+  return json({ ok: true });
+}
+
+// ============================================================
 // /events
 // ============================================================
 // deno-lint-ignore no-explicit-any
@@ -303,7 +320,7 @@ Deno.serve(async (req) => {
   const traceId = crypto.randomUUID();
   const t0 = Date.now();
   const route = new URL(req.url).pathname.split("/").filter(Boolean).pop();
-  const want: Record<string, string> = { register: "POST", config: "GET", events: "POST" };
+  const want: Record<string, string> = { register: "POST", config: "GET", events: "POST", unregister: "POST" };
   if (!route || !want[route]) return json({ error: "not found" }, 404);
   if (req.method !== want[route]) return json({ error: "method not allowed" }, 405);
   if (Number(req.headers.get("content-length") ?? "0") > MAX_BODY_BYTES) return json({ error: "too large" }, 413);
@@ -319,11 +336,13 @@ Deno.serve(async (req) => {
     if (route === "register") return await onRegister(req, body, traceId, t0);
 
     const dev = await authDevice(req);
+    if (!dev && route === "unregister") return json({ ok: true }); // already gone: nothing to do
     if (!dev) {
       trace({ traceId, route, outcome: "unauthorized", ms: Date.now() - t0 });
       return json({ error: "device not paired", code: "device_revoked" }, 401);
     }
     if (route === "config") return await onConfig(dev, req, traceId, t0);
+    if (route === "unregister") return await onUnregister(dev, traceId, t0);
     return await onEvents(dev, body, traceId, t0);
   } catch (e) {
     console.error("device error", route, String(e));
