@@ -144,7 +144,7 @@ async function openClient(id) {
   }
   editingReportId = null; editingUpdateId = null;
   $("rep-cancel").style.display = "none"; $("rep-add").textContent = "Add report";
-  await Promise.all([loadInts(), loadMsgs(), loadReps(), loadSet(), loadUpdates(), loadFiles()]);
+  await Promise.all([loadInts(), loadMsgs(), loadReps(), loadSet(), loadUpdates(), loadFiles(), loadDevs()]);
 }
 
 /* ---------- activity timeline (studio posts; edit/delete) ---------- */
@@ -364,13 +364,39 @@ async function loadSet() {
   $("cd-greeting").value = (data && data.greeting) || ""; $("cd-forward").value = (data && data.forward_number) || "";
   $("cd-hours").value = (data && data.hours && data.hours.text) || ""; $("cd-after").value = (data && data.after_hours) || "";
   $("cd-textback").value = (data && data.textback_message) || "";
+  $("cd-knowledge").value = (data && data.knowledge) || "";
 }
 $("cd-set-save").addEventListener("click", async () => {
   const btn = $("cd-set-save"); btn.disabled = true;
   const payload = { client_id: current.id, greeting: $("cd-greeting").value.trim() || null, forward_number: $("cd-forward").value.trim() || null,
-    hours: { text: $("cd-hours").value.trim() || null }, after_hours: $("cd-after").value.trim() || null, textback_message: $("cd-textback").value.trim() || null };
+    hours: { text: $("cd-hours").value.trim() || null }, after_hours: $("cd-after").value.trim() || null, textback_message: $("cd-textback").value.trim() || null,
+    knowledge: $("cd-knowledge").value.trim() || null };
   const { error } = await sb.from("gw_settings").upsert(payload, { onConflict: "client_id" });
   btn.disabled = false;
   if (error) { toast(error.message, "err"); return; }
   toast("Setup saved.", "ok");
 });
+
+/* phones (Text-Back app) — the token hash is never selected */
+async function loadDevs() {
+  const { data, error } = await sb.from("gw_devices").select("id,label,app_version,last_seen_at,revoked_at,created_at")
+    .eq("client_id", current.id).order("revoked_at", { ascending: true, nullsFirst: true }).order("created_at", { ascending: false });
+  const box = $("cd-devs");
+  if (error) { box.innerHTML = '<div class="inline-note">Couldn\'t load phones.</div>'; toast(error.message, "err"); return; }
+  if (!data || !data.length) { box.innerHTML = '<div class="inline-note">No phones yet — the owner signs into the Lost Pines app on their Android phone and turns on Text-Back.</div>'; return; }
+  box.innerHTML = data.map((d) =>
+    '<div class="msg-item ' + (d.revoked_at ? "handled" : "") + '"><div class="msg-top"><span class="badge ' + (d.revoked_at ? "handled" : "new") + '">' +
+    (d.revoked_at ? "Revoked" : "Active") + "</span><b>" + escapeHtml(d.label || "Android phone") + "</b>" +
+    '<span class="spacer" style="flex:1"></span><span class="msg-when">' +
+    (d.revoked_at ? "revoked " + fmtDateTime(d.revoked_at) : "last seen " + (d.last_seen_at ? fmtDateTime(d.last_seen_at) : "never")) + "</span></div>" +
+    '<div class="msg-body">Registered ' + fmtDate(d.created_at) + (d.app_version ? " · app " + escapeHtml(d.app_version) : "") + "</div>" +
+    (d.revoked_at ? "" : '<div class="row" style="margin-top:8px;gap:6px"><button class="btn btn-danger btn-sm" data-dv="' + d.id + '">Revoke</button></div>') +
+    "</div>"
+  ).join("");
+  box.querySelectorAll("[data-dv]").forEach((b) => b.addEventListener("click", async () => {
+    if (!confirm("Revoke this phone? It stops texting missed callers on its next call. The owner can sign in again to set it up anew; to stop Text-Back for good, pause the client.")) return;
+    const { error } = await sb.from("gw_devices").update({ revoked_at: new Date().toISOString() }).eq("id", b.dataset.dv);
+    if (error) { toast(error.message, "err"); return; }
+    toast("Phone revoked.", "ok"); loadDevs();
+  }));
+}

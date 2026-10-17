@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>Open in the Lost Pines app — Lost Pines Creative</title>
+  <meta name="theme-color" content="#0b1210">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <!--
+    https://lostpinescreative.com/auth/app is the Lost Pines app's verified link
+    (/.well-known/assetlinks.json + apple-app-site-association). On a phone with
+    the app, the system opens the app directly and this page never loads. If it
+    does load, the app isn't there — so the one-time token is NOT used here; it's
+    dropped from the address bar and the person is pointed somewhere useful.
+  -->
+  <script>history.replaceState(null, "", location.pathname);</script>
+  <style>
+    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0; --accent:#4a9e7e; --accent-hover:#5fb896; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
+      line-height:1.6; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+    .card { width:100%; max-width:460px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:28px 24px; }
+    h1 { font-size:1.3rem; margin-bottom:10px; }
+    p, li { color:var(--text-muted); font-size:.95rem; }
+    p { margin-bottom:12px; }
+    ol { padding-left:20px; margin-bottom:14px; }
+    li { margin-bottom:6px; }
+    a { color:var(--accent); }
+    a:hover, a:focus-visible { color:var(--accent-hover); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>This link opens in the Lost Pines app</h1>
+    <p>It looks like the app isn't on this device, or the email was opened somewhere else.</p>
+    <ol>
+      <li>Open the email on the phone that has the <strong>Lost Pines</strong> app.</li>
+      <li>Tap the link again — the app opens and signs you in.</li>
+    </ol>
+    <p>Links work once and expire after an hour; if this one has, request a new email from the app's sign-in screen.</p>
+    <p>Resetting your password? If tapping again keeps bringing you here, use <strong>Forgot password</strong> on the <a href="/groundwork/portal/">Groundwork portal</a> or the <a href="/desmitdesigns/portal/">DeSmit Designs portal</a> instead — it's the same account, and the new password works in the app.</p>
+    <p>Prefer the web? Sign in to either portal with the same email.</p>
+  </main>
+</body>
+</html>
