@@ -38,6 +38,12 @@ Groundwork admin too.
     cache, but nothing syncs and nobody can register until it's fixed.
   - Tests: `deno test -A groundwork/_backend/gw-device/index.test.ts`
 
+- **Service requests** — `lpc_requests` (`009`) + `lpc-request-notify`
+  (**Verify JWT ON**, uses the existing `RESEND_API_KEY`; optional
+  `STUDIO_NOTIFY_EMAIL`, default ddesmit@lostpinescreative.com). The app or a
+  portal inserts the request, then calls the function, which emails the studio
+  once. Both brands; a DeSmit *new project* still goes to `dd_projects`.
+
 ## Deploy (owner steps)
 Because the Supabase MCP must point at `ekogelnbhggyrychfrta`:
 
@@ -68,6 +74,7 @@ anon key (same project) and the `gw-assistant` endpoint — nothing to fill.
 | `gw_inquiries` | public leads captured by the gw-assistant |
 | `gw_reception_lines` | admin-only phone wiring per client (Vapi number, Cal.com event type, on/off) — `006` |
 | `gw_reception_lines.ai_enabled` / `gw_settings.textback_app_enabled` | the owner's own switches, read via `gw_my_services()` and set via `gw_set_service_enabled()` — `008` |
+| `lpc_requests` | service requests from the app/portals, both brands (customer files own, admin manages) — `009` |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit
