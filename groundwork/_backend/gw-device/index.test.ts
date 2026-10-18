@@ -273,6 +273,18 @@ Deno.test("config: client's Twilio receptionist line is on -> phone doesn't text
   assertEquals(cfg.rules.disabled_reason, null);
 });
 
+Deno.test("config: receptionist line whose texting isn't approved yet -> the phone keeps texting", async () => {
+  reset();
+  const { token } = await pair();
+  lines = [{ client_id: CLIENT, enabled: true, texting_enabled: false }];
+  let cfg = await (await req("config", { method: "GET", token })).json();
+  assertEquals(cfg.rules.enabled, true);
+  assertEquals(cfg.rules.disabled_reason, null);
+  lines[0].texting_enabled = true;
+  cfg = await (await req("config", { method: "GET", token })).json();
+  assertEquals(cfg.rules.disabled_reason, "twilio_line");
+});
+
 Deno.test("config: DB down -> 503, never 401 (the app must keep texting, not unpair)", async () => {
   reset();
   const { token } = await pair();

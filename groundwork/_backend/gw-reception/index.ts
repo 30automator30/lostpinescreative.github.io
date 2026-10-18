@@ -190,6 +190,7 @@ type Line = {
   cal_event_type_id: number | null; booking_url: string | null; timezone: string;
   voice_id: string | null; enabled: boolean;
   ai_enabled?: boolean; // 008: the owner's AI switch; off = fallback + text-back. Absent = on.
+  texting_enabled?: boolean; // 012: off until the number is approved for texting. Absent = on.
   business_name: string; client_status: string; settings: Settings;
   alert_email: string | null; // the client's contact email (else owner email) for lead alerts
 };
@@ -268,8 +269,10 @@ ${canBook(line)
 5. Otherwise call take_message with a clear summary of what they need.`
   : `4. Call take_message with a clear summary of what they need. You can't book
    appointments directly — say the owner will reach out to set a time.`}
-Before ending, tell them what happens next (they'll get a text from this number
-and the owner will follow up), ask if there's anything else, then end the call.
+Before ending, tell them what happens next (${texts(line)
+    ? "they'll get a text from this number and the owner will follow up"
+    : "the owner will call them back — don't promise a text, none will be sent"}), ask if
+there's anything else, then end the call.
 
 HOURS: ${clip(s.hours?.text) || "not specified"}
 AFTER HOURS: ${clip(s.after_hours) || "Same process — take a message and the owner follows up next business day."}
@@ -394,14 +397,16 @@ function receptionist(line: Line, caller: string | null) {
 }
 
 // Used when the agent is off, over its ceiling, or the line can't be resolved.
-// The caller still hears a human-sounding apology; end-of-call still texts back.
-// Only promise a text when end-of-call will actually send one.
-function fallback(name: string | null, willText: boolean) {
+// The caller still hears a human-sounding apology. Promise only what end-of-call
+// will actually do: a text, a call back (the owner still gets the email), or nothing.
+function fallback(name: string | null, then: "text" | "callback" | "none") {
   const who = name ? `${name}` : "us";
   return {
     name: "Fallback desk",
-    firstMessage: willText
+    firstMessage: then === "text"
       ? `Thanks for calling ${who}. Sorry we missed you — we'll text you right back at this number. Goodbye!`
+      : then === "callback"
+      ? `Thanks for calling ${who}. Sorry we missed you — we'll call you back soon. Goodbye!`
       : `Thanks for calling ${who}. Sorry we missed you — please try again a little later. Goodbye!`,
     endCallPhrases: ["Goodbye"],
     model: {
@@ -422,6 +427,9 @@ function fallback(name: string | null, willText: boolean) {
 // A cancelled/paused client or a switched-off line costs nothing: no texts, no alerts.
 const lineLive = (line: Line) => line.enabled && line.client_status !== "cancelled" &&
   line.client_status !== "paused";
+// Texting needs carrier approval (A2P 10DLC / toll-free verification); until the
+// line's switch is on, nothing is texted or promised — the owner is emailed instead.
+const texts = (line: Line) => line.texting_enabled !== false;
 
 // deno-lint-ignore no-explicit-any
 async function onAssistantRequest(msg: any, traceId: string, t0: number): Promise<Response> {
@@ -439,7 +447,8 @@ async function onAssistantRequest(msg: any, traceId: string, t0: number): Promis
       reason: !line ? "no_line" : !line.enabled ? "line_off" : aiOff ? "ai_off_by_owner" : !enabled ? "disabled"
         : !budget ? "ceiling" : "cancelled",
       ms: Date.now() - t0 });
-    return json({ assistant: fallback(line?.business_name ?? null, !!line && lineLive(line)) });
+    const then = !line || !lineLive(line) ? "none" : texts(line) ? "text" : "callback";
+    return json({ assistant: fallback(line?.business_name ?? null, then) });
   }
   trace({ traceId, type: "assistant-request", outcome: "ok", booking: canBook(line), ms: Date.now() - t0 });
   return json({ assistant: receptionist(line, caller) });
@@ -584,7 +593,8 @@ async function bookAppointment(
     from_phone: phone,
     ...(existing?.body ? {} : { body: `Booked: ${clip(args.notes, 400) || "appointment"}` }),
   }, { booking: { start: startIso, uid: d?.data?.uid ?? null } });
-  return `Booked for ${fmtWhen(startIso, line.timezone)}. Confirm it to the caller and tell them a text confirmation is coming.`;
+  return `Booked for ${fmtWhen(startIso, line.timezone)}. Confirm it to the caller` +
+    (texts(line) ? " and tell them a text confirmation is coming." : ".");
 }
 
 async function takeMessage(
@@ -600,7 +610,9 @@ async function takeMessage(
     from_phone: toE164(args.callback_number) ?? existing?.from_phone ?? caller,
     body,
   }, args.urgent === true ? { urgent: true } : {});
-  return "Message saved. Tell the caller the owner will get it right away and they'll get a text from this number.";
+  return texts(line)
+    ? "Message saved. Tell the caller the owner will get it right away and they'll get a text from this number."
+    : "Message saved. Tell the caller the owner will get it right away and will call them back.";
 }
 
 // deno-lint-ignore no-explicit-any
@@ -827,8 +839,9 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
   // owner a text-back (a STOP reply would silence every future lead alert).
   const alertTo = toE164(line.owner_alert_number) ?? toE164(s.forward_number);
   const live = lineLive(line);
+  const sms = live && texts(line);
   let texted = false, repeat = false;
-  if (live && isNanp(caller) && caller !== alertTo) {
+  if (sms && isNanp(caller) && caller !== alertTo) {
     if (!(await textbackAllowed(caller))) repeat = true;
     else if (await claimTextback(line, callId, caller, textback)) {
       texted = await sendSms(caller, textback, line.ai_number);
@@ -838,7 +851,7 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
   // Alert the owner (real calls only — a silent hang-up with no caller ID is noise;
   // so are repeat silent calls from a number already texted today).
   let alerted = false;
-  if (live && isNanp(alertTo) && (talked || (caller && !repeat && caller !== alertTo))) {
+  if (sms && isNanp(alertTo) && (talked || (caller && !repeat && caller !== alertTo))) {
     const who = existing?.from_name ? `${existing.from_name} (${existing.from_phone ?? caller ?? "no number"})`
       : (caller ?? "Blocked number");
     const what = booking?.start ? `BOOKED ${fmtWhen(booking.start, line.timezone)}`
@@ -850,6 +863,13 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
 
   // Email the owner too — works before texting is set up, and is easy to miss
   // nothing in. Same calls as the text alert; once per call (meta.emailed).
+  // Without texting there's no per-number text count, so spot repeat silent
+  // calls (robocall hang-ups) from the inbox instead.
+  if (live && !sms && !talked && caller) {
+    const dayAgo = new Date(Date.now() - 86_400_000).toISOString();
+    repeat = await countRows(`client_id=eq.${encodeURIComponent(line.client_id)}&kind=eq.missed_call` +
+      `&from_phone=eq.${encodeURIComponent(caller)}&created_at=gte.${dayAgo}`).then((n) => n > 1, () => false);
+  }
   let emailed = existing?.meta?.emailed === true;
   const emailTo = clip(line.alert_email, 254);
   if (live && !emailed && s.email_alerts !== false && EMAIL_RE.test(emailTo) &&
@@ -910,7 +930,7 @@ async function onInboundSms(req: Request, traceId: string, t0: number): Promise<
     }),
   }, T_DB).catch(() => null);
   const fresh = !!ins?.ok && ((await ins.json().catch(() => [])) as unknown[]).length > 0;
-  if (lineLive(line) && fresh && recent < RL_REPLY_FWD_HOUR && isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
+  if (lineLive(line) && texts(line) && fresh && recent < RL_REPLY_FWD_HOUR && isNanp(alertTo) && !/^(stop|unsubscribe|cancel|end|quit|stopall)$/i.test(text)) {
     await sendSms(alertTo, `${line.business_name} text from ${from}: ${text.slice(0, 300)}`, line.ai_number);
   }
   trace({ traceId, type: "sms", outcome: "ok", ms: Date.now() - t0 });
@@ -951,7 +971,7 @@ Deno.serve(async (req) => {
     console.error("reception error", msg?.type, String(e));
     trace({ traceId, type: msg?.type, outcome: "error", ms: Date.now() - t0 });
     // assistant-request must still get an answer or the caller hears dead air.
-    if (msg?.type === "assistant-request") return json({ assistant: fallback(null, false) });
+    if (msg?.type === "assistant-request") return json({ assistant: fallback(null, "none") });
     return json({}, 500); // non-2xx -> Vapi retries (backoffPlan); handlers are idempotent
   }
 });
