@@ -41,17 +41,19 @@
     <li><strong>Your account:</strong> your email address and password (stored only as a secure hash by our sign-in provider), and the name and phone number you add on the Account screen.</li>
     <li><strong>Your business records (Groundwork):</strong> the calls, voicemails, missed calls and leads your AI receptionist or phone records for your business — including the caller's name and number, a short summary and, for receptionist calls, a transcript and recording link — plus your reception settings, requests you send us, and the services we set up for you.</li>
     <li><strong>Your projects (DeSmit Designs):</strong> project details, quotes, status updates, notes, and files or photos you or we add.</li>
+    <li><strong>Call alerts (if you turn them on):</strong> a push token — a random identifier Apple or Google gives the app so we can send notifications to this phone — with the phone type (iPhone or Android) and app version. It's removed when you sign out.</li>
     <li><strong>Text-Back (Android version we install for you only):</strong> to text people who call you and don't reach you, the app reads your phone's call log and checks your contacts <em>on your phone</em>. Only missed-call events leave the phone: the caller's number, the time, and whether a text was sent. Your call log and contacts are never uploaded. Texts go out from your own number through your phone. Text-Back is not part of the iPhone app or the Play Store app.</li>
   </ul>
-  <p>The app does <strong>not</strong> use your location, does not access your camera, microphone or photo library on iPhone, and contains <strong>no advertising, analytics or tracking</strong> software. We don't track you across other companies' apps or websites.</p>
+  <p>The app does <strong>not</strong> use your location, does not access your camera, microphone or photo library on iPhone, asks to send notifications only when you turn call alerts on, and contains <strong>no advertising, analytics or tracking</strong> software. We don't track you across other companies' apps or websites.</p>
 
   <h2>3. How we use it</h2>
-  <p>Only to provide the service you signed up for: signing you in, showing your business's records and projects, sending you alerts about new calls (by email, and by text where your plan includes it), handling your requests, and keeping the service secure. We do not sell your information or use it for advertising.</p>
+  <p>Only to provide the service you signed up for: signing you in, showing your business's records and projects, sending you alerts about new calls (by email, by notification on your phone if you turn call alerts on, and by text where your plan includes it), handling your requests, and keeping the service secure. We do not sell your information or use it for advertising.</p>
 
   <h2>4. Who processes it for us</h2>
   <ul>
     <li><strong>Supabase</strong> — our database, sign-in and file storage (encrypted in transit; row-level security means each customer can only see their own records).</li>
     <li><strong>Resend</strong> — delivers sign-in, password and new-call alert emails.</li>
+    <li><strong>Expo</strong>, <strong>Apple</strong> (Apple Push Notification service) and <strong>Google</strong> (Firebase Cloud Messaging) — deliver call-alert notifications to your phone. A notification carries the caller's name or number and a short summary of the call, so it can show on your lock screen; you can hide previews in your phone's notification settings.</li>
     <li>For the AI receptionist and text-back on our phone lines: <strong>Twilio</strong>, <strong>Vapi</strong>, <strong>Anthropic</strong> and <strong>Cal.com</strong>, as described in §7 of our <a href="/privacy.html">website privacy policy</a>.</li>
   </ul>
   <p>They process information only to provide the service to us. We share information otherwise only if the law requires it.</p>
@@ -63,7 +65,7 @@
   <p>Your account information is kept until you delete your account. Business records (calls, messages, invoices and project history) are kept as part of the service while it's active. Call recordings and full transcripts are deleted after 180 days.</p>
 
   <h2>7. Deleting your account and your choices</h2>
-  <p>You can delete your account in the app (<strong>Account ▸ Delete account</strong>) or on the web at <a href="/delete-account.html">lostpinescreative.com/delete-account.html</a>. Deleting removes your login, your profile and your own DeSmit Designs projects and files. Records that belong to a business we serve (such as its call history) are detached from your login and kept for that business. You can turn off call-alert emails in Setup, switch the AI receptionist and Text-Back off, and ask us for a copy of, or a correction to, your information.</p>
+  <p>You can delete your account in the app (<strong>Account ▸ Delete account</strong>) or on the web at <a href="/delete-account.html">lostpinescreative.com/delete-account.html</a>. Deleting removes your login, your profile and your own DeSmit Designs projects and files. Records that belong to a business we serve (such as its call history) are detached from your login and kept for that business. You can turn off call-alert emails in Setup, turn off call-alert notifications in your phone's Settings, switch the AI receptionist and Text-Back off, and ask us for a copy of, or a correction to, your information.</p>
 
   <h2>8. Children</h2>
   <p>The app is for business customers and is not directed to children under 13. We don't knowingly collect information from children.</p>

@@ -26,6 +26,7 @@
 //           (optional) TWILIO_MESSAGING_SERVICE_SID   A2P-registered sender
 //           (optional) CALCOM_API_KEY                 enables booking
 //           RESEND_API_KEY (shared with the portal emails) — lead alert emails;
+//           (optional) EXPO_ACCESS_TOKEN — push alerts to the owner's app (015);
 //           (optional) INVITE_FROM sender, RL_EMAIL_DAY per-line daily cap
 // Injected: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 // Deploy with Verify JWT OFF (called by Vapi and Twilio, not a signed-in user).
@@ -42,6 +43,8 @@ const CAL_KEY = Deno.env.get("CALCOM_API_KEY") ?? "";
 const RESEND_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const EMAIL_FROM = Deno.env.get("INVITE_FROM") ?? "Lost Pines Creative <noreply@lostpinescreative.com>";
 const PORTAL_URL = "https://lostpinescreative.com/groundwork/portal/";
+const EXPO_TOKEN = Deno.env.get("EXPO_ACCESS_TOKEN") ?? ""; // only if Expo "enhanced push security" is on
+const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
 
 const FN_NAME = "gw-reception";
 const FN_URL = `${SB_URL}/functions/v1/${FN_NAME}`;
@@ -193,6 +196,7 @@ type Line = {
   texting_enabled?: boolean; // 012: off until the number is approved for texting. Absent = on.
   business_name: string; client_status: string; settings: Settings;
   alert_email: string | null; // the client's contact email (else owner email) for lead alerts
+  owner_id: string | null;    // the owner's login — their phones get push alerts (015)
 };
 
 // deno-lint-ignore no-explicit-any
@@ -204,7 +208,7 @@ async function lookupLine(msg: any): Promise<Line | null> {
   if (id) ors.push(`vapi_phone_number_id.eq.${id}`);
   if (num) ors.push(`ai_number.eq.${encodeURIComponent(num)}`);
   if (!ors.length) return null;
-  const sel = "*,client:gw_clients(business_name,status,contact_email,owner_email,settings:gw_settings(*))";
+  const sel = "*,client:gw_clients(business_name,status,owner_id,contact_email,owner_email,settings:gw_settings(*))";
   const r = await fetchT(`${REST}/gw_reception_lines?select=${sel}&or=(${ors.join(",")})&limit=1`,
     { headers: sbHeaders }, T_DB);
   if (!r.ok) throw new Error(`lookup ${r.status}`);
@@ -218,6 +222,7 @@ async function lookupLine(msg: any): Promise<Line | null> {
     client_status: row.client.status,
     settings: s ?? {},
     alert_email: row.client.contact_email || row.client.owner_email || null,
+    owner_id: row.client.owner_id ?? null,
   };
 }
 
@@ -789,6 +794,40 @@ async function markTextbackSent(callId: string, sent: boolean): Promise<void> {
   } catch (_e) { /* the report just won't count it */ }
 }
 
+// ── Push alert to the owner's phones (Expo push service → APNs / FCM). The
+// notification shows on the lock screen, so it carries the same as the text
+// alert: who called and what they need. Never logged.
+async function sendPush(ownerId: string, title: string, body: string, clientId: string): Promise<boolean> {
+  const tr = await fetchT(`${REST}/lpc_push_tokens?select=token&user_id=eq.${encodeURIComponent(ownerId)}`,
+    { headers: sbHeaders }, T_DB).catch(() => null);
+  if (!tr?.ok) return false;
+  const tokens = ((await tr.json().catch(() => [])) as { token: string }[]).map((t) => t.token).slice(0, 10);
+  if (!tokens.length) return false;
+  try {
+    const r = await fetchT(EXPO_PUSH_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json",
+        ...(EXPO_TOKEN ? { Authorization: `Bearer ${EXPO_TOKEN}` } : {}) },
+      body: JSON.stringify(tokens.map((to) => ({
+        to, title, body, sound: "default", priority: "high", channelId: "calls",
+        data: { url: "/inbox", client_id: clientId },
+      }))),
+    }, T_EXT);
+    if (!r.ok) { console.error("expo push error", r.status); return false; }
+    // deno-lint-ignore no-explicit-any
+    const tickets: any[] = (await r.json().catch(() => ({})))?.data ?? [];
+    const gone = tokens.filter((_t, i) => tickets[i]?.details?.error === "DeviceNotRegistered");
+    for (const t of gone) { // app uninstalled — stop sending to it
+      await fetchT(`${REST}/lpc_push_tokens?token=eq.${encodeURIComponent(t)}`,
+        { method: "DELETE", headers: sbHeaders }, T_DB).catch(() => {});
+    }
+    return tickets.some((t) => t?.status === "ok");
+  } catch (e) {
+    console.error("expo push failed", String(e));
+    return false;
+  }
+}
+
 // deno-lint-ignore no-explicit-any
 async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Response> {
   const callId = clip(msg?.call?.id, 100);
@@ -898,11 +937,22 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     if (emailed) await upsertCall(callId, line.client_id, {}, { emailed: true });
   }
 
+  // Push to the owner's app — same calls as the alerts above, once per call.
+  let pushed = existing?.meta?.pushed === true;
+  if (live && !pushed && line.owner_id && (talked || (caller && !repeat && caller !== alertTo))) {
+    const who = existing?.from_name ? oneLine(existing.from_name, 60) : fmtPhone(existing?.from_phone ?? caller);
+    const what = booking?.start ? `Booked ${fmtWhen(booking.start, line.timezone)}`
+      : missed ? "Missed call — no message" : oneLine(body, 160);
+    pushed = await sendPush(line.owner_id,
+      `${existing?.meta?.urgent === true ? "URGENT: " : ""}New call: ${who}`, what, line.client_id);
+    if (pushed) await upsertCall(callId, line.client_id, {}, { pushed: true });
+  }
+
   // Mark done LAST, so a retry after a failed send still texts (the text-back
   // claim row keeps the caller from ever getting two).
   await upsertCall(callId, line.client_id, {}, { reported: true });
 
-  trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted, emailed,
+  trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted, emailed, pushed,
     cli_missing: !!caller && caller === alertTo,
     ms: Date.now() - t0 });
   return json({});
