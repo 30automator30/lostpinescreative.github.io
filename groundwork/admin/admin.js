@@ -296,16 +296,50 @@ async function loadInts() {
     '<button class="int-move" data-idn="' + i.id + '"' + (idx === last ? " disabled" : "") + ' title="Move down">▼</button>' +
     '<select data-st="' + i.id + '">' + ["planned","in_progress","live","paused"].map((s) => '<option value="' + s + '"' + (s === i.status ? " selected" : "") + ">" + INT_STATUS[s] + "</option>").join("") + "</select>" +
     (i.url ? '<a href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">open</a>' : "") +
-    '<button class="btn btn-danger btn-sm" data-del-int="' + i.id + '">✕</button></div>'
+    '<button class="btn btn-ghost btn-sm" data-edit-int="' + i.id + '">Edit</button>' +
+    '<button class="btn btn-danger btn-sm" data-del-int="' + i.id + '" aria-label="Delete ' + escapeHtml(i.label) + '">✕</button></div>' +
+    (i.notes ? '<div class="inline-note" style="margin:-2px 0 6px">' + escapeHtml(i.notes) + "</div>" : "")
   ).join("");
+  box.querySelectorAll("[data-edit-int]").forEach((b) => b.addEventListener("click", () => editInt(b.dataset.editInt)));
   box.querySelectorAll("[data-st]").forEach((sel) => sel.addEventListener("change", async () => {
     await sb.from("gw_integrations").update({ status: sel.value }).eq("id", sel.dataset.st); toast("Updated.", "ok");
   }));
   box.querySelectorAll("[data-del-int]").forEach((b) => b.addEventListener("click", async () => {
+    const i = currentInts.find((x) => x.id === b.dataset.delInt);
+    if (!confirm("Remove “" + (i ? i.label : "this item") + "” from the client's system list?")) return;
     await sb.from("gw_integrations").delete().eq("id", b.dataset.delInt); loadInts();
   }));
   box.querySelectorAll("[data-iu]").forEach((b) => b.addEventListener("click", () => moveInt(b.dataset.iu, -1)));
   box.querySelectorAll("[data-idn]").forEach((b) => b.addEventListener("click", () => moveInt(b.dataset.idn, 1)));
+}
+
+/* What the client sees in "Your system": label, the link "Open" goes to
+   (a dashboard, the Snipcart admin, tel:+1… for the receptionist line), and a
+   one-line note shown under it. */
+const SAFE_LINK = /^(https:\/\/|tel:\+?[0-9]|mailto:)/i;
+function editInt(id) {
+  const i = currentInts.find((x) => x.id === id);
+  const row = document.querySelector('[data-edit-int="' + id + '"]')?.closest(".row-line");
+  if (!i || !row) return;
+  row.outerHTML =
+    '<div class="int-edit" style="display:grid;gap:6px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+    '<input type="text" id="ie-label" aria-label="Name" value="' + escapeHtml(i.label || "") + '">' +
+    '<input type="url" id="ie-url" aria-label="Link" placeholder="https://… or tel:+1…  (blank = no Open button)" value="' + escapeHtml(i.url || "") + '">' +
+    '<input type="text" id="ie-notes" aria-label="Note for the client" placeholder="Note the client sees (optional)" value="' + escapeHtml(i.notes || "") + '">' +
+    '<div class="row-line" style="gap:6px"><button class="btn btn-primary btn-sm" id="ie-save">Save</button>' +
+    '<button class="btn btn-ghost btn-sm" id="ie-cancel">Cancel</button></div></div>';
+  $("ie-cancel").addEventListener("click", loadInts);
+  $("ie-save").addEventListener("click", async () => {
+    const label = $("ie-label").value.trim();
+    const url = $("ie-url").value.trim();
+    if (!label) { toast("Give it a name.", "err"); return; }
+    if (url && !SAFE_LINK.test(url)) { toast("Links must start with https://, tel: or mailto:.", "err"); return; }
+    const { error } = await sb.from("gw_integrations")
+      .update({ label, url: url || null, notes: $("ie-notes").value.trim() || null }).eq("id", id);
+    if (error) { toast(error.message, "err"); return; }
+    toast("Saved.", "ok"); loadInts();
+  });
+  $("ie-label").focus();
 }
 
 async function moveInt(id, delta) {
@@ -322,7 +356,9 @@ async function moveInt(id, delta) {
 }
 $("int-add").addEventListener("click", async () => {
   const label = $("int-label").value.trim(); if (!label) return;
-  const { error } = await sb.from("gw_integrations").insert({ client_id: current.id, label, status: $("int-status").value, url: $("int-url").value.trim() || null });
+  const url = $("int-url").value.trim();
+  if (url && !SAFE_LINK.test(url)) { toast("Links must start with https://, tel: or mailto:.", "err"); return; }
+  const { error } = await sb.from("gw_integrations").insert({ client_id: current.id, label, status: $("int-status").value, url: url || null });
   if (error) { toast(error.message, "err"); return; }
   $("int-label").value = ""; $("int-url").value = ""; loadInts();
 });
