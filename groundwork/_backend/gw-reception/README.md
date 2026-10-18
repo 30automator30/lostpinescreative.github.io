@@ -35,14 +35,20 @@ Caller replies by text ─────▶ gw-reception?src=twilio-sms ▸ inbox 
   portal ("Email me new calls"). Needs `RESEND_API_KEY` (already set for the portal
   emails). The portal and admin also show a new-call count, a banner, the count in
   the tab title, and a pop-up when a call arrives while they're open.
+- **Texting switch** (`012_gw_texting_switch.sql`, per line, **off by default**): carriers
+  block business texts until the number is registered (A2P 10DLC, or toll-free
+  verification for 8xx). While it's off the AI says the owner will call back, no
+  text-back / text alert is sent or promised, the owner gets the email, and the owner's
+  Text-Back phone app may text instead. Once approved:
+  `update public.gw_reception_lines set texting_enabled = true where ai_number = '+1…';`
 - Disclosure is enforced: the greeting always says it's an AI and the call may be
   recorded, even if the client's custom greeting doesn't.
 
-Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (21 cases: auth,
+Tests: `deno test -A groundwork/_backend/gw-reception/index.test.ts` (24 cases: auth,
 assistant build, fallback, booked call end-to-end, missed call, retries/idempotency,
 non-US/Caribbean blocking, per-number text cap, booking abuse, signed + replayed SMS replies,
 DB-blip retry, switched-off line, missing caller ID, blocked-ID booking, owner's AI switch,
-Text-Back app allowance, lead emails: once per call, escaping, off switch / no address, daily cap).
+Text-Back app allowance, lead emails: once per call, escaping, off switch / no address, daily cap, texting switch).
 
 ---
 

@@ -195,7 +195,7 @@ type Device = {
 async function authDevice(req: Request): Promise<Device | null> {
   const m = /^Bearer\s+([\w-]{20,200})$/.exec(req.headers.get("authorization") ?? "");
   if (!m) return null;
-  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message,textback_app_enabled),line:gw_reception_lines(enabled))";
+  const sel = "id,client_id,revoked_at,client:gw_clients(business_name,status,settings:gw_settings(textback_message,textback_app_enabled),line:gw_reception_lines(*))";
   const r = await fetchT(`${REST}/gw_devices?select=${sel}&token_hash=eq.${await sha256Hex(m[1])}&limit=1`,
     { headers: sbHeaders }, T_DB);
   if (!r.ok) throw new Error(`device lookup ${r.status}`);
@@ -209,7 +209,12 @@ async function authDevice(req: Request): Promise<Device | null> {
     business_name: row.client.business_name, client_status: row.client.status,
     textback_message: s?.textback_message ?? null,
     switched_off: s?.textback_app_enabled === false,
-    twilio_line_on: one(row.client.line)?.enabled === true,
+    // 012: a line whose texting isn't approved yet sends no text-backs, so the
+    // phone keeps texting (absent column = texting on, the pre-012 behaviour).
+    twilio_line_on: (() => {
+      const l = one(row.client.line);
+      return l?.enabled === true && l?.texting_enabled !== false;
+    })(),
   };
 }
 

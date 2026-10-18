@@ -17,7 +17,7 @@ const CLIENT = "c-1";
 const line = {
   client_id: CLIENT, vapi_phone_number_id: "pn_1", ai_number: "+15125550100",
   owner_alert_number: null, cal_event_type_id: 42, booking_url: "https://cal.com/desmit",
-  timezone: "America/Chicago", voice_id: null, enabled: true,
+  timezone: "America/Chicago", voice_id: null, enabled: true, texting_enabled: true,
   client: { business_name: "DeSmit Designs", status: "active",
     contact_email: "owner@desmit.example", owner_email: "login@desmit.example",
     settings: { email_alerts: true as boolean | undefined, greeting: null, forward_number: "(408) 348-7284", textback_message: null,
@@ -123,7 +123,7 @@ const call = (id: string, customer = "+15125551234") =>
 const reset = () => {
   messages = []; sms = []; emails = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
   line.client.settings.email_alerts = true;
-  line.enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
+  line.enabled = true; line.texting_enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
 };
 
 Deno.test("rejects requests without the Vapi bearer", async () => {
@@ -421,4 +421,39 @@ Deno.test("daily email cap per line; a silent hang-up with no caller ID isn't em
   await vapi({ type: "end-of-call-report", call: { id: "f5", phoneNumberId: "pn_1", customer: {} },
     endedReason: "customer-ended-call", artifact: { messages: [] }, analysis: {} });
   assertEquals(emails.length, 0);
+});
+
+// ---------- texting switch (012) ----------
+Deno.test("texting not approved yet: no texts sent or promised, owner still emailed", async () => {
+  reset();
+  line.texting_enabled = false;
+  const sys = (await (await vapi({ type: "assistant-request", call: call("x1") })).json())
+    .assistant.model.messages[0].content as string;
+  assertMatch(sys, /owner will call them back — don't promise a text/);
+  assert(!/they'll get a text/.test(sys));
+  const saved = (await (await vapi({ type: "tool-calls", call: call("x1"),
+    toolCallList: [{ id: "t1", type: "function", function: { name: "take_message",
+      arguments: JSON.stringify({ message: "Quote please" }) } }] })).json()).results[0].result as string;
+  assertMatch(saved, /will call them back\.$/);
+  await report("x1", { summary: "Quote please" });
+  assertEquals(sms.length, 0);
+  assert(!messages.some((m) => m.kind === "textback"), "no text-back is even claimed");
+  assertEquals(emails.length, 1);
+});
+
+Deno.test("texting off + AI off: the fallback promises a call back, not a text", async () => {
+  reset();
+  line.texting_enabled = false;
+  aiEnabled = false;
+  const a = (await (await vapi({ type: "assistant-request", call: call("x2") })).json()).assistant;
+  assertMatch(a.firstMessage, /we'll call you back soon/);
+});
+
+Deno.test("texting off: repeat silent hang-ups from one number are emailed once a day", async () => {
+  reset();
+  line.texting_enabled = false;
+  const silent = (id: string) => vapi({ type: "end-of-call-report", call: call(id, "+15125559999"),
+    endedReason: "customer-ended-call", artifact: { messages: [] }, analysis: {} });
+  await silent("x3"); await silent("x4");
+  assertEquals(emails.length, 1);
 });
