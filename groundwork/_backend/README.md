@@ -95,7 +95,8 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
    ```
 3. **Verification files** (`/.well-known/`, deploy with the site) — replace the placeholders:
    - `apple-app-site-association`: done — Team ID `Z36DKWF4D5`.
-   - `assetlinks.json`: the SHA-256 signing fingerprints — `eas credentials -p android`
+   - `assetlinks.json`: done for `android-direct` (EAS keystore SHA-256). Add a
+     `com.lostpinescreative.client` entry when the Play build exists. Get the SHA-256 signing fingerprints from `eas credentials -p android`
      for each profile (`android-play` upload key, `android-direct`), plus Play
      Console ▸ App integrity ▸ App signing key for the Play build.
    - Check: `https://lostpinescreative.com/.well-known/assetlinks.json` and

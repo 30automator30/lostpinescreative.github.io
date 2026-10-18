@@ -3,19 +3,10 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.lostpinescreative.client",
-      "sha256_cert_fingerprints": [
-        "REPLACE_WITH_PLAY_APP_SIGNING_SHA256",
-        "REPLACE_WITH_EAS_UPLOAD_KEY_SHA256"
-      ]
-    }
-  },
-  {
-    "relation": ["delegate_permission/common.handle_all_urls"],
-    "target": {
-      "namespace": "android_app",
       "package_name": "com.lostpinescreative.client.direct",
-      "sha256_cert_fingerprints": ["REPLACE_WITH_EAS_DIRECT_BUILD_SHA256"]
+      "sha256_cert_fingerprints": [
+        "C9:44:A2:E0:ED:17:CA:68:55:4F:35:2E:A3:9E:97:EC:6B:BD:F6:21:99:55:6F:F0:78:D1:82:05:A4:CC:33:8A"
+      ]
     }
   }
 ]
