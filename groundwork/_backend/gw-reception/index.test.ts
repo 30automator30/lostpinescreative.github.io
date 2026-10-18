@@ -29,6 +29,7 @@ let emails: Array<{ to: string[]; subject: string; html: string; text: string }>
 let calBookings: Array<Record<string, unknown>> = [];
 let aiEnabled = true;
 let failNextTextbackClaim = false;
+let twilioDown = false;
 
 const future = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
 const SLOT1 = future(24), SLOT2 = future(26);
@@ -64,6 +65,12 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
           return ok([], { "content-range": `0-0/${n}` });
         }
         return ok(messages.filter((m) => m.external_id === eq("external_id")));
+      }
+      if (method === "PATCH") {
+        const id = url.searchParams.get("external_id")?.replace(/^eq\./, "");
+        const patch = JSON.parse(String(init!.body));
+        messages = messages.map((m) => (m.external_id === id ? { ...m, ...patch } : m));
+        return ok([]);
       }
       const row = JSON.parse(String(init!.body));
       if (failNextTextbackClaim && String(row.external_id).endsWith(":textback")) {
@@ -102,6 +109,7 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
   }
   if (url.host === "api.twilio.com") {
     const f = new URLSearchParams(String(init!.body));
+    if (twilioDown) return new Response("{}", { status: 400 });
     sms.push({ To: f.get("To")!, Body: f.get("Body")!, From: f.get("From") });
     return ok({ sid: "SM1" });
   }
@@ -121,6 +129,7 @@ const vapi = (message: unknown, auth = "Bearer s3cret") =>
 const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
 const reset = () => {
+  twilioDown = false;
   messages = []; sms = []; emails = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
   line.client.settings.email_alerts = true;
   line.enabled = true; line.texting_enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
@@ -456,4 +465,16 @@ Deno.test("texting off: repeat silent hang-ups from one number are emailed once 
     endedReason: "customer-ended-call", artifact: { messages: [] }, analysis: {} });
   await silent("x3"); await silent("x4");
   assertEquals(emails.length, 1);
+});
+
+Deno.test("the text-back row records whether Twilio actually sent it (monthly reports count sent only)", async () => {
+  reset();
+  await report("s1", { talked: false });
+  const ok = messages.find((m) => m.external_id === "s1:textback")!;
+  assertEquals((ok.meta as Record<string, unknown>).sent, true);
+  reset();
+  twilioDown = true;
+  await report("s2", { customer: "+15125550177", talked: false });
+  const failed = messages.find((m) => m.external_id === "s2:textback")!;
+  assertEquals((failed.meta as Record<string, unknown>).sent, false);
 });

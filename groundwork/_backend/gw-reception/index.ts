@@ -776,6 +776,19 @@ async function sendEmail(to: string, m: { subject: string; html: string; text: s
   }
 }
 
+// Record whether Twilio accepted the text, so monthly reports count texts that
+// went out, not attempts (a trial number or an unapproved campaign fails).
+// Best effort: the call itself is already saved.
+async function markTextbackSent(callId: string, sent: boolean): Promise<void> {
+  try {
+    await fetchT(`${REST}/gw_messages?external_id=eq.${encodeURIComponent(`${callId}:textback`)}`, {
+      method: "PATCH",
+      headers: { ...sbHeaders, Prefer: "return=minimal" },
+      body: JSON.stringify({ meta: { via: FN_NAME, vapi_call_id: callId, sent } }),
+    }, T_DB);
+  } catch (_e) { /* the report just won't count it */ }
+}
+
 // deno-lint-ignore no-explicit-any
 async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Response> {
   const callId = clip(msg?.call?.id, 100);
@@ -845,6 +858,7 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     if (!(await textbackAllowed(caller))) repeat = true;
     else if (await claimTextback(line, callId, caller, textback)) {
       texted = await sendSms(caller, textback, line.ai_number);
+      await markTextbackSent(callId, texted);
     }
   }
 

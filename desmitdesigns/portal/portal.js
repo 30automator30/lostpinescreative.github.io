@@ -57,9 +57,24 @@ $("signout").addEventListener("click", async () => { await sb.auth.signOut(); })
 /* ---------- dashboard ---------- */
 async function enterDashboard() {
   showView("view-dash");
+  loadWelcome();
   await loadProjects();
   subscribeDashboard();
 }
+
+/* Welcome card (014: dd_my_welcome) until the customer taps "Got it". */
+async function loadWelcome() {
+  const box = $("dd-welcome");
+  const { data, error } = await sb.rpc("dd_my_welcome");
+  if (error || !data) { box.hidden = true; return; } // not deployed yet, or already seen
+  $("dd-welcome-body").innerHTML = linkify(data);
+  box.hidden = false;
+}
+$("dd-welcome-ok").addEventListener("click", async () => {
+  $("dd-welcome").hidden = true;
+  const { error } = await sb.rpc("dd_dismiss_welcome");
+  if (error) toast("Couldn't save that — it may show again next time.", "err");
+});
 
 async function loadProjects() {
   const list = $("dash-list");

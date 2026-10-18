@@ -60,6 +60,8 @@ document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () 
   document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("on", x === t));
   $("pane-clients").style.display = t.dataset.tab === "clients" ? "" : "none";
   $("pane-inbox").style.display = t.dataset.tab === "inbox" ? "" : "none";
+  $("pane-welcome").style.display = t.dataset.tab === "welcome" ? "" : "none";
+  if (t.dataset.tab === "welcome") loadWelcome();
 }));
 
 async function enterConsole() {
@@ -142,6 +144,25 @@ async function loadInbox() {
     toast("Marked handled.", "ok"); loadInbox();
   }));
 }
+
+/* ---------- welcome note (014: lpc_studio_settings) ---------- */
+const WN = { "wn-email": "contact_email", "wn-phone": "contact_phone", "wn-sign": "sign_off",
+  "wn-gw": "welcome_groundwork", "wn-dd": "welcome_desmit" };
+async function loadWelcome() {
+  $("wn-error").textContent = "";
+  const { data, error } = await sb.from("lpc_studio_settings").select("key,value");
+  if (error) { $("wn-error").textContent = "Couldn't load — has 014_lpc_welcome.sql been run?"; return; }
+  const v = Object.fromEntries((data || []).map((r) => [r.key, r.value || ""]));
+  Object.entries(WN).forEach(([id, key]) => ($(id).value = v[key] || ""));
+}
+$("wn-save").addEventListener("click", async () => {
+  const btn = $("wn-save"); btn.disabled = true; $("wn-error").textContent = "";
+  const rows = Object.entries(WN).map(([id, key]) => ({ key, value: $(id).value.trim() || null, updated_at: new Date().toISOString() }));
+  const { error } = await sb.from("lpc_studio_settings").upsert(rows, { onConflict: "key" });
+  btn.disabled = false;
+  if (error) { $("wn-error").textContent = error.message; return; }
+  toast("Welcome note saved. New clients get this version.", "ok");
+});
 
 /* ---------- new client ---------- */
 $("new-client").addEventListener("click", () => {
@@ -364,6 +385,14 @@ $("int-add").addEventListener("click", async () => {
 });
 
 /* messages */
+$("cd-welcome").addEventListener("click", async () => {
+  if (!current) return;
+  const btn = $("cd-welcome"); btn.disabled = true;
+  const { error } = await sb.rpc("gw_send_welcome", { p_client: current.id });
+  btn.disabled = false;
+  if (error) { toast(error.message || "Couldn't send the welcome note.", "err"); return; }
+  toast("Welcome note sent — it's at the top of their inbox.", "ok"); loadMsgs();
+});
 async function loadMsgs() {
   const { data } = await sb.from("gw_messages").select("*").eq("client_id", current.id).order("created_at", { ascending: false });
   const box = $("cd-msgs");
@@ -422,6 +451,39 @@ function resetRepForm() {
   $("rep-add").textContent = "Add report"; $("rep-cancel").style.display = "none";
 }
 $("rep-cancel").addEventListener("click", resetRepForm);
+
+/* Fill the report's numbers from the client's inbox for the period (YYYY-MM;
+   blank = this month). Reviews stay manual. A text-back counts only if it was
+   actually sent: by the owner's phone (gw-device) or accepted by Twilio. */
+$("rep-fill").addEventListener("click", async () => {
+  let period = $("rep-period").value.trim();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) {
+    const d = new Date();
+    period = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+    $("rep-period").value = period;
+  }
+  const [y, m] = period.split("-").map(Number);
+  const from = new Date(y, m - 1, 1).toISOString();
+  const to = new Date(y, m, 1).toISOString();
+  const btn = $("rep-fill"); btn.disabled = true;
+  const { data, error } = await sb.from("gw_messages").select("kind,meta")
+    .eq("client_id", current.id).gte("created_at", from).lt("created_at", to).limit(5000);
+  btn.disabled = false;
+  if (error) { toast("Couldn't count this month's calls.", "err"); return; }
+  const rows = data || [];
+  const calls = rows.filter((r) => ["lead", "missed_call", "voicemail"].includes(r.kind)).length;
+  const leads = rows.filter((r) => r.kind === "lead").length;
+  const saved = rows.filter((r) => r.kind === "textback" &&
+    (r.meta && (r.meta.sent === true || r.meta.via === "gw-device"))).length;
+  $("rep-calls").value = calls; $("rep-leads").value = leads; $("rep-missed").value = saved;
+  const month = new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long", year: "numeric" });
+  if (!$("rep-title").value.trim()) $("rep-title").value = month + " report";
+  if (!$("rep-summary").value.trim()) {
+    $("rep-summary").value = calls + (calls === 1 ? " call" : " calls") + " handled, " + leads + (leads === 1 ? " lead" : " leads") +
+      ", " + saved + " missed " + (saved === 1 ? "caller" : "callers") + " texted back.";
+  }
+  toast("Filled from " + month + ". Add reviews, check the summary, then save.", "ok");
+});
 $("rep-add").addEventListener("click", async () => {
   if (!current) return;
   const metrics = {};
