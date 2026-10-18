@@ -232,3 +232,8 @@ button.ms-check:hover { border-color: var(--accent); }
   text-transform: uppercase; letter-spacing: .6px; cursor: pointer; }
 .t-acts button:hover { color: var(--accent-light); }
 .up-edit-body { min-height: 62px; margin-top: 4px; }
+
+/* Welcome note (014) */
+.welcome-card { margin-bottom: 14px; border-color: rgba(96,165,250,.35); }
+.welcome-card[hidden] { display: none; }
+.welcome-card .welcome-body { color: var(--text-muted); white-space: pre-wrap; overflow-wrap: anywhere; }

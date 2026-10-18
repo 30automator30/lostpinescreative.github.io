@@ -67,11 +67,29 @@
     <div class="tabs">
       <button class="tab on" data-tab="clients">Clients <span class="count" id="calls-count" hidden></span></button>
       <button class="tab" data-tab="inbox">Website leads <span class="count" id="inbox-count" style="display:none">0</span></button>
+      <button class="tab" data-tab="welcome">Welcome note</button>
       <a class="tab" href="/onboarding/admin.html" style="text-decoration:none">Onboarding ↗</a>
     </div>
     <div id="pane-clients">
       <div class="head-row"><h2>Clients</h2><div class="spacer"></div><button class="btn btn-primary btn-sm" id="new-client">+ New client</button></div>
       <div id="client-list"></div>
+    </div>
+    <div id="pane-welcome" style="display:none">
+      <div class="head-row"><h2>Welcome note</h2></div>
+      <p class="subtle" style="margin-bottom:12px">Sent automatically to every new client. Groundwork: the first message in their inbox. DeSmit Designs: a card at the top of Projects until they tap “Got it”.
+        Fill-ins: <code>{first_name}</code> <code>{business}</code> <code>{purchase}</code> <code>{package}</code> <code>{plan}</code> <code>{services}</code> <code>{contact}</code> <code>{email}</code> <code>{phone}</code> <code>{portal_link}</code> <code>{app_link}</code> <code>{sign_off}</code>.
+        A line whose fill-in is empty is left out. Changes apply to new clients; use “Send welcome note” on a client to refresh theirs.</p>
+      <div class="card">
+        <div class="grid-2">
+          <div class="field"><label for="wn-email">Your email</label><input type="email" id="wn-email"></div>
+          <div class="field"><label for="wn-phone">Your phone (blank = email only)</label><input type="tel" id="wn-phone" placeholder="(512) 555-0123"></div>
+        </div>
+        <div class="field"><label for="wn-sign">Sign-off</label><input type="text" id="wn-sign"></div>
+        <div class="field"><label for="wn-gw">Groundwork welcome</label><textarea id="wn-gw" rows="16"></textarea></div>
+        <div class="field"><label for="wn-dd">DeSmit Designs welcome</label><textarea id="wn-dd" rows="10"></textarea></div>
+        <div class="error-text" id="wn-error"></div>
+        <div style="text-align:right"><button class="btn btn-primary btn-sm" id="wn-save">Save welcome note</button></div>
+      </div>
     </div>
     <div id="pane-inbox" style="display:none">
       <div class="head-row"><h2>Website leads <span class="subtle" style="font-size:1rem;font-weight:500">from the chat assistant on your site</span></h2></div>
@@ -144,7 +162,8 @@
 
     <!-- messages -->
     <div class="adm-sect">
-      <h3>Messages inbox</h3>
+      <div class="head-row" style="margin-bottom:8px"><h3 style="margin:0">Messages inbox</h3><div class="spacer"></div>
+        <button class="btn btn-ghost btn-sm" id="cd-welcome">Send welcome note</button></div>
       <div id="cd-msgs"></div>
       <div class="row-line" style="margin-top:10px">
         <select id="msg-kind"><option value="voicemail">Voicemail</option><option value="missed_call">Missed call</option><option value="textback">Text-back</option><option value="lead">Lead</option></select>

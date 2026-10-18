@@ -138,9 +138,9 @@ async function loadMessages() {
       "<b>" + escapeHtml(who) + "</b>" +
       (m.from_phone ? ' <span class="subtle">' + escapeHtml(m.from_phone) + "</span>" : "") +
       '<span class="spacer" style="flex:1"></span><span class="msg-when">' + fmtDateTime(m.created_at) + "</span></div>" +
-      (m.body ? '<div class="msg-body">' + escapeHtml(m.body) + "</div>" : "") +
+      (m.body ? '<div class="msg-body">' + (m.kind === "welcome" ? linkify(m.body) : escapeHtml(m.body)) + "</div>" : "") +
       (m.status === "new"
-        ? '<div style="text-align:right;margin-top:8px"><button class="btn btn-ghost btn-sm" data-handle="' + m.id + '">Mark handled</button></div>'
+        ? '<div style="text-align:right;margin-top:8px"><button class="btn btn-ghost btn-sm" data-handle="' + m.id + '">' + (m.kind === "welcome" ? "Got it" : "Mark handled") + "</button></div>"
         : "") +
       "</div>";
   }).join("");

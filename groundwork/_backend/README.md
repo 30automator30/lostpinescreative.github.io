@@ -128,6 +128,7 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
 | `gw_integrations.url` / `notes` | the client's "Your system" list: the admin **Edit** button sets the name, the link **Open** goes to (`https://…`, `tel:+1…` for a receptionist line, `mailto:`) and a one-line note. Analytics → the analytics dashboard link |
 | `gw_reports` | monthly reports; admin **Fill from this month** counts the period's calls, leads and text-backs actually sent (gw-reception records `meta.sent`; the phone app's are sent by definition). Reviews stay manual |
 | `/app/` | public "Get the Lost Pines app" page, linked from both portals. Set `ANDROID_DOWNLOAD` in `app/index.html` to the current Android build link each release |
+| `lpc_studio_settings` + welcome | `014`: an automatic welcome note — Groundwork: a `welcome` message at the top of the inbox (package, care plan, "Your system" list, how to use the inbox/Setup/Request/app, how to reach Daniel); DeSmit: a card on Projects until "Got it". Wording, email, phone and sign-off are edited in the Groundwork admin's **Welcome note** tab; **Send welcome note** on a client refreshes theirs. Never counted as a call or emailed |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit

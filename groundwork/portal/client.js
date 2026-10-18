@@ -36,6 +36,7 @@ export const MSG_KIND = {
   textback: "Text-back",
   lead: "Lead",
   form: "Form",
+  welcome: "Welcome",
 };
 
 export function money(n) {
