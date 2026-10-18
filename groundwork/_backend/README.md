@@ -126,6 +126,8 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
 | `gw_reception_lines.texting_enabled` | off until the line's number is approved for texting; off = no texts promised or sent, email only — `012` |
 | `gw_settings` defaults | `013`: empty reception fields are pre-filled from the business + onboarding intake (greeting, cell, Google hours, after-hours, text-back, receptionist knowledge); never overwrites typed text |
 | `gw_integrations.url` / `notes` | the client's "Your system" list: the admin **Edit** button sets the name, the link **Open** goes to (`https://…`, `tel:+1…` for a receptionist line, `mailto:`) and a one-line note. Analytics → the analytics dashboard link |
+| `gw_reports` | monthly reports; admin **Fill from this month** counts the period's calls, leads and text-backs actually sent (gw-reception records `meta.sent`; the phone app's are sent by definition). Reviews stay manual |
+| `/app/` | public "Get the Lost Pines app" page, linked from both portals. Set `ANDROID_DOWNLOAD` in `app/index.html` to the current Android build link each release |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get the Lost Pines app — Lost Pines Creative</title>
+  <meta name="description" content="The Lost Pines app for Groundwork and DeSmit Designs customers: your calls, messages and projects on your phone.">
+  <meta name="theme-color" content="#0b1210">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <style>
+    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#94a3a0; --accent:#4a9e7e; --accent-light:#5fb896; --on-accent:#071410; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text);
+      line-height:1.6; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px 16px; }
+    main { width:100%; max-width:520px; display:grid; gap:16px; }
+    h1 { font-size:1.5rem; }
+    h2 { font-size:1.1rem; margin-bottom:6px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 20px; }
+    p, li { color:var(--text-muted); font-size:.95rem; }
+    p + p { margin-top:10px; }
+    ol { padding-left:20px; margin-top:10px; }
+    li { margin-bottom:6px; }
+    a { color:var(--accent-light); }
+    .btn { display:inline-flex; align-items:center; justify-content:center; min-height:48px; padding:0 20px; margin-top:14px;
+      border-radius:10px; background:var(--accent-light); color:var(--on-accent); font-weight:700; text-decoration:none; }
+    .btn:hover, .btn:focus-visible { background:var(--accent); }
+    .soon { margin-top:10px; font-weight:600; color:var(--text); }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <div>
+      <h1>Get the Lost Pines app</h1>
+      <p>Your calls, messages, setup and projects — for Groundwork and DeSmit Designs customers. Sign in with the same email and password as the portal.</p>
+    </div>
+
+    <section class="card" aria-labelledby="android">
+      <h2 id="android">Android</h2>
+      <div id="android-ready" hidden>
+        <p>Includes Text-Back: it can text people who call your phone and don't reach you, from your own number.</p>
+        <a class="btn" id="android-link" href="#">Download for Android</a>
+        <ol>
+          <li>Open this page on your Android phone and tap <b>Download for Android</b>.</li>
+          <li>If your phone asks, allow your browser to install apps (<b>Settings ▸ Install unknown apps</b>). That's because this version comes straight from us, not the Play Store.</li>
+          <li>Open <b>Lost Pines</b> and sign in.</li>
+        </ol>
+      </div>
+      <p class="soon" id="android-soon">Coming soon. Ask us and we'll send it to you.</p>
+    </section>
+
+    <section class="card" aria-labelledby="iphone">
+      <h2 id="iphone">iPhone</h2>
+      <p class="soon">Coming soon to the App Store.</p>
+      <p>Until then, the portal works on your phone's browser: <a href="/groundwork/portal/">Groundwork portal</a> · <a href="/desmitdesigns/portal/">DeSmit Designs portal</a>.</p>
+    </section>
+
+    <p>Questions? <a href="mailto:ddesmit@lostpinescreative.com">ddesmit@lostpinescreative.com</a></p>
+  </main>
+  <script>
+    // The current Android build (the EAS "install" page or a direct .apk link).
+    // Update this line with each new release; empty = "Coming soon".
+    var ANDROID_DOWNLOAD = "";
+    if (/^https:\/\//.test(ANDROID_DOWNLOAD)) {
+      document.getElementById("android-link").href = ANDROID_DOWNLOAD;
+      document.getElementById("android-ready").hidden = false;
+      document.getElementById("android-soon").hidden = true;
+    }
+  </script>
+</body>
+</html>
