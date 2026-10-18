@@ -124,6 +124,8 @@ else goes through `/auth/confirm.html`, which signs into the right portal.
 | `lpc_storage_purge` | Storage objects queued for removal after an account deletion (service role only) — `010` |
 | `gw_settings.email_alerts` | the owner's "Email me new calls" switch for receptionist call emails — `011` |
 | `gw_reception_lines.texting_enabled` | off until the line's number is approved for texting; off = no texts promised or sent, email only — `012` |
+| `gw_settings` defaults | `013`: empty reception fields are pre-filled from the business + onboarding intake (greeting, cell, Google hours, after-hours, text-back, receptionist knowledge); never overwrites typed text |
+| `gw_integrations.url` / `notes` | the client's "Your system" list: the admin **Edit** button sets the name, the link **Open** goes to (`https://…`, `tel:+1…` for a receptionist line, `mailto:`) and a one-line note. Analytics → the analytics dashboard link |
 | `gw_devices` | registered Text-Back phones (token hash only, who registered, last seen, revoked_at) — admin-only, `007` |
 
 RLS: a client owner sees only their own client + children; the client can edit

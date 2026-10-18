@@ -118,8 +118,8 @@ async function loadIntegrations() {
   }
   grid.innerHTML = data.map((i) =>
     '<div class="int-item"><div class="int-main"><b>' + escapeHtml(i.label) + "</b>" +
-    (i.url ? '<a href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">Open &rarr;</a>'
-           : (i.notes ? '<span class="int-sub">' + escapeHtml(i.notes) + "</span>" : "")) +
+    (i.notes ? '<span class="int-sub">' + escapeHtml(i.notes) + "</span>" : "") +
+    (i.url && /^(https:\/\/|tel:|mailto:)/i.test(i.url) ? '<a href="' + escapeHtml(i.url) + '" target="_blank" rel="noopener">Open &rarr;</a>' : "") +
     '</div><span class="badge ' + i.status + '">' + (INT_STATUS[i.status] || i.status) + "</span></div>"
   ).join("");
 }
