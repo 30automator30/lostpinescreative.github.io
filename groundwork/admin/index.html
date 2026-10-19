@@ -119,6 +119,11 @@
           <select id="cd-status"><option value="onboarding">Onboarding</option><option value="active">Active</option><option value="paused">Paused</option><option value="cancelled">Cancelled</option></select></div>
       </div>
       <div class="field"><label for="cd-phone">Phone</label><input type="tel" id="cd-phone"></div>
+      <div class="grid-2">
+        <div class="field"><label for="cd-total">Project total ($)</label><input type="number" id="cd-total" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 3500"></div>
+        <div class="field"><label for="cd-paid">Paid so far ($)</label><input type="number" id="cd-paid" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 1750"></div>
+      </div>
+      <div class="inline-note" style="margin:-4px 0 8px">Shown to the owner in the app (Account ▸ Your plan) as "Paid $X of $Y". Leave blank to hide.</div>
       <div class="inline-note" id="cd-billing" style="margin:2px 0 10px"></div>
       <div class="error-text" id="cd-error"></div>
       <div style="text-align:right"><button class="btn btn-primary btn-sm" id="cd-save">Save client</button></div>

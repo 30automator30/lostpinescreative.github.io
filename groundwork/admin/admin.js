@@ -198,6 +198,7 @@ async function openClient(id) {
   $("cd-biz").value = c.business_name || ""; $("cd-email").value = c.contact_email || "";
   $("cd-plan").value = c.care_plan || "none"; $("cd-status").value = c.status || "onboarding";
   $("cd-phone").value = c.phone || ""; $("cd-error").textContent = "";
+  $("cd-total").value = c.project_total ?? ""; $("cd-paid").value = c.paid_to_date ?? "";
   // Billing state is mirrored from the onboarding intake by the Stripe webhook.
   const bill = $("cd-billing");
   if (bill) {
@@ -287,9 +288,14 @@ wireUploader(document.getElementById("cd-uploader"), document.getElementById("cd
 });
 
 $("cd-save").addEventListener("click", async () => {
+  // Blank = not shown to the owner; otherwise a non-negative dollar amount.
+  const money = (id) => { const v = $(id).value.trim(); if (v === "") return null; const n = Number(v); return Number.isFinite(n) && n >= 0 ? Math.round(n * 100) / 100 : NaN; };
+  const total = money("cd-total"), paid = money("cd-paid");
+  if (Number.isNaN(total) || Number.isNaN(paid)) { $("cd-error").textContent = "Project total and paid so far must be dollar amounts (or blank)."; return; }
   const btn = $("cd-save"); btn.disabled = true; $("cd-error").textContent = "";
   const patch = { business_name: $("cd-biz").value.trim(), contact_email: $("cd-email").value.trim() || null,
-    care_plan: $("cd-plan").value, status: $("cd-status").value, phone: $("cd-phone").value.trim() || null };
+    care_plan: $("cd-plan").value, status: $("cd-status").value, phone: $("cd-phone").value.trim() || null,
+    project_total: total, paid_to_date: paid };
   const { error } = await sb.from("gw_clients").update(patch).eq("id", current.id);
   btn.disabled = false;
   if (error) { $("cd-error").textContent = error.message; return; }

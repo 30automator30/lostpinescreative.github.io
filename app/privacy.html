@@ -40,6 +40,7 @@
   <ul>
     <li><strong>Your account:</strong> your email address and password (stored only as a secure hash by our sign-in provider), and the name and phone number you add on the Account screen.</li>
     <li><strong>Your business records (Groundwork):</strong> the calls, voicemails, missed calls and leads your AI receptionist or phone records for your business — including the caller's name and number, a short summary and, for receptionist calls, a transcript and recording link — plus your reception settings, requests you send us, and the services we set up for you.</li>
+    <li><strong>Your plan and billing:</strong> the package and care plan you chose, your signed agreement, your payment status, the project total and amount paid that we record, and your invoices from Stripe.</li>
     <li><strong>Your projects (DeSmit Designs):</strong> project details, quotes, status updates, notes, and files or photos you or we add.</li>
     <li><strong>Call alerts (if you turn them on):</strong> a push token — a random identifier Apple or Google gives the app so we can send notifications to this phone — with the phone type (iPhone or Android) and app version. It's removed when you sign out.</li>
     <li><strong>Text-Back (Android version we install for you only):</strong> to text people who call you and don't reach you, the app reads your phone's call log and checks your contacts <em>on your phone</em>. Only missed-call events leave the phone: the caller's number, the time, and whether a text was sent. Your call log and contacts are never uploaded. Texts go out from your own number through your phone. Text-Back is not part of the iPhone app or the Play Store app.</li>
@@ -53,6 +54,7 @@
   <ul>
     <li><strong>Supabase</strong> — our database, sign-in and file storage (encrypted in transit; row-level security means each customer can only see their own records).</li>
     <li><strong>Resend</strong> — delivers sign-in, password and new-call alert emails.</li>
+    <li><strong>Stripe</strong> — payments and invoices. The app shows your invoices and opens Stripe's own pages to pay an invoice or update your card; card details go only to Stripe, never to us or the app.</li>
     <li><strong>Expo</strong>, <strong>Apple</strong> (Apple Push Notification service) and <strong>Google</strong> (Firebase Cloud Messaging) — deliver call-alert notifications to your phone. A notification carries the caller's name or number and a short summary of the call, so it can show on your lock screen; you can hide previews in your phone's notification settings.</li>
     <li>For the AI receptionist and text-back on our phone lines: <strong>Twilio</strong>, <strong>Vapi</strong>, <strong>Anthropic</strong> and <strong>Cal.com</strong>, as described in §7 of our <a href="/privacy.html">website privacy policy</a>.</li>
   </ul>
