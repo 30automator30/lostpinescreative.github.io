@@ -111,7 +111,11 @@ const clientEmail = (c) => c.owner_email || (c.owner_id ? ownerEmail(c.owner_id)
 
 /* ---------- clients list ---------- */
 async function loadClients() {
-  const { data, error } = await sb.from("gw_clients").select("*").order("created_at", { ascending: false });
+  const [{ data, error }, { data: drafts }] = await Promise.all([
+    sb.from("gw_clients").select("*").order("created_at", { ascending: false }),
+    sb.from("gw_reports").select("client_id").eq("visible", false),
+  ]);
+  const draftsFor = {}; (drafts || []).forEach((r) => (draftsFor[r.client_id] = (draftsFor[r.client_id] || 0) + 1));
   const list = $("client-list");
   if (error) { list.innerHTML = '<div class="empty">Couldn\'t load clients.</div>'; return; }
   bizName = {}; data.forEach((c) => (bizName[c.id] = c.business_name));
@@ -119,6 +123,7 @@ async function loadClients() {
   list.innerHTML = '<div class="cards">' + data.map((c) =>
     '<div class="card click" data-id="' + c.id + '"><div class="row"><h3 style="flex:1">' + escapeHtml(c.business_name) + "</h3>" +
     '<span class="badge new" data-new-for="' + c.id + '"' + (newByClient[c.id] ? "" : " hidden") + ">" + (newByClient[c.id] || 0) + " new</span>" +
+    (draftsFor[c.id] ? '<span class="badge quoted">' + (draftsFor[c.id] === 1 ? "Report to review" : draftsFor[c.id] + " reports to review") + "</span>" : "") +
     '<span class="badge ' + (c.status === "active" ? "live" : c.status === "paused" ? "paused" : "planned") + '">' + (STATUS_LABEL[c.status] || c.status) + "</span></div>" +
     '<div class="meta">' + escapeHtml(clientEmail(c)) + " · " + (CARE_LABEL[c.care_plan] || CARE_LABEL.none) + "</div></div>"
   ).join("") + "</div>";
@@ -427,11 +432,21 @@ async function loadReps() {
   const box = $("cd-reps");
   if (!data || !data.length) { box.innerHTML = '<div class="inline-note">No reports.</div>'; return; }
   box.innerHTML = data.map((r) =>
-    '<div class="row-line" style="padding:6px 0;border-bottom:1px solid var(--border)"><b style="flex:1">' + escapeHtml(r.title || r.period || "Report") + '</b><span class="subtle">' + escapeHtml(r.period || "") + "</span>" +
+    '<div class="row-line" style="padding:6px 0;border-bottom:1px solid var(--border)"><b style="flex:1">' + escapeHtml(r.title || r.period || "Report") + '</b>' +
+    (r.visible ? "" : '<span class="badge quoted" title="The client can\'t see this yet">Draft' + (r.auto_generated ? " · auto" : "") + "</span>") +
+    '<span class="subtle">' + escapeHtml(r.period || "") + "</span>" +
     '<button class="btn btn-ghost btn-sm" data-er="' + r.id + '">Edit</button>' +
+    '<button class="btn ' + (r.visible ? "btn-ghost" : "btn-primary") + ' btn-sm" data-vr="' + r.id + '" data-vis="' + (r.visible ? "0" : "1") + '">' + (r.visible ? "Hide" : "Publish") + "</button>" +
     '<button class="btn btn-danger btn-sm" data-dr="' + r.id + '">✕</button></div>'
   ).join("");
   box.querySelectorAll("[data-er]").forEach((b) => b.addEventListener("click", () => startEditReport(data.find((x) => x.id === b.dataset.er))));
+  box.querySelectorAll("[data-vr]").forEach((b) => b.addEventListener("click", async () => {
+    const show = b.dataset.vis === "1";
+    if (show && !confirm("Publish this report? The client will see it in the portal and the app.")) return;
+    const { error } = await sb.from("gw_reports").update({ visible: show }).eq("id", b.dataset.vr);
+    if (error) { toast(error.message, "err"); return; }
+    toast(show ? "Published." : "Hidden from the client.", "ok"); loadReps(); loadClients();
+  }));
   box.querySelectorAll("[data-dr]").forEach((b) => b.addEventListener("click", async () => {
     if (!confirm("Delete this report?")) return;
     await sb.from("gw_reports").delete().eq("id", b.dataset.dr);
@@ -457,6 +472,17 @@ function resetRepForm() {
   $("rep-add").textContent = "Add report"; $("rep-cancel").style.display = "none";
 }
 $("rep-cancel").addEventListener("click", resetRepForm);
+
+/* Last month's drafts for every active client (the same job runs itself on the 1st). */
+$("draft-reports").addEventListener("click", async () => {
+  const btn = $("draft-reports"); btn.disabled = true;
+  const { data, error } = await sb.rpc("gw_build_monthly_reports", { p_period: null });
+  btn.disabled = false;
+  if (error) { toast(error.message, "err"); return; }
+  const n = (data || []).length;
+  toast(n ? n + (n === 1 ? " draft report" : " draft reports") + " added: " + data.join(", ") + "." : "Every active client already has last month's report.", "ok");
+  loadClients();
+});
 
 /* Fill the report's numbers from the client's inbox for the period (YYYY-MM;
    blank = this month). Reviews stay manual. A text-back counts only if it was
