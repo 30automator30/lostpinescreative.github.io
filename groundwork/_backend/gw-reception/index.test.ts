@@ -18,7 +18,7 @@ const line = {
   client_id: CLIENT, vapi_phone_number_id: "pn_1", ai_number: "+15125550100",
   owner_alert_number: null, cal_event_type_id: 42, booking_url: "https://cal.com/desmit",
   timezone: "America/Chicago", voice_id: null, enabled: true, texting_enabled: true,
-  client: { business_name: "DeSmit Designs", status: "active",
+  client: { business_name: "DeSmit Designs", status: "active", owner_id: "u-1" as string | null,
     contact_email: "owner@desmit.example", owner_email: "login@desmit.example",
     settings: { email_alerts: true as boolean | undefined, greeting: null, forward_number: "(408) 348-7284", textback_message: null,
       hours: { text: "Mon–Fri 8–5" }, after_hours: null, knowledge: "3D printing and laser cutting." } },
@@ -30,6 +30,9 @@ let calBookings: Array<Record<string, unknown>> = [];
 let aiEnabled = true;
 let failNextTextbackClaim = false;
 let twilioDown = false;
+let pushTokens: Array<{ token: string; user_id: string }> = [];
+let pushes: Array<Record<string, unknown>> = [];
+let expoGone = new Set<string>();
 
 const future = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
 const SLOT1 = future(24), SLOT2 = future(26);
@@ -45,6 +48,15 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     const table = url.pathname.replace("/rest/v1/", "");
     if (table === "ai_config") return ok([{ enabled: aiEnabled }]);
     if (table === "ai_call_log") return method === "GET" ? ok([], { "content-range": "0-0/3" }) : ok([]);
+    if (table === "lpc_push_tokens") {
+      if (method === "DELETE") {
+        const t = decodeURIComponent(url.searchParams.get("token")!.replace(/^eq\./, ""));
+        pushTokens = pushTokens.filter((p) => p.token !== t);
+        return ok([]);
+      }
+      const u = url.searchParams.get("user_id")?.replace(/^eq\./, "");
+      return ok(pushTokens.filter((p) => p.user_id === u).map((p) => ({ token: p.token })));
+    }
     if (table === "gw_reception_lines") {
       const or = url.searchParams.get("or") ?? "";
       const hit = or.includes("pn_1") || or.includes("+15125550100");
@@ -107,6 +119,12 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
     emails.push(JSON.parse(String(init!.body)));
     return ok({ id: "em_1" });
   }
+  if (url.host === "exp.host") {
+    const batch = JSON.parse(String(init!.body)) as Array<Record<string, unknown>>;
+    pushes.push(...batch);
+    return ok({ data: batch.map((m) => expoGone.has(String(m.to))
+      ? { status: "error", details: { error: "DeviceNotRegistered" } } : { status: "ok", id: "tk" }) });
+  }
   if (url.host === "api.twilio.com") {
     const f = new URLSearchParams(String(init!.body));
     if (twilioDown) return new Response("{}", { status: 400 });
@@ -130,6 +148,7 @@ const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
 const reset = () => {
   twilioDown = false;
+  pushTokens = []; pushes = []; expoGone = new Set(); line.client.owner_id = "u-1";
   messages = []; sms = []; emails = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
   line.client.settings.email_alerts = true;
   line.enabled = true; line.texting_enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
@@ -477,4 +496,39 @@ Deno.test("the text-back row records whether Twilio actually sent it (monthly re
   await report("s2", { customer: "+15125550177", talked: false });
   const failed = messages.find((m) => m.external_id === "s2:textback")!;
   assertEquals((failed.meta as Record<string, unknown>).sent, false);
+});
+
+const TOK = "ExponentPushToken[abcdefghij123]", TOK2 = "ExponentPushToken[zyxwvutsrq987]";
+
+Deno.test("a call pushes once to the owner's phones: who and what they need, opening the inbox", async () => {
+  reset();
+  pushTokens = [{ token: TOK, user_id: "u-1" }, { token: "ExponentPushToken[someoneelse00]", user_id: "u-2" }];
+  await report("p1", { summary: "Jane wants a quote for a website." });
+  assertEquals(pushes.length, 1);
+  const p = pushes[0];
+  assertEquals(p.to, TOK);
+  assertEquals(p.title, "New call: (512) 555-1234");
+  assertMatch(String(p.body), /Jane wants a quote/);
+  assertEquals(p.channelId, "calls");
+  assertEquals((p.data as Record<string, unknown>).url, "/inbox");
+  assertEquals((messages.find((m) => m.external_id === "p1")!.meta as Record<string, unknown>).pushed, true);
+  await report("p1", { summary: "Jane wants a quote for a website." }); // Vapi retry
+  assertEquals(pushes.length, 1);
+});
+
+Deno.test("push: an uninstalled app's token is deleted; no tokens or no owner means no push", async () => {
+  reset();
+  pushTokens = [{ token: TOK, user_id: "u-1" }, { token: TOK2, user_id: "u-1" }];
+  expoGone = new Set([TOK2]);
+  await report("p2");
+  assertEquals(pushes.length, 2);
+  assertEquals(pushTokens.map((t) => t.token), [TOK]);
+  reset();
+  await report("p3");
+  assertEquals(pushes.length, 0);
+  reset();
+  pushTokens = [{ token: TOK, user_id: "u-1" }];
+  line.client.owner_id = null;
+  await report("p4");
+  assertEquals(pushes.length, 0);
 });
