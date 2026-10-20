@@ -4,22 +4,25 @@
 -- Studio admins who turned on alerts in the app (lpc_push_tokens, 015) get a
 -- push for what used to arrive by email only:
 --   • a new website lead (gw_inquiries / dd_inquiries)  → opens Leads
---   • a customer's service request (lpc_requests)        → opens Leads
---   • a new DeSmit project request (dd_projects 'requested', filed by a
+--   • a customer service request (lpc_requests)        → opens Leads
+--   • a new DeSmit project request (dd_projects "requested", filed by a
 --     customer — not one the studio creates)             → opens that project
---   • an onboarding brief becoming 'submitted'           → opens that brief
+--   • an onboarding brief becoming "submitted"         → opens that brief
 -- (Calls come from gw-reception, 015 / its studio alert.)
 --
--- Sent straight to Expo's push API with pg_net, after the row is saved: async,
+-- Sent straight to the Expo push API with pg_net, after the row is saved: async,
 -- best effort, and it can never fail or slow the insert. Rows the studio
 -- itself makes send nothing. At most 20 alerts per kind per hour, so a burst of
--- spam leads can't flood the phone (the rows are still saved and on the hub).
+-- spam leads cannot flood the phone (the rows are still saved and on the hub).
 -- Lock-screen text is short: the kind, a name, and the first words.
 --
 -- Requires 001, 009, 010 (onboarding), 015 and the pg_net extension
 -- (Dashboard ▸ Database ▸ Extensions ▸ pg_net). Without pg_net nothing is
 -- sent. If Expo "enhanced push security" is on, put the access token in Vault
 -- as expo_access_token.
+--
+-- No apostrophes in comments: the dashboard SQL editor splits statements
+-- itself and an unmatched quote in a comment cuts a function body short.
 -- ============================================================
 
 create or replace function public.lpc_push_studio(p_title text, p_body text, p_data jsonb)
@@ -63,7 +66,7 @@ returns trigger language plpgsql security definer set search_path = '' as $$
 declare
   v_recent int;
 begin
-  -- The studio's own rows (and the admin's own tests) aren't news.
+  -- Rows made by a studio admin (including test rows) are not news.
   if public.dd_is_admin() then return new; end if;
 
   if tg_table_name = 'onb_intakes' then
