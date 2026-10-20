@@ -26,7 +26,7 @@
 //           (optional) TWILIO_MESSAGING_SERVICE_SID   A2P-registered sender
 //           (optional) CALCOM_API_KEY                 enables booking
 //           RESEND_API_KEY (shared with the portal emails) — lead alert emails;
-//           (optional) EXPO_ACCESS_TOKEN — push alerts to the owner's app (015);
+//           (optional) EXPO_ACCESS_TOKEN — push alerts to the owner's and the studio's app (015);
 //           (optional) INVITE_FROM sender, RL_EMAIL_DAY per-line daily cap
 // Injected: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 // Deploy with Verify JWT OFF (called by Vapi and Twilio, not a signed-in user).
@@ -794,11 +794,16 @@ async function markTextbackSent(callId: string, sent: boolean): Promise<void> {
   } catch (_e) { /* the report just won't count it */ }
 }
 
-// ── Push alert to the owner's phones (Expo push service → APNs / FCM). The
+// ── Push alert to these users' phones (Expo push service → APNs / FCM). The
 // notification shows on the lock screen, so it carries the same as the text
-// alert: who called and what they need. Never logged.
-async function sendPush(ownerId: string, title: string, body: string, clientId: string): Promise<boolean> {
-  const tr = await fetchT(`${REST}/lpc_push_tokens?select=token&user_id=eq.${encodeURIComponent(ownerId)}`,
+// alert: who called and what they need. Never logged. `data.url` is an in-app
+// route the app checks against its own list ("/inbox" for the owner,
+// "/studio/client" for a studio admin).
+async function sendPush(userIds: string[], title: string, body: string,
+  data: { url: string; client_id: string }): Promise<boolean> {
+  const ids = userIds.filter((u) => /^[\w-]{1,64}$/.test(u)); // no PostgREST filter syntax
+  if (!ids.length) return false;
+  const tr = await fetchT(`${REST}/lpc_push_tokens?select=token&user_id=in.(${ids.join(",")})`,
     { headers: sbHeaders }, T_DB).catch(() => null);
   if (!tr?.ok) return false;
   const tokens = ((await tr.json().catch(() => [])) as { token: string }[]).map((t) => t.token).slice(0, 10);
@@ -810,7 +815,7 @@ async function sendPush(ownerId: string, title: string, body: string, clientId: 
         ...(EXPO_TOKEN ? { Authorization: `Bearer ${EXPO_TOKEN}` } : {}) },
       body: JSON.stringify(tokens.map((to) => ({
         to, title, body, sound: "default", priority: "high", channelId: "calls",
-        data: { url: "/inbox", client_id: clientId },
+        data,
       }))),
     }, T_EXT);
     if (!r.ok) { console.error("expo push error", r.status); return false; }
@@ -826,6 +831,14 @@ async function sendPush(ownerId: string, title: string, body: string, clientId: 
     console.error("expo push failed", String(e));
     return false;
   }
+}
+
+// Studio admins (dd_profiles.is_admin) get every client's call alerts in the app.
+async function studioAdminIds(): Promise<string[]> {
+  const r = await fetchT(`${REST}/dd_profiles?select=id&is_admin=eq.true`, { headers: sbHeaders }, T_DB)
+    .catch(() => null);
+  if (!r?.ok) return [];
+  return ((await r.json().catch(() => [])) as { id: string }[]).map((p) => p.id);
 }
 
 // deno-lint-ignore no-explicit-any
@@ -937,15 +950,30 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     if (emailed) await upsertCall(callId, line.client_id, {}, { emailed: true });
   }
 
-  // Push to the owner's app — same calls as the alerts above, once per call.
+  // Push to the owner's app — same calls as the alerts above, once per call —
+  // and to the studio's phones, titled with the business (each once per call).
   let pushed = existing?.meta?.pushed === true;
-  if (live && !pushed && line.owner_id && (talked || (caller && !repeat && caller !== alertTo))) {
+  let pushedStudio = existing?.meta?.pushed_studio === true;
+  const worthAlert = live && (talked || (caller && !repeat && caller !== alertTo));
+  if (worthAlert && (!pushed || !pushedStudio)) {
     const who = existing?.from_name ? oneLine(existing.from_name, 60) : fmtPhone(existing?.from_phone ?? caller);
     const what = booking?.start ? `Booked ${fmtWhen(booking.start, line.timezone)}`
       : missed ? "Missed call — no message" : oneLine(body, 160);
-    pushed = await sendPush(line.owner_id,
-      `${existing?.meta?.urgent === true ? "URGENT: " : ""}New call: ${who}`, what, line.client_id);
-    if (pushed) await upsertCall(callId, line.client_id, {}, { pushed: true });
+    const urgent = existing?.meta?.urgent === true ? "URGENT: " : "";
+    if (!pushed && line.owner_id) {
+      pushed = await sendPush([line.owner_id], `${urgent}New call: ${who}`, what,
+        { url: "/inbox", client_id: line.client_id });
+      if (pushed) await upsertCall(callId, line.client_id, {}, { pushed: true });
+    }
+    if (!pushedStudio) {
+      // An admin who also owns this business already got the owner's alert.
+      const admins = (await studioAdminIds()).filter((id) => id !== line.owner_id);
+      if (admins.length) {
+        pushedStudio = await sendPush(admins, `${urgent}${oneLine(biz, 40)}: ${who}`, what,
+          { url: "/studio/client", client_id: line.client_id });
+        if (pushedStudio) await upsertCall(callId, line.client_id, {}, { pushed_studio: true });
+      }
+    }
   }
 
   // Mark done LAST, so a retry after a failed send still texts (the text-back
@@ -953,6 +981,7 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
   await upsertCall(callId, line.client_id, {}, { reported: true });
 
   trace({ traceId, type: "end-of-call", outcome: kind, booked: !!booking?.start, texted, alerted, emailed, pushed,
+    pushed_studio: pushedStudio,
     cli_missing: !!caller && caller === alertTo,
     ms: Date.now() - t0 });
   return json({});
