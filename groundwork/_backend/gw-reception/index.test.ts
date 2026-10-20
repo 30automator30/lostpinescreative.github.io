@@ -31,6 +31,7 @@ let aiEnabled = true;
 let failNextTextbackClaim = false;
 let twilioDown = false;
 let pushTokens: Array<{ token: string; user_id: string }> = [];
+let admins: string[] = [];
 let pushes: Array<Record<string, unknown>> = [];
 let expoGone = new Set<string>();
 
@@ -54,9 +55,10 @@ globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) =>
         pushTokens = pushTokens.filter((p) => p.token !== t);
         return ok([]);
       }
-      const u = url.searchParams.get("user_id")?.replace(/^eq\./, "");
-      return ok(pushTokens.filter((p) => p.user_id === u).map((p) => ({ token: p.token })));
+      const ids = (url.searchParams.get("user_id") ?? "").replace(/^in\.\(|\)$/g, "").split(",");
+      return ok(pushTokens.filter((p) => ids.includes(p.user_id)).map((p) => ({ token: p.token })));
     }
+    if (table === "dd_profiles") return ok(admins.map((id) => ({ id })));
     if (table === "gw_reception_lines") {
       const or = url.searchParams.get("or") ?? "";
       const hit = or.includes("pn_1") || or.includes("+15125550100");
@@ -148,7 +150,7 @@ const call = (id: string, customer = "+15125551234") =>
   ({ id, phoneNumberId: "pn_1", customer: { number: customer } });
 const reset = () => {
   twilioDown = false;
-  pushTokens = []; pushes = []; expoGone = new Set(); line.client.owner_id = "u-1";
+  pushTokens = []; pushes = []; admins = []; expoGone = new Set(); line.client.owner_id = "u-1";
   messages = []; sms = []; emails = []; calBookings = []; aiEnabled = true; failNextTextbackClaim = false;
   line.client.settings.email_alerts = true;
   line.enabled = true; line.texting_enabled = true; line.client.status = "active"; delete (line as Record<string, unknown>).ai_enabled;
@@ -531,4 +533,38 @@ Deno.test("push: an uninstalled app's token is deleted; no tokens or no owner me
   line.client.owner_id = null;
   await report("p4");
   assertEquals(pushes.length, 0);
+});
+
+const UA = "aaaaaaaa-0000-4000-8000-000000000001", TOK_A = "ExponentPushToken[studioadmin0001]";
+
+Deno.test("the studio's phones get every client's calls, titled with the business, once per call", async () => {
+  reset();
+  admins = [UA];
+  pushTokens = [{ token: TOK, user_id: "u-1" }, { token: TOK_A, user_id: UA }];
+  await report("s-a1", { summary: "Jane wants a quote for a website." });
+  assertEquals(pushes.length, 2);
+  const studio = pushes.find((p) => p.to === TOK_A)!;
+  assertMatch(String(studio.title), new RegExp("^" + line.client.business_name + ": "));
+  assertEquals((studio.data as Record<string, unknown>).url, "/studio/client");
+  assertEquals((studio.data as Record<string, unknown>).client_id, line.client_id);
+  assertEquals(pushes.find((p) => p.to === TOK)!.data, { url: "/inbox", client_id: line.client_id });
+  assertEquals((messages.find((m) => m.external_id === "s-a1")!.meta as Record<string, unknown>).pushed_studio, true);
+  await report("s-a1", { summary: "Jane wants a quote for a website." }); // Vapi retry
+  assertEquals(pushes.length, 2);
+});
+
+Deno.test("studio alerts: sent with no owner login; an admin who owns the business gets one alert", async () => {
+  reset();
+  admins = [UA];
+  pushTokens = [{ token: TOK_A, user_id: UA }];
+  line.client.owner_id = null;
+  await report("s-a2");
+  assertEquals(pushes.map((p) => p.to), [TOK_A]);
+  reset();
+  admins = [UA];
+  pushTokens = [{ token: TOK_A, user_id: UA }];
+  line.client.owner_id = UA;
+  await report("s-a3");
+  assertEquals(pushes.length, 1);
+  assertEquals((pushes[0].data as Record<string, unknown>).url, "/inbox");
 });
