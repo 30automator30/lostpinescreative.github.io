@@ -30,7 +30,7 @@
   <header>
     <a href="/app/">&larr; Get the Lost Pines app</a>
     <h1>Lost Pines App Privacy Policy</h1>
-    <p class="effective">Effective: October 18, 2026</p>
+    <p class="effective">Effective: October 20, 2026</p>
   </header>
 
   <h2>1. Who we are and what this covers</h2>
@@ -39,13 +39,14 @@
   <h2>2. Information the app uses</h2>
   <ul>
     <li><strong>Your account:</strong> your email address and password (stored only as a secure hash by our sign-in provider), and the name and phone number you add on the Account screen.</li>
-    <li><strong>Your business records (Groundwork):</strong> the calls, voicemails, missed calls and leads your AI receptionist or phone records for your business — including the caller's name and number, a short summary and, for receptionist calls, a transcript and recording link — plus your reception settings, requests you send us, and the services we set up for you.</li>
+    <li><strong>Your business records (Groundwork):</strong> the calls, voicemails, missed calls and leads your AI receptionist or phone records for your business — including the caller's name and number, a short summary and, for receptionist calls, a transcript and recording link — plus your reception settings, requests you send us, the services we set up for you, and the updates and files we share with you.</li>
     <li><strong>Your plan and billing:</strong> the package and care plan you chose, your signed agreement, your payment status, the project total and amount paid that we record, and your invoices from Stripe.</li>
     <li><strong>Your projects (DeSmit Designs):</strong> project details, quotes, status updates, notes, and files or photos you or we add.</li>
     <li><strong>Call alerts (if you turn them on):</strong> a push token — a random identifier Apple or Google gives the app so we can send notifications to this phone — with the phone type (iPhone or Android) and app version. It's removed when you sign out.</li>
     <li><strong>Text-Back (Android version we install for you only):</strong> to text people who call you and don't reach you, the app reads your phone's call log and checks your contacts <em>on your phone</em>. Only missed-call events leave the phone: the caller's number, the time, and whether a text was sent. Your call log and contacts are never uploaded. Texts go out from your own number through your phone. Text-Back is not part of the iPhone app or the Play Store app.</li>
   </ul>
-  <p>The app does <strong>not</strong> use your location, does not access your camera, microphone or photo library on iPhone, asks to send notifications only when you turn call alerts on, and contains <strong>no advertising, analytics or tracking</strong> software. We don't track you across other companies' apps or websites.</p>
+  <p>The app does <strong>not</strong> use your location or microphone, does not access your camera or photo library on a customer account, asks to send notifications only when you turn call alerts on, and contains <strong>no advertising, analytics or tracking</strong> software. We don't track you across other companies' apps or websites.</p>
+  <p><strong>Lost Pines staff accounts</strong> can also use the app to run our studio: they see the records of the customers we serve (as they can on our web admin) and can attach photos and files to a customer's project or business file. Only for that, and only when a staff member taps <em>Take photo</em> or <em>Add photos</em>, the app asks for camera or photo-library access; the photo goes straight to our file storage and isn't kept on the phone. Staff can turn on notifications for new calls, leads, requests and onboarding briefs.</p>
 
   <h2>3. How we use it</h2>
   <p>Only to provide the service you signed up for: signing you in, showing your business's records and projects, sending you alerts about new calls (by email, by notification on your phone if you turn call alerts on, and by text where your plan includes it), handling your requests, and keeping the service secure. We do not sell your information or use it for advertising.</p>
@@ -55,7 +56,7 @@
     <li><strong>Supabase</strong> — our database, sign-in and file storage (encrypted in transit; row-level security means each customer can only see their own records).</li>
     <li><strong>Resend</strong> — delivers sign-in, password and new-call alert emails.</li>
     <li><strong>Stripe</strong> — payments and invoices. The app shows your invoices and opens Stripe's own pages to pay an invoice or update your card; card details go only to Stripe, never to us or the app.</li>
-    <li><strong>Expo</strong>, <strong>Apple</strong> (Apple Push Notification service) and <strong>Google</strong> (Firebase Cloud Messaging) — deliver call-alert notifications to your phone. A notification carries the caller's name or number and a short summary of the call, so it can show on your lock screen; you can hide previews in your phone's notification settings.</li>
+    <li><strong>Expo</strong>, <strong>Apple</strong> (Apple Push Notification service) and <strong>Google</strong> (Firebase Cloud Messaging) — deliver call-alert notifications to your phone. A notification carries the caller's name or number and a short summary of the call (for staff, also a new lead's or request's first words), so it can show on your lock screen; you can hide previews in your phone's notification settings.</li>
     <li>For the AI receptionist and text-back on our phone lines: <strong>Twilio</strong>, <strong>Vapi</strong>, <strong>Anthropic</strong> and <strong>Cal.com</strong>, as described in §7 of our <a href="/privacy.html">website privacy policy</a>.</li>
   </ul>
   <p>They process information only to provide the service to us. We share information otherwise only if the law requires it.</p>
