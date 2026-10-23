@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cody — Lost Pines Creative</title>
+  <meta name="description" content="Cody is a gentle desk-pet companion for young children: games, stories and a friend who knows their name. Offline, no accounts, no ads, and nothing he hears is ever recorded.">
+  <meta name="theme-color" content="#0b1210">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <style>
+    :root { --bg:#0b1210; --surface:#111f1b; --border:#1a2f28; --text:#e2e8e6; --text-muted:#a8b5b2; --accent:#4a9e7e; --accent-light:#5fb896; --face:#000; --eye:#f5f5f0; --glow:#ff82b9; --blush:rgba(255,140,165,.55); }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.65; padding:32px 16px; }
+    main { max-width:760px; margin:0 auto; display:grid; gap:20px; }
+    header a { color:var(--accent-light); font-size:.9rem; }
+    .hero { display:grid; gap:18px; }
+    .face { width:100%; height:auto; display:block; border-radius:18px; border:1px solid var(--border); background:var(--face); }
+    h1 { font-size:2rem; line-height:1.2; }
+    .tag { font-size:1.1rem; color:var(--text); }
+    h2 { font-size:1.15rem; margin-bottom:8px; }
+    .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:22px 20px; }
+    p, li { color:var(--text-muted); }
+    p + p { margin-top:10px; }
+    ul { padding-left:22px; margin-top:8px; }
+    li { margin-bottom:6px; }
+    strong { color:var(--text); }
+    a { color:var(--accent-light); }
+    .soon { display:inline-block; margin-top:6px; padding:8px 14px; border-radius:10px; border:1px solid var(--border); color:var(--text); font-weight:600; }
+    footer { color:var(--text-muted); font-size:.9rem; text-align:center; padding-top:8px; }
+    footer a { margin:0 8px; }
+    @media (prefers-reduced-motion: no-preference) {
+      .eye { animation: blink 6s infinite; transform-box: fill-box; transform-origin: center; }
+    }
+    @keyframes blink { 0%, 94%, 100% { transform: scaleY(1); } 97% { transform: scaleY(.1); } }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <a href="/">&larr; Lost Pines Creative</a>
+  </header>
+
+  <section class="hero">
+    <svg class="face" viewBox="0 0 800 480" role="img" aria-label="Cody's face: two big friendly eyes, rosy cheeks and a little smile on a black screen">
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="18"/></filter>
+      </defs>
+      <rect width="800" height="480" fill="var(--face)"/>
+      <g fill="var(--glow)" opacity=".35" filter="url(#glow)">
+        <rect x="122" y="98" width="185" height="235" rx="92"/>
+        <rect x="492" y="98" width="185" height="235" rx="92"/>
+      </g>
+      <rect class="eye" x="122" y="98" width="185" height="235" rx="92" fill="var(--eye)"/>
+      <rect class="eye" x="492" y="98" width="185" height="235" rx="92" fill="var(--eye)"/>
+      <ellipse cx="100" cy="304" rx="42" ry="20" fill="var(--blush)"/>
+      <ellipse cx="700" cy="304" rx="42" ry="20" fill="var(--blush)"/>
+      <path d="M360 362 Q400 392 440 362" fill="none" stroke="var(--eye)" stroke-width="10" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <h1>Meet Cody</h1>
+      <p class="tag">A gentle desk-pet friend for young children. He knows their name, plays games, tells stories and dances — all on your phone or tablet, with no accounts, no ads, and nothing he hears ever recorded.</p>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="what">
+    <h2 id="what">What Cody does</h2>
+    <ul>
+      <li><strong>Talks with a real recorded voice</strong> and says your child's name, their birthday and their pets' names.</li>
+      <li><strong>Hears claps, music and his name.</strong> Say "Cody!" and ask him the time, a fact, or to dance; clap and he claps back.</li>
+      <li><strong>Plays games</strong> at easy, medium or hard: peekaboo, feeding friends, sorting, Go Fish, tic-tac-toe, a marble run, letters, block math, telling the time, drumming and singing.</li>
+      <li><strong>Tells stories</strong> — interactive adventures your child taps, says and claps through, Bible stories, and a calm bedtime story.</li>
+      <li><strong>School time</strong> on weekdays: a few short subjects to pick from, with a gold star at the end.</li>
+      <li><strong>Little everyday moments:</strong> a plant to water, friends who come to visit, a counting parade, dance parties, timers and a calendar page.</li>
+    </ul>
+  </section>
+
+  <section class="card" aria-labelledby="parents">
+    <h2 id="parents">Made for families</h2>
+    <ul>
+      <li><strong>No accounts, no ads, and no chat with strangers.</strong></li>
+      <li><strong>The microphone stays on the device.</strong> Sound is checked in tiny slices and dropped right away: never recorded, saved or sent.</li>
+      <li><strong>Your family's details are encrypted on your device</strong> and never uploaded.</li>
+      <li><strong>Works offline.</strong> Only the optional radio needs the internet.</li>
+      <li><strong>A weekly play report for you</strong>, behind a grown-up question in Settings: what your child played and what they talked to Cody about.</li>
+    </ul>
+    <p>Read exactly what stays on the device and what doesn't in the <a href="/cody/privacy.html">Cody privacy policy</a>.</p>
+  </section>
+
+  <section class="card" aria-labelledby="get">
+    <h2 id="get">Get Cody</h2>
+    <p>Cody is in family testing on iPhone, iPad and Android.</p>
+    <span class="soon">Coming soon to the App Store and Google Play</span>
+  </section>
+
+  <section class="card" aria-labelledby="help">
+    <h2 id="help">Help &amp; support</h2>
+    <ul>
+      <li><strong>Cody can't hear?</strong> Check that microphone access is on for Cody in your device's Settings. He still works without it, he just can't hear claps or his name.</li>
+      <li><strong>Change your child's name or pets:</strong> tap the gear on Cody's home screen and answer the grown-up question.</li>
+      <li><strong>Start over:</strong> deleting the app deletes everything Cody knows.</li>
+    </ul>
+    <p>Anything else, or a problem to report: <a href="mailto:ddesmit@lostpinescreative.com?subject=Cody%20support">ddesmit@lostpinescreative.com</a>.</p>
+  </section>
+
+  <footer>
+    <p><a href="/cody/privacy.html">Privacy</a><a href="mailto:ddesmit@lostpinescreative.com?subject=Cody%20support">Support</a><a href="/">Lost Pines Creative</a></p>
+    <p>&copy; 2026 Lost Pines Creative LLC · Bastrop, Texas</p>
+  </footer>
+</main>
+</body>
+</html>
