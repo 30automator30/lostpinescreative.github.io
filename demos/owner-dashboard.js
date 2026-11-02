@@ -81,7 +81,7 @@
 
     overlay.innerHTML =
       '<div class="oda-top">' +
-        '<span class="oda-mark">' + svg(ICON.grid) + '</span>' +
+        '<span class="oda-mark">' + (cfg.markSvg || svg(ICON.grid)) + '</span>' +
         '<span class="oda-brand"><b>' + esc(cfg.business || 'Business') + '</b><small>' + esc(cfg.label || 'Owner dashboard') + '</small></span>' +
         '<span class="oda-live"><span class="pip"></span>' + esc(cfg.liveLabel || 'Live') + ' · ' + esc(cfg.today || 'Today') + '</span>' +
         '<button class="oda-close" aria-label="Close dashboard">×</button>' +
