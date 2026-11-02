@@ -30,11 +30,13 @@ all Row-Level Security policies, the signup trigger, the `dd_approve_quote` RPC,
 and turns on Realtime.
 
 ## 3. Deploy the AI assistant Edge Function
-Deploy **`dd-assistant/index.ts`** as a function named `dd-assistant`:
-- **Dashboard:** Edge Functions → Create → name `dd-assistant` → paste the file →
+Deploy **`dd-assistant/index.ts`** as a function named `ai-receptionist`. Despite
+the name, that slug is this website chat; the Groundwork phone code belongs at
+`gw-reception` and breaks the widget if deployed here.
+- **Dashboard:** Edge Functions → Create → name `ai-receptionist` → paste the file →
   **Deploy with "Verify JWT" OFF** (visitors may be signed out).
-- **CLI:** put the file at `supabase/functions/dd-assistant/index.ts` →
-  `supabase functions deploy dd-assistant --no-verify-jwt`.
+- **CLI:** put the file at `supabase/functions/ai-receptionist/index.ts` →
+  `supabase functions deploy ai-receptionist --no-verify-jwt`.
 
 Then set the secret (Project Settings ▸ Edge Functions ▸ Secrets, or CLI):
 ```
@@ -59,7 +61,7 @@ Edit **`../portal/config.js`** (one file, three values):
 ```js
 SUPABASE_URL:      "https://<ref>.supabase.co",
 SUPABASE_ANON_KEY: "<anon or sb_publishable_ key>",
-ASSISTANT_FN:      "https://<ref>.supabase.co/functions/v1/dd-assistant",
+ASSISTANT_FN:      "https://<ref>.supabase.co/functions/v1/ai-receptionist",
 ```
 (The anon key is safe to ship — RLS guards all data.)
 

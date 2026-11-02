@@ -5,7 +5,7 @@
  *   SUPABASE_URL      → Project Settings ▸ API ▸ Project URL
  *   SUPABASE_ANON_KEY → Project Settings ▸ API ▸ anon / publishable key
  *                       (safe to ship publicly — Row-Level Security guards data)
- *   ASSISTANT_FN      → `${SUPABASE_URL}/functions/v1/dd-assistant`
+ *   ASSISTANT_FN      → `${SUPABASE_URL}/functions/v1/ai-receptionist`
  *
  * Nothing else in the portal, admin, or assistant needs editing.
  * ============================================================ */
