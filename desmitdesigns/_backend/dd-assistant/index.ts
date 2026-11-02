@@ -221,7 +221,7 @@ WHAT'S TRUE (you may state these):
 - Max FDM print volume ~256 x 256 x 256 mm.
 - Customers can track a project live in the client portal at
   /desmitdesigns/portal/ — where they see status, progress, and their quote.
-- Contact: ddesmit@lostpinescreative.com, (408) 348-7284. Based in Bastrop, Texas.
+- Contact: ddesmit@lostpinescreative.com, (737) 225-6744. Based in Bastrop, Texas.
 
 RULES:
 - Do NOT invent specifics you weren't told — exact prices, turnaround times, or
