@@ -179,3 +179,19 @@ client a Cal.com team seat under it, or add per-client keys when client #2 needs
   lines, ≤5 forwarded replies per sender per hour; only real US/Canada numbers are ever texted.
 - **Two off switches:** `ai_config.enabled=false` turns off the AI (callers still get a text-back);
   `gw_reception_lines.enabled=false` turns the whole line off, texts included.
+
+## Ring-first line (`gw-ring`)
+
+An alternative to carrier forwarding, for a line that publishes its own number
+and keeps the owner's cell private. The published number's Twilio voice webhook
+is `gw-ring` (`../gw-ring/`, Verify JWT OFF, needs `TWILIO_AUTH_TOKEN`). It rings
+the owner's cell with the published number as caller ID, plays who is calling,
+and connects on press 1. Anything else goes to `ai_number`, which stays imported
+into Vapi; the published number does not.
+
+Set `gw_reception_lines.public_number` (migration `019`), keep carrier forwarding
+off on the cell, and enable the US in Twilio's Voice Geo Permissions. Without
+that permission, every outbound leg shows Failed at 0 seconds with no error in
+the call log.
+
+Spectrum Mobile can't forward to a toll-free number, so use a local number there.
