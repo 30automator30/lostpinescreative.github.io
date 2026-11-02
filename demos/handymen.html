@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="owner-dashboard.css?v=2">
+  <link rel="stylesheet" href="owner-dashboard.css?v=3">
 
 <style>
   :root{
@@ -309,7 +309,7 @@
   <div class="divider"></div>
 
   <section class="band">
-    <div class="head reveal"><div class="eyebrow">The part your competition doesn't have</div><h2>What the owner sees</h2><p>Every estimate request, booking, and review in one place — so nothing slips through Messenger. This preview is only the surface.</p></div>
+    <div class="head reveal"><div class="eyebrow">The part your competition doesn't have</div><h2>What the owner sees</h2><p>Every call, missed call and estimate request in one inbox — so nothing slips through Messenger. Open the dashboard to see what's <b>included</b> in your build and what's <b>coming soon</b>.</p></div>
     <div style="text-align:center;margin:0 0 26px" class="reveal"><button class="btn btn-amber" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
       <div class="dash-head"><b>Handyman an Sons — Example week</b><span>sample data · powered by Groundwork</span></div>
@@ -464,6 +464,33 @@ window.OWNER_DASH_CONFIG = {
   business: "Handyman an Sons",
   label: "Owner dashboard",
   today: "Fri, Aug 14",
+  liveLabel: "Demo · sample data",
+  overviewSub: "What you'd see each week. Green tags are in your build; grey tags are previews of what's coming next.",
+  included: [
+    "Inbox: every call, missed call, voicemail and estimate request",
+    "Missed-call text-back, counted when it goes out",
+    "Estimate requests from your website",
+    "Monthly report: calls, leads, missed calls saved, new reviews",
+    "Booking, payments and Google reviews run in their own apps (Cal.com, Stripe, Google)"
+  ],
+  soonList: [
+    "Jobs booked and close rate in this dashboard",
+    "Revenue collected in this dashboard",
+    "Job schedule and crew dispatch",
+    "Business reports",
+    "Payroll and analytics"
+  ],
+  soon: { appointments:true, team:true, reports:true, payroll:true, revenue:true },
+  inbox: {
+    sub: "Every call, missed call, voicemail and estimate request lands here as it happens, on the web and in the Lost Pines app.",
+    report: "On the 1st of each month: calls, leads, missed callers saved by text-back, and new reviews for the month.",
+    items: [
+      { t:"2:14p", from:"(512) 555-0143", text:"Missed call → text-back sent: \"Sorry we missed you, what do you need done?\"", kind:"Missed call", st:"Texted back" },
+      { t:"1:52p", from:"K. Delgado", text:"Website: estimate for a cedar privacy fence, ~120 ft", kind:"Estimate request", st:"New" },
+      { t:"11:30a", from:"(737) 555-0198", text:"Voicemail: \"Calling about a deck repair in Cedar Creek…\"", kind:"Voicemail", st:"New" },
+      { t:"9:05a", from:"T. Nguyen", text:"Website: tile backsplash, wants a visit this week", kind:"Estimate request", st:"Handled" }
+    ]
+  },
   cur: "$",
   terms: { team: "Crew", member: "Pro", job: "Job", jobs: "Jobs", location: "Area", schedule: "Schedule" },
   theme: {
@@ -472,12 +499,12 @@ window.OWNER_DASH_CONFIG = {
     good:"var(--pine)", font:"var(--slab)"
   },
   kpis: [
-    { l:"Estimate requests", n:"21", d:"6", up:true },
-    { l:"Jobs booked", n:"11", d:"3", up:true },
-    { l:"Missed calls recovered", n:"7", d:"2", up:true },
-    { l:"Close rate", n:"74%", d:"8%", up:true },
-    { l:"Revenue collected", n:"$9,340", d:"16%", up:true },
-    { l:"New reviews", n:"4", d:"2", up:true }
+    { l:"Estimate requests", n:"21", d:"6", up:true, inc:true },
+    { l:"Missed calls recovered", n:"7", d:"2", up:true, inc:true },
+    { l:"New reviews", n:"4", d:"2", up:true, inc:true },
+    { l:"Jobs booked", n:"11", d:"3", up:true, soon:true },
+    { l:"Close rate", n:"74%", d:"8%", up:true, soon:true },
+    { l:"Revenue collected", n:"$9,340", d:"16%", up:true, soon:true }
   ],
   revenue: [["Mon",1.4],["Tue",1.7],["Wed",1.2],["Thu",2.0],["Fri",1.9],["Sat",1.1]],
   appointments: {
@@ -529,6 +556,6 @@ window.OWNER_DASH_CONFIG = {
   ]
 };
 </script>
-<script src="owner-dashboard.js?v=2"></script>
+<script src="owner-dashboard.js?v=3"></script>
 </body>
 </html>

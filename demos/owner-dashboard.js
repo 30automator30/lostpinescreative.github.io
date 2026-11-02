@@ -47,11 +47,27 @@
 
   var TABS = [
     { id: 'overview', label: 'Overview', icon: ICON.grid, render: renderOverview },
+    { id: 'inbox', label: 'Inbox', icon: ICON.cal, render: renderInbox, only: !!cfg.inbox },
     { id: 'appointments', label: (T.schedule || 'Appointments'), icon: ICON.cal, render: renderAppointments },
     { id: 'team', label: (T.team || 'Team') + ' & dispatch', icon: ICON.team, render: renderTeam },
     { id: 'reports', label: 'Reports', icon: ICON.chart, render: renderReports },
     { id: 'payroll', label: 'Payroll', icon: ICON.cash, render: renderPayroll }
-  ];
+  ].filter(function (t) { return t.only !== false; });
+
+  /* Optional "what's included" labelling (off unless the demo's config sets it):
+     cfg.soon = { tabId|revenue: true } marks previews of features not built yet;
+     cfg.included / cfg.soonList fill the key at the top of the Overview;
+     kpis[].inc / kpis[].soon put a pill on a tile. */
+  var SOON = cfg.soon || {};
+  function pill(kind) {
+    if (kind === 'inc') return '<span class="oda-pill inc">Included</span>';
+    if (kind === 'soon') return '<span class="oda-pill soon">Coming soon</span>';
+    return '';
+  }
+  function soonBar(what) {
+    return '<div class="oda-soonbar">' + pill('soon') + '<span><b>Preview.</b> ' + esc(what) +
+      ' is on our roadmap and is not part of the current build. Sample data shown.</span></div>';
+  }
 
   /* ---- build shell ---- */
   function build() {
@@ -67,7 +83,7 @@
       '<div class="oda-top">' +
         '<span class="oda-mark">' + svg(ICON.grid) + '</span>' +
         '<span class="oda-brand"><b>' + esc(cfg.business || 'Business') + '</b><small>' + esc(cfg.label || 'Owner dashboard') + '</small></span>' +
-        '<span class="oda-live"><span class="pip"></span>Live · ' + esc(cfg.today || 'Today') + '</span>' +
+        '<span class="oda-live"><span class="pip"></span>' + esc(cfg.liveLabel || 'Live') + ' · ' + esc(cfg.today || 'Today') + '</span>' +
         '<button class="oda-close" aria-label="Close dashboard">×</button>' +
       '</div>' +
       '<div class="oda-tabs" id="odaTabs"></div>' +
@@ -80,7 +96,7 @@
       var b = document.createElement('button');
       b.className = 'oda-tab' + (t.id === active ? ' on' : '');
       b.setAttribute('data-tab', t.id);
-      b.innerHTML = svg(t.icon) + esc(t.label);
+      b.innerHTML = svg(t.icon) + esc(t.label) + (SOON[t.id] ? ' <span class="oda-pill soon sm">Soon</span>' : '');
       b.onclick = function () { show(t.id); };
       tabsEl.appendChild(b);
     });
@@ -103,7 +119,8 @@
   function renderOverview() {
     var kpis = (cfg.kpis || []).map(function (k) {
       return '<div class="oda-kpi"><div class="n">' + esc(k.n) + '</div><div class="l">' + esc(k.l) + '</div>' +
-        (k.d ? '<div class="d ' + (k.up ? 'up' : 'down') + '">' + (k.up ? '▲' : '▼') + ' ' + esc(k.d) + '</div>' : '') + '</div>';
+        (k.d ? '<div class="d ' + (k.up ? 'up' : 'down') + '">' + (k.up ? '▲' : '▼') + ' ' + esc(k.d) + '</div>' : '') +
+        (k.inc ? pill('inc') : k.soon ? pill('soon') : '') + '</div>';
     }).join('');
 
     var appts = (cfg.appointments && cfg.appointments.today) || [];
@@ -117,15 +134,24 @@
     var team = (cfg.team || []);
     var onjob = team.filter(function (m) { return /job|route/i.test(m.status); }).length;
 
+    var key = '';
+    if (cfg.included || cfg.soonList) {
+      var li = function (xs) { return '<ul>' + (xs || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
+      key = '<div class="oda-key">' +
+        '<div><h3>' + pill('inc') + ' In your build</h3>' + li(cfg.included) + '</div>' +
+        '<div><h3>' + pill('soon') + ' On the roadmap</h3>' + li(cfg.soonList) + '</div>' +
+      '</div>';
+    }
     main.innerHTML =
       '<h2 class="oda-h">This week at a glance</h2>' +
-      '<p class="oda-sub">The part your competition doesn’t have — every call, ' + esc((T.job || 'job').toLowerCase()) + ', and dollar in one place.</p>' +
+      '<p class="oda-sub">' + (cfg.overviewSub ? esc(cfg.overviewSub) : 'The part your competition doesn’t have — every call, ' + esc((T.job || 'job').toLowerCase()) + ', and dollar in one place.') + '</p>' +
+      key +
       '<div class="oda-kpis">' + kpis + '</div>' +
       '<div class="oda-sec oda-grid2">' +
-        '<div class="oda-card"><h3>Revenue this week <span class="tag">collected</span></h3>' + barChart(cfg.revenue || [], 'k') + '</div>' +
-        '<div class="oda-card"><h3>Today’s ' + esc((T.jobs || 'jobs').toLowerCase()) + ' <span class="tag">' + appts.length + ' scheduled</span></h3>' + (snapshot || '<p class="oda-sub" style="margin:0">Nothing booked yet.</p>') + '</div>' +
+        '<div class="oda-card"><h3>Revenue this week <span class="tag">collected</span>' + (SOON.revenue ? pill('soon') : '') + '</h3>' + barChart(cfg.revenue || [], 'k') + '</div>' +
+        '<div class="oda-card"><h3>Today’s ' + esc((T.jobs || 'jobs').toLowerCase()) + ' <span class="tag">' + appts.length + ' scheduled</span>' + (SOON.appointments ? pill('soon') : '') + '</h3>' + (snapshot || '<p class="oda-sub" style="margin:0">Nothing booked yet.</p>') + '</div>' +
       '</div>' +
-      '<div class="oda-sec oda-card"><h3>' + esc(T.team || 'Team') + ' right now <span class="tag">' + onjob + ' of ' + team.length + ' active</span></h3>' +
+      '<div class="oda-sec oda-card"><h3>' + esc(T.team || 'Team') + ' right now <span class="tag">' + onjob + ' of ' + team.length + ' active</span>' + (SOON.team ? pill('soon') : '') + '</h3>' +
         '<div class="oda-team">' + team.map(teamMini).join('') + '</div></div>';
   }
   function teamMini(m) {
@@ -150,12 +176,28 @@
 
   /* ---- Appointments ---- */
   var apptDay = 'today';
+  /* ---- Inbox (calls, missed calls, text-backs, leads) ---- */
+  function renderInbox() {
+    var ib = cfg.inbox || {};
+    var rows = (ib.items || []).map(function (m) {
+      return '<div class="oda-appt"><span class="time">' + esc(m.t) + '</span>' +
+        '<span class="cust"><b>' + esc(m.from) + '</b><span>' + esc(m.text) + '</span></span>' +
+        '<span class="who"><b>' + esc(m.kind) + '</b></span>' +
+        (m.st ? '<span class="oda-badge">' + esc(m.st) + '</span>' : '') + '</div>';
+    }).join('');
+    main.innerHTML =
+      '<h2 class="oda-h">Inbox ' + pill('inc') + '</h2>' +
+      '<p class="oda-sub">' + esc(ib.sub || 'Every call, missed call, voicemail and estimate request lands here as it happens.') + '</p>' +
+      '<div class="oda-card"><h3>Latest <span class="tag">sample</span></h3>' + rows + '</div>' +
+      (ib.report ? '<div class="oda-sec oda-card"><h3>Monthly report ' + pill('inc') + '</h3><p class="oda-sub" style="margin:0">' + esc(ib.report) + '</p></div>' : '');
+  }
+
   function renderAppointments() {
     var days = cfg.appointments || { today: [], tomorrow: [] };
     var list = days[apptDay] || [];
     var counts = {};
     list.forEach(function (a) { counts[a.st] = (counts[a.st] || 0) + 1; });
-    main.innerHTML =
+    main.innerHTML = (SOON.appointments ? soonBar('Job scheduling') : '') +
       '<h2 class="oda-h">' + (T.schedule || 'Appointments') + '</h2>' +
       '<p class="oda-sub">Every ' + (T.job || 'job').toLowerCase() + ', who’s on it, and where it stands — live as they come in.</p>' +
       '<div class="oda-row"><div class="oda-seg" id="apptSeg">' +
@@ -179,7 +221,7 @@
 
   /* ---- Team & dispatch ---- */
   function renderTeam() {
-    main.innerHTML =
+    main.innerHTML = (SOON.team ? soonBar((T.team || 'Team') + ' & dispatch') : '') +
       '<h2 class="oda-h">' + esc(T.team || 'Team') + ' & dispatch</h2>' +
       '<p class="oda-sub">See who’s where, who’s free, and assign the next ' + esc((T.job || 'job').toLowerCase()) + ' in one tap.</p>' +
       (state.unassigned.length
@@ -245,7 +287,7 @@
       var chart = r.type === 'hbars' ? hbars(r.data, r.money ? money : null) : barChart(r.data, r.unit || '');
       return '<div class="oda-card"><h3>' + esc(r.title) + (r.note ? ' <span class="tag">' + esc(r.note) + '</span>' : '') + '</h3>' + chart + '</div>';
     });
-    var html = '<h2 class="oda-h">Reports</h2><p class="oda-sub">Where the money and the demand actually come from — so you staff and spend where it counts.</p>';
+    var html = (SOON.reports ? soonBar('Business reports') : '') + '<h2 class="oda-h">Reports</h2><p class="oda-sub">Where the money and the demand actually come from — so you staff and spend where it counts.</p>';
     // two per row
     html += '<div class="oda-grid2">';
     secs.forEach(function (s, i) { html += s; });
@@ -265,7 +307,7 @@
       return '<div class="oda-kpi"><div class="n">' + esc(a.n) + '</div><div class="l">' + esc(a.l) + '</div></div>';
     }).join('');
 
-    main.innerHTML =
+    main.innerHTML = (SOON.payroll ? soonBar('Payroll & analytics') : '') +
       '<h2 class="oda-h">Payroll & analytics</h2>' +
       '<p class="oda-sub">Hours, commissions, and the numbers behind the business — payroll runs itself off the ' + esc((T.jobs || 'jobs').toLowerCase()) + ' already in the system.</p>' +
       (state.payrollRun ? '<div class="oda-banner"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>Payroll approved — ' + money(total) + ' to ' + p.rows.length + ' people, direct-deposits ' + esc(p.note || 'Friday') + '.</div>' : '') +
