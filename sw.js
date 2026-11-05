@@ -13,7 +13,7 @@
  *     else          (instant from cache, refreshed quietly in the background)
  */
 
-const VERSION = 'v47';
+const VERSION = 'v49';
 const PRECACHE = `lpc-precache-${VERSION}`;
 const RUNTIME = `lpc-runtime-${VERSION}`;
 
@@ -24,8 +24,6 @@ const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/groundwork.html',
-  '/groundwork/flow.js',
-  '/groundwork/flow.css',
   '/terms.html',
   '/privacy.html',
   '/analytics.js',

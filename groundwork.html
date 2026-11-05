@@ -19,7 +19,7 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
 :root {
     --bg: #0b1210; --surface: #111f1b; --raised: #16291f; --border: #24403a; --text: #e2e8e6;
@@ -553,8 +553,80 @@ label.f small { color: var(--muted); font-size: .8rem; }
 .legal { margin-top: 14px; font-size: .82rem; line-height: 1.6; color: var(--muted); }
 .legal a { color: var(--muted); }
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+/* ---------- The forest: same film as the home page, seen through the six windows ---------- */
+:root {
+    --bg: #060a07; --surface: rgba(14, 22, 15, .72); --raised: rgba(30, 38, 24, .86); --border: rgba(239, 233, 207, .18); --text: #efe9cf;
+    --muted: #b9b69d; --warm-hi: #efe9cf; --trace: #80703f; --tile: rgba(9, 14, 9, .74); --energy: #ffd089;
+    --land-amber: #a58a5c; --land-amber-hi: #cfa957; --land-green: #80703f; --pine: #060a07; --pine2: #0b120c;
+    --accent: #cfa957; --accent-hi: #e2c988; --warm: #cfa957; --serif: 'Instrument Serif', Georgia, serif;
+}
+body { background: var(--bg); }
+.film { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: #050705; }
+.film > * { position: absolute; inset: 0; will-change: transform, opacity; }
+.back, .front { background-position: 62% 50%; background-size: cover; background-repeat: no-repeat; transform-origin: 45% 58%; }
+.back { background-image: url(home/forest-back.webp); }
+.front { background-image: url(home/forest-front.webp); }
+.sun { background: radial-gradient(circle at var(--sx, 88%) var(--sy, 31%), rgba(255, 196, 112, .55), rgba(255, 170, 84, .15) 17%, transparent 42%); mix-blend-mode: screen; animation: breathe 11s ease-in-out infinite; }
+.mist { inset: -12% -40%; background: radial-gradient(38% 15% at 28% 74%, rgba(226, 205, 168, .17), transparent 72%), radial-gradient(30% 12% at 66% 69%, rgba(246, 214, 164, .15), transparent 72%), radial-gradient(44% 16% at 88% 80%, rgba(214, 200, 170, .12), transparent 72%); mix-blend-mode: screen; animation: drift 58s ease-in-out infinite alternate; }
+.shade { background: linear-gradient(180deg, rgba(5, 7, 5, .62) 0%, transparent 18%), linear-gradient(0deg, rgba(5, 7, 5, .78) 0%, transparent 20%); }
+.dim { background: #050705; opacity: .3; }
+.grain { inset: -10%; opacity: .1; mix-blend-mode: overlay; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.86' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E"); }
+.dawn { background: #050705; animation: dawn 2s ease-out .1s forwards; pointer-events: none; }
+@keyframes dawn { to { opacity: 0; visibility: hidden; } }
+@keyframes breathe { 0%, 100% { opacity: .72; } 50% { opacity: 1; } }
+@keyframes drift { from { transform: translate3d(-7%, 0, 0); } to { transform: translate3d(7%, -1.5%, 0); } }
+.bar, .rail { position: relative; z-index: 2; }
+.track { z-index: 1; }
+
+/* Windows of smoked glass over the forest */
+.flow, #system .in > .flow { display: none; }
+.in { background: rgba(7, 11, 8, .54); }
+.wf-frame path { stroke: rgba(207, 169, 87, .5); }
+.win.off .wf-frame path { stroke: var(--border); }
+.link { background: var(--trace); }
+.link::before { background: #0b120c; }
+
+/* Type */
+h1, h2, .steps h3, .shop h3, .chip b, .tier h3 { font-family: var(--serif); font-weight: 400; font-stretch: 100%; letter-spacing: -.008em; }
+h1 { padding-left: 0; font-size: clamp(2.1rem, min(4vw, 6.4vh), 4rem); line-height: 1.03; }
+@media (min-width: 761px) { #system .in { padding-block: clamp(10px, 1.8vh, 34px); } #readout, #readout p { max-width: none; flex: 1; } .readout { padding-block: 7px; } }
+h1::before, h1 .w::after { display: none; }
+h1 .w { color: var(--accent); font-style: italic; }
+h2 { font-size: clamp(2.2rem, 3.6vw, 3.5rem); }
+#packages .head h2 { font-size: clamp(2rem, 3vw, 3.1rem); }
+.steps h3, .shop h3 { font-size: 1.8rem; line-height: 1.1; }
+.tier .price { font-family: var(--serif); font-weight: 400; font-stretch: 100%; font-size: 1.9rem; }
+.chip b { font-size: clamp(1.25rem, 1.9vw, 1.7rem); line-height: 1.02; letter-spacing: 0; }
+.lp, .gw { text-transform: none; font-family: var(--serif); font-stretch: 100%; letter-spacing: 0; font-size: 1.25rem; font-weight: 400; }
+.lp { flex-direction: row; gap: 5px; }
+.lp small { font-size: inherit; letter-spacing: 0; color: inherit; font-weight: 400; }
+.gw { font-style: italic; color: var(--accent); }
+.gw small { display: none; }
+
+/* Buttons match the home page */
+.btn { border-radius: 999px; background: rgba(6, 10, 7, .45); border-color: var(--border); }
+.btn:hover { border-color: var(--text); }
+.btn.go, .sink .btn.ready { background: var(--text); border-color: var(--text); color: #12140c; }
+.btn.go:hover { background: #fff8dd; }
+.cta .btn:not(.go) { border-color: var(--border); }
+.cta .btn:not(.go):hover { border-color: var(--text); }
+.plan input:checked + label { background: var(--text); border-color: var(--text); color: #12140c; }
+
+/* The drawn trees and their roots give way to the real ones */
+.land, .howsvg, .feed { display: none !important; }
+.head { padding-left: 0; }
+.head::before { display: none; }
+.copy { padding-left: 0; padding-top: 0; align-self: center; }
+:is(#how, #packages, #proof, #faq) { --tree: 0px; }
+:is(#how, #packages, #proof, #faq) .human { margin-top: 16px; margin-left: 0; }
+@media (max-width: 760px) {
+    .back { background-image: url(home/forest-back-small.webp); background-position: 82% 50%; }
+    .front { background-image: url(home/forest-front-small.webp); background-position: 82% 50%; }
+    .mist { mix-blend-mode: normal; opacity: .6; }
+    .in { background: rgba(7, 11, 8, .68); }
+}
+@media (prefers-reduced-motion: reduce) { .sun, .mist { animation: none; } .dawn { display: none; } }
 </style>
-<link rel="stylesheet" href="groundwork/flow.css">
 </head>
 <body>
 <header class="bar">
@@ -564,6 +636,16 @@ label.f small { color: var(--muted); font-size: .8rem; }
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gw" viewBox="0 0 512 512"><g fill="none" stroke="currentColor" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"><circle cx="256" cy="256" r="196"/><line x1="70" y1="316" x2="442" y2="316"/><path d="M256,112 Q268,150 302,190 L284,182 Q300,208 320,238 L300,230 Q320,254 340,282 L268,282 L268,316 L244,316 L244,282 L172,282 Q192,254 212,230 L192,238 Q212,208 228,182 L210,190 Q244,150 256,112 Z"/><g stroke-width="6"><path d="M256,316 C256,350 256,372 256,400"/><path d="M256,316 C272,346 280,364 282,388"/><path d="M256,316 C240,346 232,364 230,388"/><path d="M256,316 C280,340 296,356 306,384"/><path d="M256,316 C232,340 216,356 206,384"/><path d="M256,316 C300,336 330,350 350,368"/><path d="M256,316 C212,336 182,350 162,368"/><path d="M256,316 C296,330 340,340 372,352"/><path d="M256,316 C216,330 172,340 140,352"/></g></g></symbol></svg>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="gwl" viewBox="0 0 1254 700"><path d="M682 662Q640 660 640 610L640 513Q695 550 760 549Q695 505 668 442L738 462Q675 420 650 352L712 374Q660 340 642 285L683 296Q640 245 627 172Q614 245 571 296L612 285Q594 340 542 374L604 352Q579 420 516 462L586 442Q559 505 494 549Q559 550 614 513L614 610Q614 660 572 662" vector-effect="non-scaling-stroke"/></symbol><symbol id="ct" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice"><path d="M262 168Q261 170 261 172Q261 174 261 177Q262 179 262 182Q262 185 262 188Q261 191 259 193Q257 196 254 198Q252 200 248 202Q245 204 242 205Q238 207 234 208Q230 209 226 209Q221 209 218 207Q214 206 210 204Q207 202 205 199Q202 197 200 194Q198 192 195 189Q193 187 191 185Q189 182 187 179Q186 176 186 173Q186 170 188 167Q190 164 193 162Q196 160 198 158Q201 157 203 155Q205 153 206 151Q208 149 209 146Q211 144 213 141Q216 139 219 137Q222 135 226 134Q230 133 234 132Q239 131 243 131Q248 131 252 132Q257 133 260 135Q264 137 267 140Q269 144 269 148Q270 152 269 155Q267 159 265 162Q264 165 262 168ZM300 165Q298 170 298 175Q298 180 299 185Q300 190 300 197Q301 203 299 209Q297 215 292 220Q288 226 283 230Q277 235 270 239Q263 243 256 247Q248 251 239 253Q230 255 221 255Q211 254 203 251Q194 248 188 243Q181 238 175 233Q170 227 165 222Q159 217 154 212Q149 208 144 202Q139 197 136 190Q133 184 134 177Q135 170 140 164Q144 158 150 153Q156 148 161 145Q167 141 171 137Q175 133 178 128Q181 123 185 118Q188 112 194 107Q199 102 206 98Q213 94 222 92Q230 89 239 88Q248 86 258 86Q268 86 278 87Q288 89 297 94Q305 98 310 106Q315 113 316 122Q316 130 313 138Q310 147 306 153Q303 160 300 165ZM339 162Q336 170 336 177Q336 185 338 193Q339 202 339 211Q339 220 335 229Q332 238 325 246Q319 255 310 262Q302 270 292 277Q282 283 270 289Q258 295 244 299Q230 302 216 301Q201 300 188 295Q176 290 165 282Q155 274 146 266Q138 258 129 251Q121 243 112 236Q104 228 96 220Q88 211 85 201Q81 191 83 181Q85 170 92 161Q99 152 108 144Q117 137 125 131Q132 125 138 119Q144 112 149 105Q154 97 160 89Q166 81 174 74Q183 66 194 60Q205 55 217 51Q230 46 244 44Q258 41 274 40Q290 39 305 42Q321 44 334 52Q346 59 354 71Q361 82 361 96Q361 109 357 122Q352 134 347 144Q342 154 339 162ZM377 159Q374 170 375 180Q376 191 377 202Q379 213 377 225Q376 238 371 249Q366 261 357 272Q349 283 338 294Q327 304 313 314Q300 324 284 332Q268 341 249 345Q230 349 211 347Q191 345 174 338Q157 330 143 320Q129 310 118 299Q106 288 94 279Q82 269 70 259Q58 250 48 238Q37 226 33 212Q28 198 32 184Q35 170 45 158Q55 145 66 136Q78 126 88 117Q98 109 105 100Q112 91 119 81Q126 70 134 60Q143 49 155 40Q167 31 181 23Q196 16 213 10Q230 4 249 -0Q268 -5 290 -6Q311 -8 332 -5Q353 -1 371 9Q388 20 397 36Q406 52 406 70Q406 89 400 105Q394 122 387 135Q381 149 377 159ZM417 157Q414 170 415 183Q416 196 417 210Q418 225 416 240Q413 255 407 269Q400 284 389 298Q379 312 365 325Q352 339 335 352Q319 366 298 376Q278 387 254 392Q230 397 206 394Q181 390 160 380Q139 370 122 357Q104 344 89 332Q74 319 58 307Q43 296 27 283Q11 271 -2 256Q-14 241 -19 223Q-24 206 -18 188Q-13 170 -1 155Q11 139 25 127Q39 115 51 104Q62 93 71 81Q80 69 89 56Q97 43 109 31Q120 18 135 7Q151 -4 169 -13Q188 -22 209 -30Q230 -38 254 -44Q279 -51 306 -53Q333 -56 360 -51Q387 -47 408 -33Q429 -20 440 1Q451 22 450 45Q450 69 442 89Q435 110 427 127Q420 143 417 157ZM457 154Q454 170 455 186Q456 202 457 219Q457 236 454 254Q450 271 441 289Q432 306 420 323Q408 340 393 357Q377 374 358 391Q338 408 313 421Q288 434 259 439Q230 444 201 439Q172 435 146 422Q121 410 100 394Q79 379 61 364Q42 349 22 336Q3 323 -17 308Q-37 293 -51 275Q-66 256 -71 235Q-75 213 -68 192Q-61 170 -46 152Q-31 133 -15 118Q1 103 14 90Q26 76 37 62Q47 47 58 32Q69 16 83 2Q98 -13 116 -26Q135 -38 157 -49Q179 -60 205 -70Q230 -80 259 -88Q289 -97 322 -101Q355 -105 387 -99Q420 -93 445 -76Q470 -59 482 -33Q494 -8 493 21Q492 49 484 74Q476 98 468 118Q460 138 457 154ZM498 151Q496 170 497 189Q498 208 497 228Q496 248 491 268Q485 288 475 308Q464 327 451 347Q437 368 420 389Q403 410 380 430Q358 451 328 466Q299 481 264 486Q230 492 196 485Q162 478 133 463Q104 448 79 430Q55 413 32 397Q9 381 -15 365Q-39 350 -62 333Q-85 316 -101 293Q-118 271 -122 246Q-125 220 -116 195Q-107 170 -90 149Q-73 127 -56 110Q-39 92 -25 75Q-11 59 1 42Q13 24 26 7Q40 -11 58 -27Q76 -44 98 -58Q120 -72 146 -84Q171 -97 201 -109Q230 -122 265 -133Q299 -145 338 -149Q377 -154 415 -147Q454 -140 482 -119Q511 -98 524 -67Q537 -36 536 -4Q535 29 526 58Q517 86 509 109Q501 132 498 151ZM839 428Q841 430 843 432Q844 435 846 438Q847 441 847 444Q847 447 846 450Q844 453 842 456Q839 458 836 460Q833 462 829 463Q825 464 822 464Q818 465 814 464Q810 463 807 461Q803 460 801 457Q799 455 797 452Q796 450 794 448Q793 446 791 445Q789 444 786 443Q783 442 780 441Q777 440 775 437Q772 435 771 433Q770 430 770 427Q770 424 771 422Q772 419 774 416Q775 414 777 411Q779 409 781 407Q783 404 786 403Q789 401 793 400Q796 399 800 399Q803 399 807 399Q810 400 813 400Q816 400 820 401Q823 402 826 403Q829 404 831 405Q834 407 835 410Q837 412 837 415Q837 417 837 420Q837 422 838 424Q838 426 839 428ZM879 425Q883 430 887 436Q891 441 894 448Q897 455 897 463Q896 470 893 477Q890 484 884 489Q878 495 871 499Q863 504 855 507Q846 510 837 511Q828 512 819 510Q810 508 802 503Q795 499 790 493Q784 487 781 481Q777 476 773 472Q770 468 765 466Q760 464 753 462Q746 459 739 456Q732 453 727 448Q722 442 720 436Q718 430 718 424Q719 417 721 411Q723 405 725 398Q728 392 732 386Q736 380 741 375Q747 370 754 366Q761 362 769 361Q778 359 786 359Q794 359 802 359Q810 360 818 360Q825 361 833 362Q841 363 848 365Q855 368 860 372Q866 377 869 383Q871 389 872 395Q873 401 873 406Q873 412 874 416Q876 421 879 425ZM920 423Q925 430 932 439Q938 448 942 459Q946 470 946 481Q945 492 940 503Q934 513 925 522Q917 532 905 539Q894 546 881 551Q868 556 853 558Q838 559 824 556Q810 552 798 545Q786 537 778 528Q770 518 764 510Q759 501 753 496Q747 490 738 487Q730 484 720 480Q709 477 698 471Q688 466 680 458Q672 449 669 440Q666 430 667 420Q667 410 670 400Q673 390 677 380Q681 370 687 361Q692 351 701 343Q710 335 722 329Q734 324 747 322Q760 319 773 319Q786 319 798 319Q810 320 822 320Q834 321 846 322Q858 323 870 328Q881 332 889 339Q897 347 902 356Q906 366 906 375Q907 385 908 393Q908 401 911 408Q914 415 920 423ZM961 420Q969 430 978 442Q986 455 991 469Q995 484 994 499Q992 514 985 529Q978 543 967 556Q955 568 940 579Q925 589 907 597Q889 604 869 606Q849 607 830 602Q810 597 794 586Q778 575 767 562Q756 549 748 538Q740 527 732 520Q723 513 712 508Q700 504 685 499Q671 494 657 487Q643 479 633 467Q624 456 620 443Q616 430 616 416Q617 403 619 389Q622 375 627 362Q632 348 640 335Q648 322 661 311Q674 300 690 293Q706 286 724 283Q742 281 759 280Q777 280 793 280Q810 280 827 280Q843 280 860 282Q877 283 892 289Q907 295 918 306Q929 317 934 330Q939 343 940 356Q941 369 942 380Q943 391 948 400Q953 410 961 420ZM1003 417Q1014 430 1024 446Q1034 462 1039 480Q1044 498 1042 517Q1039 536 1030 554Q1021 572 1007 588Q993 605 975 619Q957 633 934 643Q911 652 885 654Q860 656 835 648Q810 641 790 626Q770 612 756 595Q742 579 732 565Q722 552 711 544Q699 535 684 530Q669 525 650 519Q632 512 615 502Q598 492 587 477Q576 463 571 447Q566 430 566 413Q566 396 569 378Q571 361 577 343Q583 325 593 308Q604 292 620 278Q637 265 658 257Q679 249 702 246Q725 242 746 242Q768 241 789 240Q810 239 831 238Q852 238 874 240Q895 243 914 251Q933 259 947 273Q960 287 966 304Q972 322 973 338Q975 354 977 367Q979 381 986 392Q993 404 1003 417ZM1047 414Q1059 430 1071 449Q1082 468 1087 490Q1092 512 1088 535Q1085 557 1075 579Q1064 601 1048 621Q1032 642 1010 660Q989 677 961 689Q933 701 902 702Q870 704 840 694Q810 684 786 666Q762 648 745 628Q729 608 716 593Q704 577 689 568Q675 559 656 553Q637 546 615 538Q593 530 574 517Q555 504 542 487Q529 470 523 450Q518 430 517 409Q515 388 518 367Q520 345 526 324Q532 302 546 282Q559 261 580 246Q601 230 627 221Q653 212 680 209Q708 205 734 203Q760 202 785 200Q810 198 836 197Q862 195 888 198Q914 201 937 212Q959 223 975 241Q990 258 997 279Q1003 300 1006 319Q1008 339 1012 354Q1015 370 1025 384Q1034 398 1047 414ZM1091 411Q1106 430 1118 453Q1130 475 1134 500Q1138 526 1134 552Q1130 578 1118 604Q1107 629 1089 654Q1071 679 1046 701Q1021 723 988 736Q956 750 918 751Q881 752 846 740Q810 727 782 705Q754 683 735 660Q716 638 700 620Q685 603 667 593Q650 583 627 576Q604 568 579 558Q554 548 533 533Q512 517 498 497Q484 476 476 453Q469 430 467 406Q464 381 466 356Q467 330 474 304Q481 278 497 255Q514 231 539 214Q565 196 596 187Q627 177 659 172Q691 168 721 166Q751 163 781 159Q810 156 841 154Q871 152 902 156Q933 160 959 173Q985 187 1002 209Q1019 230 1027 255Q1034 279 1038 301Q1041 323 1047 341Q1053 359 1064 376Q1076 392 1091 411ZM1136 408Q1152 430 1164 456Q1176 482 1180 510Q1184 539 1179 569Q1174 598 1162 628Q1150 658 1131 688Q1111 717 1083 743Q1054 769 1016 784Q978 800 935 800Q892 800 851 785Q810 769 778 743Q747 718 724 692Q702 667 684 648Q666 630 645 619Q623 608 597 599Q571 591 543 578Q516 566 493 548Q470 529 454 506Q439 482 430 456Q422 430 417 402Q413 374 413 344Q413 314 421 284Q429 254 449 228Q469 201 499 182Q530 163 566 152Q602 142 638 137Q674 132 708 128Q742 123 776 118Q810 113 845 110Q881 108 916 113Q952 118 981 135Q1011 152 1029 177Q1048 203 1057 231Q1065 259 1070 283Q1074 308 1083 328Q1091 348 1105 367Q1119 386 1136 408ZM975 55Q978 60 979 66Q980 71 979 77Q978 83 975 88Q971 93 967 97Q962 101 956 105Q951 108 945 112Q940 115 934 118Q928 121 921 124Q915 126 907 127Q900 127 893 125Q886 122 881 118Q876 113 872 108Q869 103 866 99Q864 94 861 91Q858 88 854 86Q849 83 844 81Q839 78 834 74Q830 70 826 65Q823 60 821 54Q819 49 819 42Q819 36 820 30Q821 23 824 17Q827 11 833 7Q839 2 847 -0Q855 -2 864 -2Q872 -1 880 2Q888 5 894 8Q900 11 905 12Q910 14 915 15Q920 15 926 15Q932 16 938 17Q944 18 949 21Q954 23 958 27Q962 31 965 36Q968 40 971 45Q973 50 975 55ZM1027 51Q1031 60 1032 69Q1034 79 1032 88Q1030 98 1024 106Q1018 115 1010 122Q1002 128 993 134Q984 140 975 146Q966 152 957 158Q947 163 936 167Q925 171 912 171Q900 172 889 167Q877 163 869 155Q860 148 854 139Q849 131 844 124Q840 117 834 113Q829 108 822 104Q814 100 806 95Q798 90 791 83Q783 76 778 68Q773 60 770 51Q767 41 765 31Q764 20 766 10Q767 -1 773 -12Q778 -22 788 -30Q798 -37 812 -40Q825 -44 840 -42Q854 -40 867 -36Q880 -31 890 -27Q900 -22 908 -20Q917 -17 926 -16Q934 -16 944 -15Q954 -14 963 -12Q973 -10 981 -5Q990 -0 996 6Q1003 12 1008 20Q1013 27 1018 35Q1023 43 1027 51ZM1079 48Q1085 60 1087 73Q1089 87 1085 100Q1082 113 1073 124Q1064 136 1053 145Q1041 155 1029 163Q1017 172 1005 181Q993 189 980 198Q966 206 950 211Q935 217 917 217Q900 216 884 210Q868 203 857 192Q845 182 837 170Q829 159 822 150Q815 141 807 134Q799 128 789 122Q779 116 768 109Q757 102 747 92Q738 83 731 71Q724 60 719 47Q714 34 712 19Q710 5 711 -11Q713 -26 720 -41Q728 -56 742 -66Q757 -77 776 -81Q796 -84 816 -82Q837 -79 854 -73Q872 -67 886 -61Q900 -55 912 -52Q924 -49 936 -48Q949 -47 962 -46Q976 -45 989 -41Q1002 -37 1013 -30Q1025 -24 1034 -15Q1043 -6 1050 4Q1058 14 1065 25Q1073 36 1079 48ZM141 535Q143 540 144 545Q146 551 145 556Q144 562 142 567Q140 572 136 577Q133 582 129 587Q125 592 120 597Q115 602 108 606Q102 611 94 613Q87 616 78 616Q70 617 62 615Q54 613 46 611Q39 608 31 606Q24 604 16 601Q9 598 1 595Q-6 591 -11 586Q-17 580 -19 573Q-21 566 -18 559Q-16 552 -12 546Q-8 540 -3 535Q2 530 5 526Q8 522 10 517Q11 513 13 508Q15 503 18 498Q20 493 25 488Q29 483 34 478Q40 474 47 469Q53 465 62 461Q70 457 80 455Q89 453 99 454Q109 455 117 459Q125 464 130 471Q135 478 136 486Q138 494 138 502Q137 509 137 515Q137 520 138 525Q139 530 141 535ZM183 532Q186 540 187 548Q189 557 187 565Q186 574 182 582Q178 590 173 598Q168 606 162 614Q156 622 149 630Q141 638 131 645Q121 652 109 656Q96 659 83 660Q70 660 57 657Q45 654 33 651Q21 647 10 644Q-2 640 -15 636Q-27 633 -39 627Q-50 621 -59 612Q-67 603 -69 592Q-71 581 -68 570Q-64 559 -58 549Q-51 540 -44 532Q-38 525 -33 518Q-29 511 -26 504Q-23 497 -20 489Q-17 482 -12 474Q-8 466 -1 459Q6 451 14 444Q23 437 33 429Q44 422 57 416Q70 409 85 406Q100 402 116 404Q131 405 144 413Q156 420 164 432Q171 443 174 456Q176 469 176 480Q175 491 176 500Q176 509 178 517Q180 524 183 532ZM226 529Q229 540 230 551Q231 563 229 574Q226 586 221 596Q216 607 210 618Q203 629 196 641Q188 653 178 664Q168 676 154 685Q140 694 123 698Q106 703 88 702Q70 702 53 698Q36 694 20 690Q4 685 -13 681Q-29 677 -46 672Q-64 667 -79 659Q-95 651 -106 639Q-117 626 -119 611Q-122 596 -117 581Q-111 566 -103 553Q-94 540 -86 530Q-78 519 -72 510Q-66 500 -62 491Q-58 481 -54 470Q-49 460 -42 450Q-35 440 -26 430Q-17 420 -5 410Q6 400 20 390Q34 379 52 370Q70 360 91 355Q112 350 133 353Q154 356 171 366Q188 377 197 393Q207 409 210 427Q213 444 213 459Q214 474 215 486Q216 497 219 508Q222 518 226 529Z" fill="none" stroke="currentColor" stroke-width="1" vector-effect="non-scaling-stroke"/></symbol></svg>
+<div class="film" aria-hidden="true">
+    <div class="back" id="back"></div>
+    <div class="sun" id="sun"></div>
+    <div class="mist"></div>
+    <div class="front" id="front"></div>
+    <div class="shade"></div>
+    <div class="dim" id="dim"></div>
+    <div class="grain"></div>
+    <div class="dawn"></div>
+</div>
 <div class="flow" id="flow" aria-hidden="true"></div>
 <main class="track" id="track" tabindex="-1">
 
@@ -719,7 +801,6 @@ label.f small { color: var(--muted); font-size: .8rem; }
 if (location.hostname === 'lostpinescreative.com') { var ga = document.createElement('script'); ga.src = '/analytics.js'; document.head.appendChild(ga); }</script>
 <script src="groundwork/portal/config.js"></script>
 <script src="groundwork/assistant.js" defer></script>
-<script src="groundwork/flow.js"></script>
 <script>
 (function () {
     var calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1295,6 +1376,39 @@ if (location.hostname === 'lostpinescreative.com') { var ga = document.createEle
     }
     build2();
     new ResizeObserver(build2).observe(form);
+})();
+</script>
+<script>
+/* The camera: traveling sideways through the windows pushes through the trees */
+(function () {
+    var track = document.getElementById('track'), back = document.getElementById('back'), front = document.getElementById('front'), sun = document.getElementById('sun'), dim = document.getElementById('dim');
+    var still = matchMedia('(prefers-reduced-motion: reduce)').matches, phone = innerWidth <= 760;
+    var IMG = 2400 / 1018, SUNX = .915, SUNY = .31, POS = phone ? .82 : .62, at = 0, last = -1;
+    function placeSun(scale) {
+        var w = innerWidth, h = innerHeight, iw = Math.max(w, h * IMG), ih = iw / IMG;
+        var x = (w - iw) * POS + iw * SUNX, y = (h - ih) * .5 + ih * SUNY, ox = w * .45, oy = h * .58;
+        sun.style.setProperty('--sx', (ox + (x - ox) * scale) + 'px');
+        sun.style.setProperty('--sy', (oy + (y - oy) * scale) + 'px');
+    }
+    function render() {
+        var max = track.scrollWidth - track.clientWidth;
+        var p = max > 0 ? Math.min(1, Math.max(0, track.scrollLeft / max)) : 0;
+        at += (p - at) * (still ? 1 : .07);
+        if (Math.abs(at - last) > .0002) {
+            last = at;
+            var push = Math.min(1, at / .4), ease = 1 - Math.pow(1 - push, 2);
+            var b = 1.03 + ease * .12 + at * .06, f = 1.05 + ease * .62;
+            back.style.transform = 'scale(' + b + ')';
+            front.style.transform = 'translate3d(0,' + (ease * 3) + '%,0) scale(' + f + ')';
+            front.style.opacity = Math.max(0, 1 - Math.max(0, push - .55) / .45);
+            dim.style.opacity = (.3 + .22 * Math.min(1, at / .3)).toFixed(3);
+            placeSun(b);
+        }
+        if (!still) requestAnimationFrame(render);
+    }
+    addEventListener('resize', function () { last = -1; if (still) render(); });
+    if (still) track.addEventListener('scroll', render, { passive: true });
+    render();
 })();
 </script>
 </body>

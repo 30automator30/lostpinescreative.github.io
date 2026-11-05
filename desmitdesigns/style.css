@@ -6,17 +6,17 @@
 }
 
 :root {
-  --bg-dark: #0a0e17;
-  --bg-card: #111827;
-  --bg-card-hover: #1a2332;
-  --accent: #3b82f6;
-  --accent-light: #60a5fa;
-  --accent-glow: rgba(59, 130, 246, 0.3);
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
-  --border: #1e293b;
-  --gradient: linear-gradient(135deg, #3b82f6, #06b6d4);
+  --bg-dark: #060a07;
+  --bg-card: #10170f;
+  --bg-card-hover: #1a2316;
+  --accent: #cfa957;
+  --accent-light: #e2c988;
+  --accent-glow: rgba(207, 169, 87, 0.24);
+  --text: #efe9cf;
+  --text-muted: #c9c6ad;
+  --text-dim: #b9b69d;
+  --border: rgba(239, 233, 207, .18);
+  --gradient: linear-gradient(135deg, #cfa957, #e2c988);
 }
 
 html {
@@ -128,14 +128,14 @@ img {
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(10, 14, 23, 0.9);
+  background: rgba(11, 18, 16, 0.9);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
   transition: all 0.3s;
 }
 
 #navbar.scrolled {
-  background: rgba(10, 14, 23, 0.98);
+  background: rgba(11, 18, 16, 0.98);
 }
 
 .nav-container {
@@ -227,7 +227,7 @@ img {
   justify-content: center;
   position: relative;
   text-align: center;
-  background: radial-gradient(ellipse at center, #0f1729 0%, #0a0e17 70%);
+  background: radial-gradient(ellipse at center, #111f1b 0%, #0b1210 70%);
   overflow: hidden;
 }
 
@@ -239,8 +239,8 @@ img {
   right: 0;
   bottom: 0;
   background:
-    linear-gradient(90deg, transparent 49.5%, rgba(59, 130, 246, 0.03) 49.5%, rgba(59, 130, 246, 0.03) 50.5%, transparent 50.5%),
-    linear-gradient(0deg, transparent 49.5%, rgba(59, 130, 246, 0.03) 49.5%, rgba(59, 130, 246, 0.03) 50.5%, transparent 50.5%);
+    linear-gradient(90deg, transparent 49.5%, rgba(74, 158, 126, 0.03) 49.5%, rgba(74, 158, 126, 0.03) 50.5%, transparent 50.5%),
+    linear-gradient(0deg, transparent 49.5%, rgba(74, 158, 126, 0.03) 49.5%, rgba(74, 158, 126, 0.03) 50.5%, transparent 50.5%);
   background-size: 60px 60px;
   animation: gridMove 20s linear infinite;
 }
@@ -417,7 +417,7 @@ img {
 }
 .work-card-media {
   aspect-ratio: 4 / 3;
-  background: #0f1626;
+  background: #0d1c18;
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -466,7 +466,7 @@ img {
 /* ===== Portfolio ===== */
 #portfolio {
   padding: 100px 0;
-  background: linear-gradient(180deg, var(--bg-dark) 0%, #0d1220 50%, var(--bg-dark) 100%);
+  background: linear-gradient(180deg, var(--bg-dark) 0%, #0d1c18 50%, var(--bg-dark) 100%);
 }
 
 .portfolio-grid {
@@ -481,7 +481,7 @@ img {
   overflow: hidden;
   aspect-ratio: 1;
   cursor: pointer;
-  background: #0f1626;
+  background: #0d1c18;
   border: 1px solid var(--border);
 }
 
@@ -499,7 +499,7 @@ img {
 .portfolio-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(10, 14, 23, 0.95) 0%, rgba(10, 14, 23, 0.4) 50%, transparent 100%);
+  background: linear-gradient(to top, rgba(11, 18, 16, 0.95) 0%, rgba(11, 18, 16, 0.4) 50%, transparent 100%);
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -610,7 +610,7 @@ img {
 /* ===== About ===== */
 #about {
   padding: 100px 0;
-  background: linear-gradient(180deg, var(--bg-dark) 0%, #0d1220 50%, var(--bg-dark) 100%);
+  background: linear-gradient(180deg, var(--bg-dark) 0%, #0d1c18 50%, var(--bg-dark) 100%);
 }
 
 .about-content {
@@ -887,7 +887,7 @@ footer {
     top: 72px;
     left: 0;
     right: 0;
-    background: rgba(10, 14, 23, 0.98);
+    background: rgba(11, 18, 16, 0.98);
     flex-direction: column;
     padding: 24px;
     gap: 16px;

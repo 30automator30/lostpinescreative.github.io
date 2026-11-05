@@ -3,32 +3,49 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DeSmit Designs - Engineering Design & 3D Printing</title>
-  <meta name="description" content="Custom 3D printing, CAD design, laser cutting, and engineering services in Bastrop, Texas. From concept to creation.">
-  <meta property="og:title" content="DeSmit Designs">
-  <meta property="og:description" content="Custom 3D printing, CAD design, laser cutting, and engineering services. From concept to creation.">
-  <meta property="og:image" content="https://lostpinescreative.com/desmitdesigns/images/logo.png">
+  <title>Design and Fabrication Extras | Lost Pines Creative</title>
+  <meta name="description" content="Design and fabrication extras from Lost Pines Creative in Bastrop, Texas: graphic design, CAD, product development consulting, 3D printing, and laser cutting.">
+  <meta property="og:title" content="Design and Fabrication Extras | Lost Pines Creative">
+  <meta property="og:description" content="Design and fabrication extras from Lost Pines Creative in Bastrop, Texas: graphic design, CAD, product development consulting, 3D printing, and laser cutting.">
+  <meta property="og:image" content="https://lostpinescreative.com/lostpines.png">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://lostpinescreative.com/desmitdesigns/">
   <link rel="canonical" href="https://lostpinescreative.com/desmitdesigns/">
-  <link rel="icon" href="images/logo.png" type="image/png">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Lost Pines type, over the original stylesheet */
+    body, body * { font-family: Archivo, -apple-system, 'Segoe UI', sans-serif; }
+    .nav-logo img, .footer-brand img { width: 32px; height: 32px; }
+    .hero-mark { width: 92px; height: 92px; margin: 0 auto 18px; }
+    #hero { background: linear-gradient(rgba(5, 7, 5, .7), rgba(5, 7, 5, .86)), url(/home/forest-back.webp) 62% 50% / cover no-repeat; }
+    #hero::before { display: none; }
+    #hero h1.hero-title { font-size: clamp(2.8rem, 6vw, 5.2rem); line-height: 1.05; }
+    h1, h2, h3, h4 { font-family: 'Instrument Serif', Georgia, serif !important; font-weight: 400; }
+    .btn { border-radius: 999px; text-transform: none; letter-spacing: 0; }
+    .btn-primary, .nav-cta { background: var(--text) !important; color: #12140c !important; border-color: var(--text) !important; }
+    .nav-cta { border-radius: 999px; text-transform: none; letter-spacing: 0; }
+    #hero h1.hero-title, .section-title { text-transform: none; letter-spacing: -.01em; background: none; -webkit-text-fill-color: currentColor; color: var(--text); }
+    .nav-logo { white-space: nowrap; font-size: clamp(.92rem, 3.6vw, 1.15rem); text-transform: none; }
+    .contact-grid { grid-template-columns: 1fr; justify-items: center; }
+    .contact-info { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 32px 48px; padding-top: 0; }
+  </style>
   <script src="/analytics.js"></script>
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": ["ProfessionalService", "LocalBusiness"],
-    "@id": "https://lostpinescreative.com/desmitdesigns/#business",
-    "name": "DeSmit Designs",
-    "description": "Design & fabrication studio in Bastrop, Texas — multi-color and multi-material 3D printing, 12K resin printing, CAD & engineering design, laser cutting & engraving, product development, and branding. From concept to manufactured part.",
+    "@id": "https://lostpinescreative.com/#business",
+    "name": "Lost Pines Creative",
+    "description": "Groundwork business systems for local businesses, plus design and fabrication extras in Bastrop, Texas — multi-color and multi-material 3D printing, 12K resin printing, CAD & engineering design, laser cutting & engraving, product development, and branding. From concept to manufactured part.",
     "url": "https://lostpinescreative.com/desmitdesigns/",
     "telephone": "+1-737-225-6744",
     "email": "ddesmit@lostpinescreative.com",
-    "image": "https://lostpinescreative.com/desmitdesigns/images/logo.png",
-    "logo": "https://lostpinescreative.com/desmitdesigns/images/logo.png",
+    "image": "https://lostpinescreative.com/lostpines.png",
+    "logo": "https://lostpinescreative.com/lostpines.png",
     "address": {
       "@type": "PostalAddress",
       "addressLocality": "Bastrop",
@@ -40,13 +57,12 @@
       { "@type": "City", "name": "Austin, TX" },
       { "@type": "AdministrativeArea", "name": "Central Texas" }
     ],
-    "founder": { "@type": "Person", "name": "Daniel DeSmit" },
-    "parentOrganization": { "@type": "Organization", "name": "Lost Pines Creative LLC" },
+    "founder": { "@type": "Person", "name": "Daniel De Smit" },
     "sameAs": ["https://lostpinescreative.com/"],
     "knowsAbout": ["3D printing", "resin printing", "CAD", "engineering design", "laser cutting", "product development", "industrial design", "branding"],
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
-      "name": "DeSmit Designs services",
+      "name": "Design and fabrication extras",
       "itemListElement": [
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Multi-color & multi-material FDM 3D printing", "description": "Up to 16 colors on a Bambu Lab P1S + AMS." } },
         { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "High-resolution 12K resin (MSLA) 3D printing" } },
@@ -64,9 +80,9 @@
   <!-- Navigation -->
   <nav id="navbar">
     <div class="nav-container">
-      <a href="#hero" class="nav-logo">
-        <img src="images/emblem_v2.webp" alt="DeSmit Designs Logo">
-        <span>DeSmit Designs</span>
+      <a href="/" class="nav-logo">
+        <img src="/mark.svg" alt="" width="32" height="32">
+        <span>Lost Pines Creative</span>
       </a>
       <button class="nav-toggle" aria-label="Toggle navigation">
         <span></span>
@@ -75,11 +91,11 @@
       </button>
       <ul class="nav-links">
         <li><a href="#services">Services</a></li>
-        <li><a href="#portfolio">Portfolio</a></li>
+        <li><a href="#portfolio">Examples</a></li>
         <li><a href="#equipment">Equipment</a></li>
-        <li><a href="#about">About</a></li>
+        <li><a href="/groundwork.html">Groundwork</a></li>
         <li><a href="portal/">Client Login</a></li>
-        <li><a href="#contact" class="nav-cta">Get a Quote</a></li>
+        <li><a href="#contact" class="nav-cta">Ask about it</a></li>
       </ul>
     </div>
   </nav>
@@ -88,12 +104,12 @@
   <section id="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-      <h1 class="hero-title"><img src="images/logo_v2_light.webp" alt="DeSmit Designs" class="hero-logo"></h1>
-      <p class="hero-tagline">Driving Innovation and Breakthroughs<br>with Engineering Excellence</p>
-      <p class="hero-sub">Custom 3D printing, CAD design, and laser cutting services in Central Texas</p>
+      <img class="hero-mark" src="/mark.svg" alt="" width="92" height="92">
+      <h1 class="hero-title">Design and fabrication extras</h1>
+      <p class="hero-sub">Available &agrave; la carte from Lost Pines Creative, with or without Groundwork. Bastrop, Texas.</p>
       <div class="hero-buttons">
-        <a href="#portfolio" class="btn btn-primary">View Work</a>
-        <a href="#contact" class="btn btn-outline">Get a Quote</a>
+        <a href="#portfolio" class="btn btn-primary">See examples</a>
+        <a href="#contact" class="btn btn-outline">Ask about it</a>
       </div>
     </div>
     <div class="hero-scroll">
@@ -157,8 +173,8 @@
   <!-- Portfolio -->
   <section id="portfolio">
     <div class="container">
-      <h2 class="section-title">Selected Work</h2>
-      <p class="section-subtitle">A sample of recent commissions across 3D printing, CAD, laser cutting, and product design</p>
+      <h2 class="section-title">Examples</h2>
+      <p class="section-subtitle">Things I&rsquo;ve designed and made across 3D printing, CAD, laser cutting, and product design</p>
       <div class="work-cards">
         <article class="work-card">
           <div class="work-card-media"><img src="images/portfolio/hydroponic-system.webp" alt="Custom-built vertical hydroponic grow system" loading="lazy"></div>
@@ -303,9 +319,9 @@
       <div class="about-content">
         <div class="about-text">
           <h2 class="section-title">About</h2>
-          <p class="about-lead">DeSmit Designs is a design and fabrication studio based in Bastrop, Texas, specializing in turning ideas into tangible products.</p>
-          <p>With over 15 years of professional engineering experience spanning medical devices, consumer products, and industrial design, Daniel DeSmit brings a depth of technical skill rarely found in small-shop fabrication.</p>
-          <p>Whether you need a one-off custom gift, a prototype for your product idea, or production-quality branded items, DeSmit Designs delivers with engineering precision and creative flair.</p>
+          <p class="about-lead">These extras come from the same person who builds Groundwork, in Bastrop, Texas.</p>
+          <p>With over 15 years of professional engineering experience spanning medical devices, consumer products, and industrial design, Daniel De Smit brings a depth of technical skill rarely found in small-shop fabrication.</p>
+          <p>Whether you need a one-off custom piece, a prototype for your product idea, or branded items for your business, just ask.</p>
           <div class="about-stats">
             <div class="stat">
               <span class="stat-number">15+</span>
@@ -331,8 +347,8 @@
   <!-- Contact -->
   <section id="contact">
     <div class="container">
-      <h2 class="section-title">Get in Touch</h2>
-      <p class="section-subtitle">Have a project in mind? Let's talk.</p>
+      <h2 class="section-title">Ask about an extra</h2>
+      <p class="section-subtitle">Tell me what you need. Call or email and you&rsquo;ll reach me directly.</p>
       <p class="contact-login">Already have a project? <a href="portal/">Client login &rarr;</a></p>
       <div class="contact-grid">
         <div class="contact-info">
@@ -340,7 +356,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             <div>
               <h3>Email</h3>
-              <a href="mailto:ddesmit@lostpinescreative.com">ddesmit@lostpinescreative.com</a>
+              <a href="mailto:ddesmit@lostpinescreative.com?subject=Groundwork%20extras">ddesmit@lostpinescreative.com</a>
             </div>
           </div>
           <div class="contact-item">
@@ -358,31 +374,6 @@
             </div>
           </div>
         </div>
-        <form class="contact-form" action="https://formspree.io/f/placeholder" method="POST">
-          <div class="form-group">
-            <input type="text" name="name" placeholder="Your Name" required>
-          </div>
-          <div class="form-group">
-            <input type="email" name="email" placeholder="Your Email" required>
-          </div>
-          <div class="form-group">
-            <select name="service">
-              <option value="" disabled selected>What service are you interested in?</option>
-              <option value="3d-printing">3D Printing</option>
-              <option value="cad-design">CAD & Engineering Design</option>
-              <option value="laser">Laser Cutting & Engraving</option>
-              <option value="product-dev">Product Development</option>
-              <option value="branding">Graphic Design & Branding</option>
-              <option value="custom">Custom Commission</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <textarea name="message" placeholder="Tell me about your project..." rows="5" required></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary btn-full">Send Message</button>
-          <p class="form-note">Or email directly at <a href="mailto:ddesmit@lostpinescreative.com">ddesmit@lostpinescreative.com</a></p>
-        </form>
       </div>
     </div>
   </section>
@@ -392,19 +383,15 @@
     <div class="container">
       <div class="footer-content">
         <div class="footer-brand">
-          <img src="images/emblem_v2.webp" alt="DeSmit Designs">
-          <span>DeSmit Designs</span>
+          <img src="/mark.svg" alt="" width="32" height="32">
+          <span>Lost Pines Creative</span>
         </div>
-        <p class="footer-tagline">Driving Innovation with Engineering Excellence</p>
-        <p class="footer-links"><a href="/">&larr; Lost Pines Creative</a> &nbsp;&middot;&nbsp; <a href="/groundwork.html">Groundwork</a></p>
-        <p class="footer-copy">&copy; 2025 DeSmit Designs. All rights reserved.</p>
-        <p class="footer-copy" style="margin-top:6px;">A <a href="/" style="color:inherit;">Lost Pines Creative</a> studio</p>
+                <p class="footer-links"><a href="/">Home</a> &nbsp;&middot;&nbsp; <a href="/groundwork.html">Groundwork</a> &nbsp;&middot;&nbsp; <a href="/terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="/privacy.html">Privacy</a></p>
+        <p class="footer-copy">&copy; 2026 Lost Pines Creative LLC, Bastrop, Texas</p>
       </div>
     </div>
   </footer>
 
   <script src="script.js"></script>
-  <script src="portal/config.js"></script>
-  <script src="assistant.js" defer></script>
 </body>
 </html>
