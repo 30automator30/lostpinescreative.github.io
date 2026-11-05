@@ -21,6 +21,21 @@
 }
 html[data-product="groundwork"] { --accent: #4a9e7e; --accent2: #3ba5a1; }
 
+/* Admin surface (onboarding/admin.html) is cross-product and reached only from
+ * the green admin suite (Command Center, Groundwork admin), so it wears the
+ * shared LPC portal palette instead of the default DeSmit-blue wizard theme.
+ * Client wizard theming above is unaffected. */
+html[data-surface="admin"] {
+  --bg-dark: #0b1210;
+  --bg-card: #111f1b;
+  --bg-card-2: #1a2f28;
+  --accent: #4a9e7e;
+  --accent2: #3ba5a1;
+  --text: #e2e8e6;
+  --text-muted: #94a3a0;
+  --border: #1a2f28;
+}
+
 html { scroll-behavior: smooth; }
 body {
   font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
