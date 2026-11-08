@@ -411,6 +411,17 @@
   .dog.air .s-walk .rig{ rotate:calc(var(--pitch,0deg) * -1); transform-origin:50% 50%; }
   .dog.air .rig .fn, .dog.air .rig .ff{ transform:rotate(-32deg) scaleY(.86); }
   .dog.air .rig .hn, .dog.air .rig .hf{ transform:rotate(30deg); }
+
+  /* real Facebook recommendations */
+  .reviews.real{ grid-template-columns:repeat(2,1fr); }
+  .rev blockquote{ margin:0; } .rev blockquote p{ font-size:.92rem; line-height:1.6; margin:0 0 10px; }
+  .rev .fb{ display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:.62rem; letter-spacing:.08em; text-transform:uppercase; color:var(--pine); background:color-mix(in srgb,var(--pine) 10%,transparent); border:1px solid color-mix(in srgb,var(--pine) 30%,transparent); border-radius:999px; padding:4px 10px; margin-bottom:12px; }
+  .rev .fb svg{ width:12px; height:12px; }
+  .saying{ margin-top:22px; } .saying-h{ font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--cedar); margin-bottom:10px; }
+  .saying ul{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
+  .saying li{ background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-size:.84rem; }
+  .saying q{ quotes:"“" "”"; } .saying li span{ font-family:var(--mono); font-size:.7rem; color:var(--muted); white-space:nowrap; }
+  @media (max-width:720px){ .reviews.real{ grid-template-columns:1fr; } .saying li{ border-radius:14px; } }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -573,12 +584,14 @@
   </section>
 
   <section class="band">
-    <div class="head reveal"><div class="eyebrow">Reviews on autopilot</div><h2>Grow past 5 reviews — where it counts</h2><p>Today you're at <b>84% recommend (5 reviews)</b> on Facebook. The system asks every happy customer for a Google review automatically, so that number climbs where new customers actually look. (Cards are samples.)</p></div>
-    <div class="reviews">
-      <div class="rev reveal"><span class="tag">Sample</span><div class="stars">★★★★★</div><p>"Built us a cedar outdoor kitchen and it's the best part of our house now. Craftsmanship is unreal."</p><div class="who">— Placeholder review</div></div>
-      <div class="rev reveal"><span class="tag">Sample</span><div class="stars">★★★★★</div><p>"Redid our front porch and added a room — on time, fair price, cleaned up every day."</p><div class="who">— Placeholder review</div></div>
-      <div class="rev reveal"><span class="tag">Sample</span><div class="stars">★★★★★</div><p>"Honest, local, and they actually answer. This is who you want for a build in Bastrop."</p><div class="who">— Placeholder review</div></div>
+    <div class="head reveal"><div class="eyebrow">What customers say</div><h2>Your customers already say it best</h2><p>Real recommendations from your Facebook page, front and center on your own site. The system also asks every happy customer for a <b>Google</b> review automatically, so this kind of word-of-mouth shows up where new customers search.</p></div>
+    <div class="reviews real">
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“We had a really good experience with Chip. He built a fence in our backyard. His work is of very high quality at a very fair price. Both he and his crew are very courteous. They work very hard and are efficient. We have a beautiful fence built on time. They exceeded our expectations!!”</p></blockquote><figcaption class="who">— Emily V. · May 2025</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Wow, not only do you get quality craftsmanship, but Chip and his sons are very friendly and personable. … Chip gives a solid estimate, works fast, and even when my wife wanted something changed on day 2, took the time to discuss options and was even the one to suggest a change that we ended up preferring over our own idea! … You can’t go wrong with these guys.”</p></blockquote><figcaption class="who">— Matt M. · May 2022</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Chip and Tony installed a custom fence for us. Being new to the area we got several estimates and they got the job! Best choice we could have made hands down. These guys are both friendly and professional. … If you need work done call Chip and you won’t be disappointed.”</p></blockquote><figcaption class="who">— Debra T.</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“[Mr.] Gosnell and Tony have done several projects for me. I am always extremely pleased with the finished [product]. Not only are they really good at what they do but they bend over backwards to make everything right and up to my standards. … As for their prices I can assure you that they are more than fair.”</p></blockquote><figcaption class="who">— Donna B.</figcaption></figure>
     </div>
+    <div class="saying reveal"><div class="saying-h">From the comments</div><ul><li><q>That cedar will last forever too. Awesome job.</q> <span>— Brent P.</span></li><li><q>Thank you for [my] beautiful new room!</q> <span>— Sarah B.</span></li><li><q>Another great job guys!</q> <span>— Kathy C.</span></li><li><q>That is super cool. Exactly what I want for my place.</q> <span>— Cassidy P.</span></li><li><q>Wow, that is a lot of work. Great job guys 👏</q> <span>— Aurora M.</span></li><li><q>I want this!! Love it</q> <span>— Stacie D.</span></li><li><q>You had me at Cowboy pool!!</q> <span>— Kathy C.</span></li><li><q>Looks real good</q> <span>— Hman V.</span></li></ul></div>
   </section>
 
   <section class="band">
