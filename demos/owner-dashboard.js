@@ -99,6 +99,7 @@
     buildTabs();
     if (LEVELS) {
       var lv = overlay.querySelector('#odaLevels');
+      lv.style.setProperty('--n', LEVELS.length);
       LEVELS.forEach(function (l) {
         var b = document.createElement('button');
         b.className = 'oda-level';
@@ -145,33 +146,64 @@
     show('level');
   }
 
-  /* ---- Package level: what to expect, with screens from the Lost Pines app ---- */
+  /* ---- Package level: what to expect, with screens from the Lost Pines app ----
+     Level fields (all optional except id/name/price/title):
+       gets/later: [string | {t, d, p}]   shots: [{src, cap, alt}]
+       addons: [{t, d, p, was}] + addonsTitle/addonsNote   deal: {was, now, label, note}
+       embed: [{sel, title, sub}] moves an element from the page into this level
+       actions: [{label, fn}] buttons that close the dashboard and call window[fn]()
+       tabs: tab ids shown for this level (default: just "What you get") */
+  var embedCache = {};
+  function embedNode(sel) {
+    if (!embedCache[sel]) embedCache[sel] = document.querySelector(sel);
+    return embedCache[sel];
+  }
   function renderLevel() {
     var l = level, i = LEVELS.indexOf(l);
-    var li = function (xs, cls) { return '<ul class="' + cls + '">' + (xs || []).map(function (x) {
-      return '<li>' + (typeof x === 'string' ? esc(x) : '<b>' + esc(x.t) + '</b>' + (x.p ? ' <span class="pr">' + esc(x.p) + '</span>' : '') + (x.d ? '<span>' + esc(x.d) + '</span>' : '')) + '</li>';
-    }).join('') + '</ul>'; };
+    function item(x) {
+      if (typeof x === 'string') return '<li>' + esc(x) + '</li>';
+      return '<li><b>' + esc(x.t) + '</b>' + (x.p ? ' <span class="pr">' + esc(x.p) + '</span>' : '') + (x.d ? '<span>' + esc(x.d) + '</span>' : '') + '</li>';
+    }
+    var li = function (xs, cls) { return '<ul class="' + cls + '">' + (xs || []).map(item).join('') + '</ul>'; };
     var shots = (l.shots || []).map(function (sh, k) {
       return '<figure class="oda-shot"><button class="oda-phone" data-k="' + k + '" aria-label="Enlarge: ' + esc(sh.cap) + '"><img src="' + esc(sh.src) + '" alt="' + esc(sh.alt || sh.cap) + '" loading="lazy"></button><figcaption>' + esc(sh.cap) + '</figcaption></figure>';
     }).join('');
+    var addons = (l.addons || []).map(function (a) {
+      return '<li><div><b>' + esc(a.t) + '</b>' + (a.d ? '<span>' + esc(a.d) + '</span>' : '') + (a.was ? '<em>' + esc(a.was) + '</em>' : '') + '</div><span class="amt">' + esc(a.p) + '</span></li>';
+    }).join('');
+    var deal = l.deal ? '<div class="oda-deal"><span class="lb">' + esc(l.deal.label || '') + '</span><span class="was">' + esc(l.deal.was) + '</span><span class="now">' + esc(l.deal.now) + '</span>' + (l.deal.note ? '<small>' + esc(l.deal.note) + '</small>' : '') + '</div>' : '';
+    var embeds = (l.embed || []).map(function (e, k) {
+      return '<div class="oda-sec"><h3 class="oda-h" style="font-size:1rem">' + esc(e.title || '') + '</h3>' + (e.sub ? '<p class="oda-sub">' + esc(e.sub) + '</p>' : '') + '<div class="oda-embed" data-e="' + k + '"></div></div>';
+    }).join('');
+    var actions = (l.actions || []).map(function (a, k) { return '<button class="oda-btn oda-btn-accent" data-a="' + k + '">' + esc(a.label) + '</button>'; }).join('');
     var next = LEVELS[i + 1];
     main.innerHTML =
-      '<div class="oda-lvhead"><div><p class="oda-eyebrow">' + esc(l.name) + ' · ' + esc(l.price) + '</p>' +
-        '<h2 class="oda-h">' + esc(l.title) + '</h2><p class="oda-sub">' + esc(l.intro) + '</p></div></div>' +
-      '<div class="oda-lvgrid">' +
+      '<div class="oda-lvhead"><p class="oda-eyebrow">' + esc(l.name) + ' · ' + esc(l.price) + '</p>' +
+        '<h2 class="oda-h">' + esc(l.title) + '</h2><p class="oda-sub">' + esc(l.intro || '') + '</p></div>' +
+      '<div class="oda-lvgrid' + (shots ? '' : ' solo') + '">' +
         '<div class="oda-card"><h3>What you get</h3>' + li(l.gets, 'oda-gets') +
           (l.later && l.later.length ? '<h3 class="mt">Not in this level</h3>' + li(l.later, 'oda-later') : '') +
-          (l.note ? '<p class="oda-sub oda-note">' + esc(l.note) + '</p>' : '') + '</div>' +
-        '<div class="oda-shots-wrap"><h3 class="oda-h" style="font-size:1rem">' + esc(l.shotsTitle || 'In the Lost Pines app') + '</h3><div class="oda-shots">' + shots + '</div></div>' +
+          (l.note ? '<p class="oda-sub oda-note">' + esc(l.note) + '</p>' : '') +
+          (actions ? '<div class="oda-acts">' + actions + '</div>' : '') + '</div>' +
+        (shots ? '<div class="oda-shots-wrap"><h3 class="oda-h" style="font-size:1rem">' + esc(l.shotsTitle || 'In the Lost Pines app') + '</h3><div class="oda-shots">' + shots + '</div></div>' : '') +
       '</div>' +
+      (addons ? '<div class="oda-sec oda-card"><h3>' + esc(l.addonsTitle || 'Add-ons') + '</h3><ul class="oda-addons">' + addons + '</ul>' + deal + (l.addonsNote ? '<p class="oda-sub oda-note">' + esc(l.addonsNote) + '</p>' : '') + '</div>' : deal) +
+      embeds +
       (l.tabs && l.tabs.length > 1 ? '<div class="oda-row oda-sec"><span class="oda-sub" style="margin:0">' + esc(l.more || 'More in the tabs above.') + '</span><button class="oda-btn oda-btn-accent" id="odaMore">' + esc(l.moreBtn || 'Open the dashboard') + ' →</button></div>' : '') +
       (next ? '<div class="oda-row oda-sec"><span class="oda-sub" style="margin:0">' + esc(l.teaser || '') + '</span><button class="oda-btn" id="odaNext">See ' + esc(next.name) + ' →</button></div>' : '');
+    (l.embed || []).forEach(function (e, k) {
+      var n = embedNode(e.sel), slot = main.querySelector('.oda-embed[data-e="' + k + '"]');
+      if (n && slot) slot.appendChild(n);
+    });
     Array.prototype.forEach.call(main.querySelectorAll('.oda-phone'), function (b) {
       b.onclick = function () {
         var sh = l.shots[+b.getAttribute('data-k')], z = overlay.querySelector('.oda-zoom');
         z.querySelector('img').src = sh.src; z.querySelector('img').alt = sh.alt || sh.cap; z.querySelector('p').textContent = sh.cap;
         z.classList.add('open');
       };
+    });
+    Array.prototype.forEach.call(main.querySelectorAll('[data-a]'), function (b) {
+      b.onclick = function () { var f = window[l.actions[+b.getAttribute('data-a')].fn]; closeOwnerDash(); if (typeof f === 'function') f(); };
     });
     var m = main.querySelector('#odaMore'); if (m) m.onclick = function () { show(l.tabs[1]); };
     var n = main.querySelector('#odaNext'); if (n) n.onclick = function () { setLevel(next.id); };
