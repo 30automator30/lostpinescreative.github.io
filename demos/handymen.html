@@ -423,6 +423,9 @@
   .saying li{ background:var(--card); border:1px solid var(--line); border-radius:999px; padding:8px 14px; font-size:.84rem; }
   .saying q{ quotes:"“" "”"; } .saying li span{ font-family:var(--mono); font-size:.7rem; color:var(--muted); white-space:nowrap; }
   @media (max-width:720px){ .reviews.real{ grid-template-columns:1fr; } .saying li{ border-radius:14px; } }
+
+  .hero .badge-card .bq{ font-family:var(--slab); font-weight:800; font-size:1.12rem; line-height:1.25; color:#f4c27a; margin-bottom:6px; }
+  .hero .badge-card .bq-who{ display:block; line-height:1.5; }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -470,8 +473,8 @@
       <p class="fx-hint" hidden>Tap the sky or the river</p>
     </div>
     <div class="badge-card">
-      <div class="lg">84%</div>
-      <small>Recommend · family-built · Bastrop, TX</small>
+      <div class="bq">“They exceeded our expectations!”</div>
+      <small class="bq-who">— Emily V. · Recommends on Facebook</small>
     </div>
   </section>
 </div>
