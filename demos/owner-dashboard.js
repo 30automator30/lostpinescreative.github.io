@@ -58,13 +58,14 @@
      cfg.soon = { tabId|revenue: true } marks previews of features not built yet;
      cfg.included / cfg.soonList fill the key at the top of the Overview;
      kpis[].inc / kpis[].soon put a pill on a tile. */
-  var SOON = cfg.soon || {};
+  var SOON = cfg.soon || {}, L = cfg.labels || {};
   function pill(kind) {
-    if (kind === 'inc') return '<span class="oda-pill inc">Included</span>';
-    if (kind === 'soon') return '<span class="oda-pill soon">Coming soon</span>';
+    if (kind === 'inc') return '<span class="oda-pill inc">' + esc(L.inc || 'Included') + '</span>';
+    if (kind === 'soon') return '<span class="oda-pill soon">' + esc(L.soon || 'Coming soon') + '</span>';
     return '';
   }
   function soonBar(what) {
+    if (L.soonBar) return '<div class="oda-soonbar">' + pill('soon') + '<span>' + esc(L.soonBar.replace('{what}', what)) + '</span></div>';
     return '<div class="oda-soonbar">' + pill('soon') + '<span><b>Preview.</b> ' + esc(what) +
       ' is on our roadmap and is not part of the current build. Sample data shown.</span></div>';
   }
@@ -96,7 +97,7 @@
       var b = document.createElement('button');
       b.className = 'oda-tab' + (t.id === active ? ' on' : '');
       b.setAttribute('data-tab', t.id);
-      b.innerHTML = svg(t.icon) + esc(t.label) + (SOON[t.id] ? ' <span class="oda-pill soon sm">Soon</span>' : '');
+      b.innerHTML = svg(t.icon) + esc(t.label) + (SOON[t.id] ? ' <span class="oda-pill soon sm">' + esc(L.soonShort || 'Soon') + '</span>' : '');
       b.onclick = function () { show(t.id); };
       tabsEl.appendChild(b);
     });
@@ -138,8 +139,8 @@
     if (cfg.included || cfg.soonList) {
       var li = function (xs) { return '<ul>' + (xs || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
       key = '<div class="oda-key">' +
-        '<div><h3>' + pill('inc') + ' In your build</h3>' + li(cfg.included) + '</div>' +
-        '<div><h3>' + pill('soon') + ' On the roadmap</h3>' + li(cfg.soonList) + '</div>' +
+        '<div><h3>' + pill('inc') + ' ' + esc(L.keyInc || 'In your build') + '</h3>' + li(cfg.included) + '</div>' +
+        '<div><h3>' + pill('soon') + ' ' + esc(L.keySoon || 'On the roadmap') + '</h3>' + li(cfg.soonList) + '</div>' +
       '</div>';
     }
     main.innerHTML =
