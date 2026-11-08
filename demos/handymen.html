@@ -467,6 +467,33 @@
   .build:hover .mini-replay, .mini-replay:focus-visible, .mini-done .mini-replay{ opacity:.9; }
   @media (hover:none){ .mini-replay{ opacity:.9; } }
   @media (prefers-reduced-motion:reduce){ .mini-replay{ display:none; } }
+
+  /* pricing checklist */
+  .price-sheet .eyebrow{ color:var(--amber); }
+  .price-sheet .tier{ border:1px solid rgba(246,236,218,.18); border-radius:14px; padding:16px 18px; margin:6px 0 20px; background:rgba(246,236,218,.04); }
+  .price-sheet .tier-head{ display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .price-sheet .amt{ font-family:var(--slab); font-weight:800; color:var(--amber); font-size:1.15rem; white-space:nowrap; }
+  .price-sheet .tier-head .amt{ font-size:2rem; line-height:1; }
+  .price-sheet .tier-head .nm{ font-family:var(--slab); font-weight:800; font-size:1.15rem; color:#fff; }
+  .price-sheet .check{ list-style:none; display:grid; grid-template-columns:1fr 1fr; gap:8px 22px; margin:0; padding:0; }
+  .price-sheet .check li{ padding-left:26px; position:relative; font-size:.92rem; }
+  .price-sheet .check li::before{ content:"✓"; position:absolute; left:2px; top:-1px; color:#8fd1a6; font-weight:800; }
+  .price-sheet .extras-h{ font-family:var(--mono); font-size:.7rem; letter-spacing:.16em; text-transform:uppercase; color:#c3b8a3; margin:6px 0 8px; }
+  .price-sheet .addons{ list-style:none; margin:0 0 18px; padding:0; display:block; }
+  .price-sheet .addons li::before{ content:none; } .price-sheet .addons li{ padding-left:0; }
+  .price-sheet .addons li{ display:grid; grid-template-columns:7.2rem 1fr auto; align-items:center; gap:12px; padding:11px 0; border-top:1px solid rgba(246,236,218,.12); }
+  .price-sheet .addons li:last-child{ border-bottom:1px solid rgba(246,236,218,.12); }
+  .price-sheet .addons b{ color:#fff; display:block; } .price-sheet .addons small{ color:#c3b8a3; font-size:.82rem; }
+  .price-sheet .amt.inc{ color:#8fd1a6; font-size:.95rem; }
+  .price-sheet .try{ font:inherit; font-size:.8rem; font-weight:700; color:var(--char); background:var(--amber); border:0; border-radius:999px; min-height:44px; padding:0 16px; cursor:pointer; white-space:nowrap; }
+  .price-sheet .try:hover{ filter:brightness(1.08); }
+  .price-sheet .ex{ font-size:.9rem; color:#ece1cd; background:rgba(246,236,218,.07); border-radius:10px; padding:10px 14px; }
+  .price-sheet .ex b{ color:var(--amber); }
+  @media (max-width:640px){
+    .price-sheet .check{ grid-template-columns:1fr; }
+    .price-sheet .addons li{ grid-template-columns:5.6rem 1fr; }
+    .price-sheet .addons .try{ grid-column:1 / -1; justify-self:start; }
+  }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -622,19 +649,40 @@
     </div>
   </section>
 
-  <section class="band">
-    <div class="whatnow reveal">
-      <h2>What Groundwork would set up</h2>
-      <p class="lead">You've already nailed the hard part — people are watching (Jon's reels, the Bastrop following, 160+ posts of real work). Right now it all dead-ends in Messenger. This turns that attention into booked jobs and Google reviews.</p>
-      <ul>
-        <li><b>This website</b> — your domain, your reels &amp; photos sending viewers to actually book.</li>
-        <li><b>Google Business Profile</b> — show up in Search &amp; Maps, not just Facebook.</li>
-        <li><b>Estimate requests &amp; booking</b> — no more Messenger back-and-forth.</li>
-        <li><b>Missed-call text-back</b> — never lose a job because you were on a ladder.</li>
-        <li><b>Reviews on autopilot</b> — grow past 5 on Google, automatically.</li>
-        <li><b>Optional AI receptionist</b> — answers &amp; books after hours, add it anytime.</li>
+  <section class="band" id="pricing">
+    <div class="whatnow price-sheet reveal">
+      <div class="eyebrow">Pricing</div>
+      <h2>What it costs</h2>
+      <p class="lead">One-time setup, everything in your name. The tools are billed to you directly — about $10 a month, no markup.</p>
+
+      <div class="tier">
+        <div class="tier-head"><span class="amt">$750</span><span class="nm">Website &amp; Google profile</span></div>
+        <ul class="check">
+          <li>Website on your own domain</li>
+          <li>Services, project photo gallery &amp; reels</li>
+          <li>Your real customer reviews</li>
+          <li>Free-estimate form on every page</li>
+          <li>Google Business Profile — show up in Search &amp; Maps</li>
+          <li>Google review link to send customers</li>
+          <li>Setup walkthrough</li>
+        </ul>
+      </div>
+
+      <div class="extras-h">Add-ons — pick any</div>
+      <ul class="addons">
+        <li><span class="amt">+$400</span><div><b>Book a visit</b><small>Customers pick a day &amp; arrival window online</small></div><button type="button" class="try" onclick="openBooking()">Try it</button></li>
+        <li><span class="amt">+$300</span><div><b>Missed-call text-back</b><small>Every missed call gets an instant text; calls land in your inbox</small></div><button type="button" class="try" data-try="missed">Try it</button></li>
+        <li><span class="amt">+$350</span><div><b>Automatic Google reviews</b><small>A review request goes out after every finished job</small></div></li>
+        <li><span class="amt inc">Included</span><div><b>Pay-your-invoice button</b><small>Linked to the payment system you already use</small></div></li>
       </ul>
-      <div class="price">Starts at $750 for the website and Google profile — packages and pricing are in your proposal.</div>
+
+      <div class="extras-h">Keep it running — optional</div>
+      <ul class="addons">
+        <li><span class="amt">$99/mo</span><div><b>Essential care</b><small>Hosting, updates, backups, small changes &amp; a monthly report. Cancel anytime.</small></div><button type="button" class="try" onclick="openOwnerDash()">See the dashboard</button></li>
+        <li><span class="amt">from $3,500</span><div><b>Growth — AI phone receptionist</b><small>Answers when you can't and books estimates. Quoted after a short call.</small></div></li>
+      </ul>
+
+      <div class="ex">Example: website + booking + text-back = <b>$1,450</b>. All three add-ons (the “Get More Jobs” package) = <b>$1,800</b>.</div>
     </div>
   </section>
 </div>
@@ -1367,6 +1415,19 @@ window.OWNER_DASH_CONFIG = {
     var btn=card.querySelector('.mini-replay'); if(btn) btn.addEventListener('click', play);
     var io=new IntersectionObserver(function(es){ if(es[0].isIntersecting){ play(); io.disconnect(); } }, {threshold:.6});
     io.observe(svg);
+  });
+})();
+</script>
+
+<script>
+/* Pricing "Try it": jump to the missed-call demo and run it */
+(function(){
+  var b=document.querySelector('.price-sheet [data-try="missed"]'); if(!b) return;
+  b.addEventListener('click', function(){
+    var run=document.querySelector('[onclick="runMissedCall()"]'); if(!run) return;
+    var sec=run.closest('section')||run;
+    sec.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'center'});
+    setTimeout(function(){ run.click(); }, 700);
   });
 })();
 </script>
