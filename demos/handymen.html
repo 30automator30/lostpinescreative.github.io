@@ -426,6 +426,15 @@
 
   .hero .badge-card .bq{ font-family:var(--slab); font-weight:800; font-size:1.12rem; line-height:1.25; color:#f4c27a; margin-bottom:6px; }
   .hero .badge-card .bq-who{ display:block; line-height:1.5; }
+
+  /* the line between the mock website and the Groundwork extras */
+  .site-end{ margin:56px 0 8px; }
+  .site-end-line{ position:relative; text-align:center; margin-bottom:34px; }
+  .site-end-line::before{ content:""; position:absolute; left:0; right:0; top:50%; border-top:2px dashed var(--cedar); opacity:.55; }
+  .site-end-line span{ position:relative; display:inline-block; font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--bone); background:var(--char); border-radius:999px; padding:8px 16px; }
+  .site-end-copy{ max-width:720px; }
+  .site-end-copy h2{ font-size:clamp(1.6rem,3.6vw,2.3rem); margin:6px 0 10px; }
+  .site-end-copy p{ color:var(--muted); }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -555,6 +564,26 @@
   <div class="divider"></div>
 
   <section class="band">
+    <div class="head reveal"><div class="eyebrow">What customers say</div><h2>Your customers already say it best</h2><p>Real recommendations from your Facebook page, front and center on your own site. The system also asks every happy customer for a <b>Google</b> review automatically, so this kind of word-of-mouth shows up where new customers search.</p></div>
+    <div class="reviews real">
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“We had a really good experience with Chip. He built a fence in our backyard. His work is of very high quality at a very fair price. Both he and his crew are very courteous. They work very hard and are efficient. We have a beautiful fence built on time. They exceeded our expectations!!”</p></blockquote><figcaption class="who">— Emily V. · May 2025</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Wow, not only do you get quality craftsmanship, but Chip and his sons are very friendly and personable. … Chip gives a solid estimate, works fast, and even when my wife wanted something changed on day 2, took the time to discuss options and was even the one to suggest a change that we ended up preferring over our own idea! … You can’t go wrong with these guys.”</p></blockquote><figcaption class="who">— Matt M. · May 2022</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Chip and Tony installed a custom fence for us. Being new to the area we got several estimates and they got the job! Best choice we could have made hands down. These guys are both friendly and professional. … If you need work done call Chip and you won’t be disappointed.”</p></blockquote><figcaption class="who">— Debra T.</figcaption></figure>
+      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“[Mr.] Gosnell and Tony have done several projects for me. I am always extremely pleased with the finished [product]. Not only are they really good at what they do but they bend over backwards to make everything right and up to my standards. … As for their prices I can assure you that they are more than fair.”</p></blockquote><figcaption class="who">— Donna B.</figcaption></figure>
+    </div>
+    <div class="saying reveal"><div class="saying-h">From the comments</div><ul><li><q>That cedar will last forever too. Awesome job.</q> <span>— Brent P.</span></li><li><q>Thank you for [my] beautiful new room!</q> <span>— Sarah B.</span></li><li><q>Another great job guys!</q> <span>— Kathy C.</span></li><li><q>That is super cool. Exactly what I want for my place.</q> <span>— Cassidy P.</span></li><li><q>Wow, that is a lot of work. Great job guys 👏</q> <span>— Aurora M.</span></li><li><q>I want this!! Love it</q> <span>— Stacie D.</span></li><li><q>You had me at Cowboy pool!!</q> <span>— Kathy C.</span></li><li><q>Looks real good</q> <span>— Hman V.</span></li></ul></div>
+  </section>
+
+  <div class="site-end" role="separator" aria-label="End of website preview">
+    <div class="site-end-line"><span>End of your website preview</span></div>
+    <div class="site-end-copy reveal">
+      <div class="eyebrow">Behind the scenes</div>
+      <h2>What Groundwork adds to the business</h2>
+      <p>Everything above is what your customers see. Everything below is the system working for you: the owner dashboard, missed-call text-back, and what we'd set up.</p>
+    </div>
+  </div>
+
+  <section class="band">
     <div class="head reveal"><div class="eyebrow">The part your competition doesn't have</div><h2>What the owner sees</h2><p>Every call, missed call and estimate request in one inbox — so nothing slips through Messenger. Open the dashboard to see what's <b>included</b> in your build and what's <b>coming soon</b>.</p></div>
     <div style="text-align:center;margin:0 0 26px" class="reveal"><button class="btn btn-amber" onclick="openOwnerDash()">Open the full owner dashboard →</button></div>
     <div class="dash reveal">
@@ -588,17 +617,6 @@
   </section>
 
   <section class="band">
-    <div class="head reveal"><div class="eyebrow">What customers say</div><h2>Your customers already say it best</h2><p>Real recommendations from your Facebook page, front and center on your own site. The system also asks every happy customer for a <b>Google</b> review automatically, so this kind of word-of-mouth shows up where new customers search.</p></div>
-    <div class="reviews real">
-      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“We had a really good experience with Chip. He built a fence in our backyard. His work is of very high quality at a very fair price. Both he and his crew are very courteous. They work very hard and are efficient. We have a beautiful fence built on time. They exceeded our expectations!!”</p></blockquote><figcaption class="who">— Emily V. · May 2025</figcaption></figure>
-      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Wow, not only do you get quality craftsmanship, but Chip and his sons are very friendly and personable. … Chip gives a solid estimate, works fast, and even when my wife wanted something changed on day 2, took the time to discuss options and was even the one to suggest a change that we ended up preferring over our own idea! … You can’t go wrong with these guys.”</p></blockquote><figcaption class="who">— Matt M. · May 2022</figcaption></figure>
-      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“Chip and Tony installed a custom fence for us. Being new to the area we got several estimates and they got the job! Best choice we could have made hands down. These guys are both friendly and professional. … If you need work done call Chip and you won’t be disappointed.”</p></blockquote><figcaption class="who">— Debra T.</figcaption></figure>
-      <figure class="rev reveal"><span class="fb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>Recommends on Facebook</span><blockquote><p>“[Mr.] Gosnell and Tony have done several projects for me. I am always extremely pleased with the finished [product]. Not only are they really good at what they do but they bend over backwards to make everything right and up to my standards. … As for their prices I can assure you that they are more than fair.”</p></blockquote><figcaption class="who">— Donna B.</figcaption></figure>
-    </div>
-    <div class="saying reveal"><div class="saying-h">From the comments</div><ul><li><q>That cedar will last forever too. Awesome job.</q> <span>— Brent P.</span></li><li><q>Thank you for [my] beautiful new room!</q> <span>— Sarah B.</span></li><li><q>Another great job guys!</q> <span>— Kathy C.</span></li><li><q>That is super cool. Exactly what I want for my place.</q> <span>— Cassidy P.</span></li><li><q>Wow, that is a lot of work. Great job guys 👏</q> <span>— Aurora M.</span></li><li><q>I want this!! Love it</q> <span>— Stacie D.</span></li><li><q>You had me at Cowboy pool!!</q> <span>— Kathy C.</span></li><li><q>Looks real good</q> <span>— Hman V.</span></li></ul></div>
-  </section>
-
-  <section class="band">
     <div class="whatnow reveal">
       <h2>What Groundwork would set up</h2>
       <p class="lead">You've already nailed the hard part — people are watching (Jon's reels, the Bastrop following, 160+ posts of real work). Right now it all dead-ends in Messenger. This turns that attention into booked jobs and Google reviews.</p>
@@ -610,7 +628,7 @@
         <li><b>Reviews on autopilot</b> — grow past 5 on Google, automatically.</li>
         <li><b>Optional AI receptionist</b> — answers &amp; books after hours, add it anytime.</li>
       </ul>
-      <div class="price">Starts at Groundwork's Starter/Foundation tier — and I'm open to trading for a build.</div>
+      <div class="price">Starts at $750 for the website and Google profile — packages and pricing are in your proposal.</div>
     </div>
   </section>
 </div>
