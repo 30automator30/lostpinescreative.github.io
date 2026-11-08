@@ -302,6 +302,44 @@
   .lightbox .lb-cap small{ display:block; font-family:var(--mono); font-size:.7rem; letter-spacing:.12em; color:#cdbfa5; margin-top:4px; }
   .lightbox .lb-x{ position:absolute; top:10px; right:12px; width:48px; height:48px; border:none; background:none; color:#f6ecda; font-size:2rem; line-height:1; cursor:pointer; }
   .lightbox .car-btn{ top:50%; }
+
+  /* ---- How we build: house-going-up animation ---- */
+  .bld-wrap{ margin-top:22px; background:var(--card); border:1px solid var(--line); border-radius:16px; padding:18px 18px 16px; box-shadow:var(--shadow); }
+  .bld{ display:block; width:100%; height:auto; max-height:360px; }
+  .bld .sky-tree{ fill:var(--pine); opacity:.22; }
+  .bld .ground{ stroke:var(--muted); stroke-width:2; stroke-linecap:round; }
+  .bld .slab{ fill:var(--muted); }
+  .bld .stud, .bld .plate{ fill:var(--cedar-soft); }
+  .bld .truss{ fill:none; stroke:var(--cedar); stroke-width:3; stroke-linejoin:round; stroke-linecap:round; }
+  .bld .roof{ fill:var(--char); }
+  .bld .roof-edge{ fill:none; stroke:var(--amber); stroke-width:3; stroke-linecap:round; }
+  .bld .siding{ fill:var(--cedar); }
+  .bld .board{ stroke:var(--char); stroke-opacity:.18; stroke-width:1.5; }
+  .bld .door{ fill:var(--pine); } .bld .knob{ fill:var(--amber); }
+  .bld .win{ fill:#f6ecda; stroke:var(--char); stroke-width:3; } .bld .mull{ stroke:var(--char); stroke-width:2; }
+  .bld .step{ fill:var(--muted); }
+  .bld .check{ fill:var(--pine); } .bld .check path{ fill:none; stroke:#fff; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; }
+
+  /* start state (only when motion is allowed and JS is running) */
+  .bld-anim .bld .a{ transition:transform .55s cubic-bezier(.2,.9,.25,1.15), opacity .45s ease, stroke-dashoffset .9s ease; transform-box:fill-box; }
+  .bld-anim .bld .slab{ transform:scaleX(0); transform-origin:center; }
+  .bld-anim .bld .stud{ transform:scaleY(0); transform-origin:bottom; }
+  .bld-anim .bld .plate{ transform:scaleX(0); transform-origin:left; }
+  .bld-anim .bld .truss{ stroke-dasharray:900; stroke-dashoffset:900; }
+  .bld-anim .bld .roofg{ opacity:0; transform:translateY(-26px); }
+  .bld-anim .bld .sidingg{ transform:scaleX(0); transform-origin:left; }
+  .bld-anim .bld .pop{ opacity:0; transform:scale(.4); transform-origin:center; }
+  .bld-anim .bld.go .a{ transform:none; opacity:1; stroke-dashoffset:0; }
+  .bld-anim .bld.no-tr .a{ transition:none !important; }
+
+  .bld-steps{ list-style:none; display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin:14px 0 0; padding:0; counter-reset:s; }
+  .bld-steps li{ counter-increment:s; font-size:.76rem; font-weight:600; color:var(--muted); text-align:center; padding:8px 4px 0; border-top:4px solid var(--line); transition:color .3s, border-color .3s; }
+  .bld-steps li::before{ content:counter(s); display:block; font-family:var(--slab); font-weight:800; font-size:1rem; }
+  .bld-steps li.on{ color:var(--ink); border-top-color:var(--cedar); }
+  .bld-foot{ display:flex; justify-content:flex-end; margin-top:10px; }
+  .bld-replay{ font:inherit; font-size:.82rem; font-weight:700; color:var(--ink); background:var(--paper); border:1px solid var(--line); border-radius:999px; min-height:44px; padding:0 16px; cursor:pointer; }
+  .bld-replay:hover{ border-color:var(--cedar); }
+  @media (max-width:640px){ .bld-steps{ grid-template-columns:repeat(3,1fr); row-gap:10px; } }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -366,6 +404,32 @@
       <div class="build reveal"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 20V8m6 12V8m6 12V8m6 12V8M2 8h20M4 20h16"/></svg><h3>Fences</h3><p>Cedar privacy, ranch rail, and wire fences — straight lines, solid posts.</p></div>
       <div class="build reveal"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m14 6 3 3M4 20l1-4L16 5l3 3L8 19l-4 1zM14 6l4 4"/></svg><h3>Repairs &amp; maintenance</h3><p>Siding, trim, doors, drywall, that list you keep meaning to get to. One call.</p></div>
       <div class="build reveal"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3"/></svg><h3>Residential construction</h3><p>Bigger builds and full projects — the whole thing, managed start to finish.</p></div>
+    </div>
+  </section>
+
+  <section class="band" id="howWeBuild">
+    <div class="head reveal"><div class="eyebrow">How we build</div><h2>From slab to walkthrough</h2><p>One family crew, start to finish — and you always know what's next.</p></div>
+    <div class="bld-wrap reveal">
+      <svg class="bld" viewBox="0 0 640 300" role="img" aria-label="Illustration of a house being built: foundation, framing, roof, siding, then doors and windows.">
+        <g class="sky-tree"><path d="M40 262 L62 200 L84 262 Z"/><path d="M48 230 L62 180 L76 230 Z"/><path d="M560 262 L586 186 L612 262 Z"/><path d="M570 226 L586 166 L602 226 Z"/></g>
+        <line class="ground" x1="20" y1="262" x2="620" y2="262"/>
+        <rect class="a slab" data-d="300" x="104" y="246" width="392" height="16" rx="2"/>
+        <rect class="a stud" data-d="700" x="121" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="790" x="151" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="880" x="181" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="970" x="211" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1060" x="241" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1150" x="271" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1240" x="301" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1330" x="331" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1420" x="361" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1510" x="391" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1600" x="421" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1690" x="451" y="132" width="7" height="114" rx="1"/><rect class="a stud" data-d="1780" x="481" y="132" width="7" height="114" rx="1"/>
+        <rect class="a plate" data-d="1900" x="110" y="126" width="380" height="8" rx="1"/>
+        <path class="a truss" data-d="2250" d="M92 136 L300 52 L508 136 Z M160 136 L230 80 M300 52 L300 136 M440 136 L370 80 M230 80 L230 136 M370 80 L370 136"/>
+        <g class="a roofg" data-d="3100"><path class="roof" d="M80 140 L300 44 L520 140 L506 146 L300 58 L94 146 Z"/><path class="roof-edge" d="M80 140 L300 44 L520 140"/></g>
+        <g class="a sidingg" data-d="3900"><path class="siding" d="M110 136 L300 60 L490 136 Z"/><rect class="siding" x="110" y="134" width="380" height="112"/><line class="board" x1="130" y1="134" x2="130" y2="244"/><line class="board" x1="150" y1="134" x2="150" y2="244"/><line class="board" x1="170" y1="134" x2="170" y2="244"/><line class="board" x1="190" y1="134" x2="190" y2="244"/><line class="board" x1="210" y1="134" x2="210" y2="244"/><line class="board" x1="230" y1="134" x2="230" y2="244"/><line class="board" x1="250" y1="134" x2="250" y2="244"/><line class="board" x1="270" y1="134" x2="270" y2="244"/><line class="board" x1="290" y1="134" x2="290" y2="244"/><line class="board" x1="310" y1="134" x2="310" y2="244"/><line class="board" x1="330" y1="134" x2="330" y2="244"/><line class="board" x1="350" y1="134" x2="350" y2="244"/><line class="board" x1="370" y1="134" x2="370" y2="244"/><line class="board" x1="390" y1="134" x2="390" y2="244"/><line class="board" x1="410" y1="134" x2="410" y2="244"/><line class="board" x1="430" y1="134" x2="430" y2="244"/><line class="board" x1="450" y1="134" x2="450" y2="244"/><line class="board" x1="470" y1="134" x2="470" y2="244"/></g>
+        <g class="a pop" data-d="4800"><rect class="door" x="280" y="182" width="42" height="64" rx="2"/><circle class="knob" cx="314" cy="216" r="3"/></g>
+        <g class="a pop" data-d="5000"><rect class="win" x="150" y="160" width="58" height="44" rx="2"/><line class="mull" x1="179" y1="160" x2="179" y2="204"/><line class="mull" x1="150" y1="182" x2="208" y2="182"/></g>
+        <g class="a pop" data-d="5150"><rect class="win" x="392" y="160" width="58" height="44" rx="2"/><line class="mull" x1="421" y1="160" x2="421" y2="204"/><line class="mull" x1="392" y1="182" x2="450" y2="182"/></g>
+        <g class="a pop" data-d="5300"><rect class="step" x="270" y="246" width="62" height="8" rx="1"/></g>
+        <g class="a pop check" data-d="5700"><circle cx="560" cy="70" r="22"/><path d="M549 70 L557 78 L572 62"/></g>
+      </svg>
+      <ol class="bld-steps" aria-label="Build steps">
+        <li data-d="0">Free estimate</li><li data-d="300">Foundation</li><li data-d="700">Framing</li>
+        <li data-d="2250">Roof</li><li data-d="3900">Siding &amp; trim</li><li data-d="4800">Walkthrough</li>
+      </ol>
+      <div class="bld-foot"><button class="bld-replay" type="button" aria-label="Replay the build animation">↻ Watch it again</button></div>
     </div>
   </section>
 
@@ -831,6 +895,27 @@ window.OWNER_DASH_CONFIG = {
     if(!lb.classList.contains('open')) return;
     if(e.key==='Escape') closeLb(); else if(e.key==='ArrowLeft') showLb(lbIdx-1); else if(e.key==='ArrowRight') showLb(lbIdx+1);
   });
+})();
+</script>
+
+<script>
+(function(){
+  var sec=document.getElementById('howWeBuild'); if(!sec) return;
+  var svg=sec.querySelector('.bld'), steps=[].slice.call(sec.querySelectorAll('.bld-steps li')), timers=[];
+  var still=window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window);
+  if(still){ steps.forEach(function(s){ s.classList.add('on'); }); sec.querySelector('.bld-foot').hidden=true; return; }
+  svg.classList.add('no-tr'); sec.classList.add('bld-anim'); void svg.getBoundingClientRect();
+  [].forEach.call(svg.querySelectorAll('.a'),function(el){ el.style.transitionDelay=(+el.getAttribute('data-d')||0)+'ms'; });
+  function play(){
+    timers.forEach(clearTimeout); timers=[];
+    svg.classList.add('no-tr'); svg.classList.remove('go'); steps.forEach(function(s){ s.classList.remove('on'); });
+    void svg.getBoundingClientRect(); svg.classList.remove('no-tr'); void svg.getBoundingClientRect();
+    requestAnimationFrame(function(){ svg.classList.add('go'); });
+    steps.forEach(function(s){ timers.push(setTimeout(function(){ s.classList.add('on'); }, +s.getAttribute('data-d')||0)); });
+  }
+  sec.querySelector('.bld-replay').onclick=play;
+  var io=new IntersectionObserver(function(es){ if(es[0].isIntersecting){ play(); io.disconnect(); } },{threshold:.45});
+  io.observe(svg);
 })();
 </script>
 </body>
