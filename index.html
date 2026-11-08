@@ -20,8 +20,8 @@
 <script>/* Real visits only, so local testing never reaches the live analytics property. */
 if (location.hostname === 'lostpinescreative.com') { var ga = document.createElement('script'); ga.src = '/analytics.js'; document.head.appendChild(ga); }</script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="preload" as="image" type="image/webp" href="home/forest-back-small.webp" media="(max-width: 760px)">
-<link rel="preload" as="image" type="image/webp" href="home/forest-back.webp" media="(min-width: 761px)">
+<link rel="preload" as="image" type="image/webp" href="home/yard-back-small.webp" media="(max-width: 760px)">
+<link rel="preload" as="image" type="image/webp" href="home/yard-back.webp" media="(min-width: 761px)">
 <style>
 :root {
     --ink: #060a07; --cream: #efe9cf; --soft: #c9c6ad; --muted: #a9a78f; --amber: #cfa957; --line: rgba(239, 233, 207, .16);
@@ -33,12 +33,20 @@ body { font-family: Archivo, -apple-system, 'Segoe UI', sans-serif; color: var(-
 a { color: inherit; }
 img { display: block; max-width: 100%; }
 .wrap { width: min(1240px, 100% - 56px); margin: 0 auto; }
-/* The film: one forest behind the whole page. Far and near layers move apart as the camera pushes in. */
+/* The film: the woods behind the house, behind the whole page. The camera pushes in as you scroll. */
 .film { position: fixed; inset: 0; overflow: hidden; background: #050705; }
 .film > * { position: absolute; inset: 0; will-change: transform, opacity; }
-.back, .front { background-position: 62% 50%; background-size: cover; background-repeat: no-repeat; transform-origin: 45% 58%; }
-.back { background-image: url(home/forest-back.webp); }
-.front { background-image: url(home/forest-front.webp); }
+.back { background: url(home/yard-back.webp) 62% 50% / cover no-repeat; transform-origin: 45% 58%; }
+/* A buck in the back clearing, pinned to the photo by script so it moves with the camera */
+.deer { position: absolute; inset: auto; opacity: 0; transition: opacity 2.6s ease, transform 13s linear; transform-origin: 50% 100%; }
+.deer img { height: 100%; width: auto; max-width: none; }
+.deer.left img { transform: scaleX(-1); }
+.deer.on { opacity: .94; }
+/* Backlit birds crossing the canopy */
+.birds { pointer-events: none; }
+.bird { position: absolute; left: 0; top: 0; width: 26px; color: #12130d; }
+.bird svg { display: block; width: 100%; animation: flap .34s ease-in-out infinite alternate; transform-origin: 50% 62%; }
+@keyframes flap { to { transform: scaleY(-.45); } }
 /* The sun's position in the image, kept in step by script */
 .sun { background: radial-gradient(circle at var(--sx, 88%) var(--sy, 31%), rgba(255, 196, 112, .62), rgba(255, 170, 84, .17) 17%, transparent 42%); mix-blend-mode: screen; animation: breathe 11s ease-in-out infinite; }
 .mist { inset: -12% -40%; background: radial-gradient(38% 15% at 28% 74%, rgba(226, 205, 168, .19), transparent 72%), radial-gradient(30% 12% at 66% 69%, rgba(246, 214, 164, .17), transparent 72%), radial-gradient(44% 16% at 88% 80%, rgba(214, 200, 170, .13), transparent 72%); mix-blend-mode: screen; animation: drift 58s ease-in-out infinite alternate; }
@@ -56,12 +64,12 @@ img { display: block; max-width: 100%; }
 @keyframes rise { from { opacity: 0; transform: translateY(18px); } }
 @media (prefers-reduced-motion: reduce) {
     .sun, .mist, .hero h1, .hero .lede, .hero .cta, .live { animation: none; }
-    .dawn { display: none; }
+    .dawn, .birds { display: none; }
+    .deer { transition: none; }
     html { scroll-behavior: auto; }
 }
 @media (max-width: 760px) {
-    .back { background-image: url(home/forest-back-small.webp); background-position: 82% 50%; }
-    .front { background-image: url(home/forest-front-small.webp); background-position: 82% 50%; }
+    .back { background-image: url(home/yard-back-small.webp); background-position: 50% 50%; }
     .shade { background: linear-gradient(180deg, rgba(5, 7, 5, .58) 0%, rgba(5, 7, 5, .42) 42%, rgba(5, 7, 5, .86) 100%); }
     .mist { mix-blend-mode: normal; opacity: .6; }
 }
@@ -152,10 +160,10 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 </head>
 <body>
 <div class="film" id="film" aria-hidden="true">
-    <div class="back" id="back"></div>
+    <div class="back" id="back"><div class="deer" id="deer"><img src="home/yard-deer.webp" alt="" width="350" height="440"></div></div>
     <div class="sun" id="sun"></div>
     <div class="mist"></div>
-    <div class="front" id="front"></div>
+    <div class="birds" id="birds"></div>
     <div class="mist two"></div>
     <div class="shade"></div>
     <div class="dim" id="dim"></div>
@@ -277,16 +285,28 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
 /* The camera: one slow push through the trees as you scroll, a little drift with the pointer */
 (function () {
-    var back = document.getElementById('back'), front = document.getElementById('front'), sun = document.getElementById('sun'), dim = document.getElementById('dim');
+    var back = document.getElementById('back'), sun = document.getElementById('sun'), dim = document.getElementById('dim'), deer = document.getElementById('deer');
     var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     var phone = innerWidth <= 760;
-    var IMG = 2400 / 1018, SUNX = .915, SUNY = .31, POS = phone ? .82 : .62;
+    /* Where things sit in each photo crop, as fractions of the image: the sun, and the deer's feet and height */
+    var P = phone ? { img: 800 / 1500, pos: .5, sx: .544, sy: .383, dx: .469, dy: .667, dh: .07 }
+                  : { img: 2048 / 1280, pos: .62, sx: .642, sy: .286, dx: .602, dy: .729, dh: .104 };
     var at = 0, mx = 0, mxNow = 0, last = -1;
 
+    function plate() {
+        var w = innerWidth, h = innerHeight, iw = Math.max(w, h * P.img), ih = iw / P.img;
+        return { w: w, h: h, iw: iw, ih: ih, x: (w - iw) * P.pos, y: (h - ih) * .5 };
+    }
+    function placeDeer() {
+        var p = plate(), dh = p.ih * P.dh;
+        deer.style.height = dh + 'px';
+        deer.style.left = (p.x + p.iw * P.dx - dh * .4) + 'px';
+        deer.style.top = (p.y + p.ih * P.dy - dh) + 'px';
+    }
     /* Finds where the image's sun lands on this screen, so the glow sits on it at any window shape */
     function placeSun(scale) {
-        var w = innerWidth, h = innerHeight, iw = Math.max(w, h * IMG), ih = iw / IMG;
-        var x = (w - iw) * POS + iw * SUNX, y = (h - ih) * .5 + ih * SUNY;
+        var p = plate(), w = p.w, h = p.h;
+        var x = p.x + p.iw * P.sx, y = p.y + p.ih * P.sy;
         var ox = w * .45, oy = h * .58;
         sun.style.setProperty('--sx', (ox + (x - ox) * scale) + 'px');
         sun.style.setProperty('--sy', (oy + (y - oy) * scale) + 'px');
@@ -299,19 +319,65 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
         if (Math.abs(at - last) > .0002 || Math.abs(mx - mxNow) > .0005) {
             last = at;
             var push = Math.min(1, at / .34), ease = 1 - Math.pow(1 - push, 2);
-            var b = 1.03 + ease * .12 + at * .05, f = 1.05 + ease * .62;
-            back.style.transform = 'translate3d(' + (-mxNow * 10) + 'px,0,0) scale(' + b + ')';
-            front.style.transform = 'translate3d(' + (-mxNow * 42) + 'px,' + (ease * 3) + '%,0) scale(' + f + ')';
-            /* The near trunks pass the camera, then the forest settles back behind the content */
-            front.style.opacity = Math.max(0, 1 - Math.max(0, push - .55) / .45);
+            var b = 1.03 + ease * .17 + at * .05;
+            back.style.transform = 'translate3d(' + (-mxNow * 14) + 'px,0,0) scale(' + b + ')';
+            /* The woods settle back behind the content */
             dim.style.opacity = (.62 * Math.min(1, Math.max(0, (at - .1) / .25))).toFixed(3);
             placeSun(b);
         }
         if (!still) requestAnimationFrame(render);
     }
     addEventListener('pointermove', function (e) { mx = e.clientX / innerWidth - .5; }, { passive: true });
-    addEventListener('resize', function () { last = -1; if (still) render(); });
+    addEventListener('resize', function () { last = -1; placeDeer(); if (still) render(); });
+    placeDeer();
     render();
+
+    /* The buck steps out now and then, lingers, and slips back into the trees */
+    if (still) { deer.classList.add('on'); return; }
+    var facing = false;
+    function visit() {
+        facing = !facing;
+        deer.classList.toggle('left', facing);
+        deer.style.transition = 'none';
+        deer.style.transform = 'translateX(0)';
+        void deer.offsetWidth;
+        deer.style.transition = '';
+        deer.classList.add('on');
+        deer.style.transform = 'translateX(' + (facing ? -1 : 1) * 14 + '%)';
+        setTimeout(function () { deer.classList.remove('on'); setTimeout(visit, 9000 + Math.random() * 9000); }, 9000 + Math.random() * 5000);
+    }
+    setTimeout(visit, 2600);
+})();
+
+/* Birds: a few dark shapes crossing the canopy against the light */
+(function () {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate) return;
+    var sky = document.getElementById('birds');
+    var SVG = '<svg viewBox="0 0 40 16" aria-hidden="true"><path fill="currentColor" d="M0 7Q9 0 20 9Q31 0 40 7Q31 4 20 13Q9 4 0 7Z"/></svg>';
+    function bird(delay, dy, size, dir, time) {
+        var b = document.createElement('div');
+        b.className = 'bird'; b.innerHTML = SVG; b.style.width = size + 'px';
+        b.firstChild.style.animationDuration = (.26 + Math.random() * .16) + 's';
+        sky.appendChild(b);
+        /* They fly where the canopy is bright, so they read as silhouettes against the light */
+        var w = innerWidth, h = innerHeight, y = h * (.06 + Math.random() * .2) + dy;
+        var near = w * (w > 760 ? .34 : .05), from = dir > 0 ? near : w + 60, to = dir > 0 ? w + 60 : near, rise = (Math.random() - .5) * h * .14;
+        var a = b.animate([
+            { transform: 'translate(' + from + 'px,' + y + 'px)', opacity: 0 },
+            { transform: 'translate(' + (from * .85 + to * .15) + 'px,' + (y + rise * .3 - 4) + 'px)', opacity: .85, offset: .15 },
+            { transform: 'translate(' + (from + to) / 2 + 'px,' + (y + rise - 12) + 'px)', opacity: .85 },
+            { transform: 'translate(' + to + 'px,' + (y + rise * 1.6) + 'px)', opacity: .85 }
+        ], { duration: time, delay: delay, easing: 'linear', fill: 'both' });
+        a.onfinish = function () { b.remove(); };
+    }
+    function flock() {
+        if (!document.hidden) {
+            var n = 1 + Math.floor(Math.random() * 4), dir = Math.random() < .5 ? 1 : -1, time = 7000 + Math.random() * 5000;
+            for (var i = 0; i < n; i++) bird(i * (180 + Math.random() * 260), (Math.random() - .5) * 40, 20 + Math.random() * 14, dir, time + Math.random() * 900);
+        }
+        setTimeout(flock, 8000 + Math.random() * 12000);
+    }
+    setTimeout(flock, 3200);
 })();
 </script>
 </body>
