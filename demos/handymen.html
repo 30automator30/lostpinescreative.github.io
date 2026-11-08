@@ -525,6 +525,63 @@
   #estOverlay .est-done{ padding:22px 18px; text-align:center; } #estOverlay .est-done .crest{ width:56px; height:56px; border-radius:50%; background:var(--pine); color:#fff; display:grid; place-items:center; font-size:1.6rem; margin:0 auto 10px; }
   #estOverlay .est-done h4{ font-family:var(--slab); font-size:1.3rem; margin-bottom:6px; } #estOverlay .est-done p{ color:var(--muted); font-size:.9rem; margin:0 0 10px; }
   @media (max-width:480px){ #estOverlay .two{ grid-template-columns:1fr; } }
+
+  /* comparison bars */
+  .price-sheet .cmp{ border:1px solid rgba(246,236,218,.14); border-radius:14px; padding:14px 18px 6px; margin-bottom:20px; }
+  .price-sheet .cmp-lead{ color:#c3b8a3; font-size:.86rem; margin:0 0 6px; }
+  .price-sheet .cmp-item{ padding:12px 0 34px; border-top:1px solid rgba(246,236,218,.08); }
+  .price-sheet .cmp-item:first-of-type{ border-top:0; }
+  .price-sheet .cmp-name{ color:#fff; font-weight:700; } .price-sheet .cmp-note{ color:#c3b8a3; font-size:.8rem; margin-bottom:30px; }
+  .price-sheet .cmp-track{ position:relative; height:10px; border-radius:999px; margin:0 18px; background:linear-gradient(90deg,#3f6b55,#7a6a45,#8a4f3a); }
+  .price-sheet .cmp-track .tk{ position:absolute; top:-5px; transform:translateX(-50%); text-align:center; }
+  .price-sheet .cmp-track .tk i{ display:block; width:2px; height:20px; margin:0 auto; background:rgba(246,236,218,.55); }
+  .price-sheet .cmp-track .tk em{ display:block; font-style:normal; font-size:.66rem; color:#c3b8a3; margin-top:3px; white-space:nowrap; }
+  .price-sheet .cmp-track .tk b{ display:block; font-size:.8rem; color:#ece1cd; white-space:nowrap; }
+  .price-sheet .cmp-track .you{ position:absolute; top:-30px; transform:translateX(-50%); text-align:center; z-index:1; }
+  .price-sheet .cmp-track .you b{ display:block; font-family:var(--slab); font-size:.86rem; color:var(--amber); white-space:nowrap; margin-bottom:4px; }
+  .price-sheet .cmp-track .you i{ display:block; width:18px; height:18px; margin:0 auto; border-radius:50%; background:var(--amber); border:3px solid var(--char); box-shadow:0 0 0 2px var(--amber); }
+  .price-sheet .cmp-src{ color:#9c917f; font-size:.7rem; margin:4px 0 10px; }
+  /* quote builder */
+  .price-sheet .quote{ border:1px solid color-mix(in srgb,var(--amber) 45%,transparent); border-radius:14px; padding:14px 18px 18px; margin-bottom:18px; }
+  .price-sheet .qlist{ list-style:none; margin:0 0 12px; padding:0; display:block; }
+  .price-sheet .qlist li{ padding:0; } .price-sheet .qlist li::before{ content:none; }
+  .price-sheet .qlist label{ display:flex; align-items:center; gap:12px; min-height:48px; border-bottom:1px solid rgba(246,236,218,.1); cursor:pointer; }
+  .price-sheet .qlist input{ width:22px; height:22px; accent-color:var(--amber); flex:none; }
+  .price-sheet .qlist span{ flex:1; color:#fff; } .price-sheet .qlist b{ color:var(--amber); font-family:var(--slab); white-space:nowrap; }
+  .price-sheet .qtotal{ display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px 24px; font-size:1rem; margin:6px 0 14px; color:#ece1cd; }
+  .price-sheet .qtotal b{ font-family:var(--slab); font-size:1.4rem; color:#fff; margin-left:6px; } .price-sheet .qtotal small{ color:#c3b8a3; }
+  /* quote document */
+  #quoteOverlay{ position:fixed; inset:0; z-index:65; background:rgba(12,10,7,.65); display:none; align-items:flex-start; justify-content:center; padding:20px; overflow:auto; }
+  #quoteOverlay.open{ display:flex; }
+  #quoteOverlay .qsheet{ width:760px; max-width:100%; background:#fff; color:#1f2328; border-radius:14px; box-shadow:0 30px 70px -24px rgba(0,0,0,.6); overflow:hidden; }
+  #quoteOverlay .qbar{ display:flex; align-items:center; padding:8px 8px 8px 18px; background:var(--char); color:#fff; } #quoteOverlay .qx{ margin-left:auto; width:44px; height:44px; background:none; border:0; color:#fff; font-size:1.5rem; cursor:pointer; }
+  #quoteOverlay .qdoc{ padding:26px 30px; font-size:.9rem; }
+  #quoteOverlay .qhead{ display:flex; justify-content:space-between; gap:16px; border-bottom:2px solid #1f2328; padding-bottom:12px; }
+  #quoteOverlay .qbrand{ font-family:var(--slab); font-weight:800; font-size:1.25rem; color:#2c6b4f; } #quoteOverlay .qsub{ color:#666; font-size:.8rem; }
+  #quoteOverlay .qmeta{ text-align:right; font-size:.8rem; color:#555; } #quoteOverlay .qmeta h2{ font-family:var(--slab); font-size:1.4rem; color:#1f2328; margin:0 0 2px; }
+  #quoteOverlay .qfor{ margin:14px 0; } #quoteOverlay .qfor span{ display:block; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:#2c6b4f; font-weight:700; } #quoteOverlay .qfor b{ font-size:1rem; }
+  #quoteOverlay .qtable{ width:100%; border-collapse:collapse; } #quoteOverlay .qtable th{ text-align:left; font-size:.75rem; border-bottom:2px solid #1f2328; padding:6px 4px; }
+  #quoteOverlay .qtable td{ border-bottom:1px solid #ddd; padding:8px 4px; vertical-align:top; } #quoteOverlay .qtable td:nth-child(2){ color:#555; font-size:.82rem; }
+  #quoteOverlay .qtable .r{ text-align:right; white-space:nowrap; } #quoteOverlay .qtable tfoot td{ font-weight:700; } #quoteOverlay .qtable tfoot .dep td{ font-weight:400; color:#555; }
+  #quoteOverlay .qterms{ margin:14px 0; padding-left:18px; color:#444; font-size:.8rem; } #quoteOverlay .qterms li{ margin:3px 0; }
+  #quoteOverlay .qsig-box{ position:relative; border:1.5px dashed #999; border-radius:10px; height:120px; margin-top:10px; touch-action:none; }
+  #quoteOverlay canvas{ width:100%; height:100%; display:block; cursor:crosshair; touch-action:none; }
+  #quoteOverlay .qsig-hint{ position:absolute; left:14px; bottom:10px; color:#999; font-size:.8rem; pointer-events:none; } #quoteOverlay.signed .qsig-hint{ display:none; }
+  #quoteOverlay .qsig-row{ display:flex; justify-content:space-between; gap:12px; align-items:center; margin-top:8px; font-size:.82rem; color:#444; }
+  #quoteOverlay .qsig-row input{ font:inherit; border:0; border-bottom:1px solid #999; padding:4px 2px; margin-left:6px; min-height:36px; }
+  #quoteOverlay .qfine{ color:#777; font-size:.75rem; margin:12px 0 0; }
+  #quoteOverlay .qactions{ display:flex; justify-content:flex-end; gap:10px; padding:12px 18px 18px; flex-wrap:wrap; }
+  #quoteOverlay .qbtn{ font:inherit; font-weight:700; min-height:44px; padding:0 18px; border-radius:999px; border:0; background:var(--amber); color:var(--char); cursor:pointer; } #quoteOverlay .qbtn.ghost{ background:#eee; }
+  @media print{
+    body.q-print > *:not(#quoteOverlay){ display:none !important; }
+    body.q-print, html:has(body.q-print){ overflow:visible !important; background:#fff !important; }
+    body.q-print #quoteOverlay{ position:static; background:none; padding:0; display:block; overflow:visible; }
+    body.q-print #quoteOverlay .qsheet{ box-shadow:none; width:100%; border-radius:0; }
+    body.q-print .no-print{ display:none !important; }
+    body.q-print #quoteOverlay .qsig-box{ border-style:solid; }
+  }
+  @media (max-width:640px){ #quoteOverlay{ padding:0; } #quoteOverlay .qsheet{ border-radius:0; } #quoteOverlay .qdoc{ padding:18px 16px; } #quoteOverlay .qhead{ flex-direction:column; } #quoteOverlay .qmeta{ text-align:left; }
+    .price-sheet .cmp-track{ margin:0 22px; } .price-sheet .cmp-track .tk b{ font-size:.7rem; } }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -695,6 +752,28 @@
         <li><span class="amt">$99/mo</span><div><b>Essential care</b><small>Hosting, updates, backups, small changes &amp; a monthly report. Cancel anytime.</small></div></li>
       </ul>
 
+      <div class="extras-h">How this compares</div>
+      <div class="cmp">
+        <p class="cmp-lead">Typical published prices for the same pieces (Nov 2026). Monthly services are shown as first-year cost; your numbers include your own tool costs.</p>
+        <div class="cmp-item"><div class="cmp-name">Website & Google profile</div><div class="cmp-note">Freelancer and template sites at the low end; agency builds at the high end.</div><div class="cmp-track" role="img" aria-label="Website & Google profile: market low $700, typical $4,000, high $15,000+; your price $750"><span class="tk" style="left:4.9%"><i></i><em>Low</em><b>$700</b></span><span class="tk" style="left:57.0%"><i></i><em>Typical</em><b>$4,000</b></span><span class="tk" style="left:96.6%"><i></i><em>High</em><b>$15,000+</b></span><span class="you" style="left:6.9%"><b>Your price $750</b><i></i></span></div></div>
+        <div class="cmp-item"><div class="cmp-name">Book a visit (online booking)</div><div class="cmp-note">Scheduling apps run about $15–$100 a month; setup help is extra.</div><div class="cmp-track" role="img" aria-label="Book a visit (online booking): market low $180, typical $600, high $1,400; your price $400"><span class="tk" style="left:7.0%"><i></i><em>Low</em><b>$180</b></span><span class="tk" style="left:58.7%"><i></i><em>Typical</em><b>$600</b></span><span class="tk" style="left:95.1%"><i></i><em>High</em><b>$1,400</b></span><span class="you" style="left:41.3%"><b>Your price $400</b><i></i></span></div></div>
+        <div class="cmp-item"><div class="cmp-name">Missed-call text-back</div><div class="cmp-note">Apps start near $17–$30 a month; managed services run $79–$459 a month plus setup.</div><div class="cmp-track" role="img" aria-label="Missed-call text-back: market low $200, typical $1,500, high $6,500; your price ~$380"><span class="tk" style="left:4.3%"><i></i><em>Low</em><b>$200</b></span><span class="tk" style="left:58.0%"><i></i><em>Typical</em><b>$1,500</b></span><span class="tk" style="left:97.0%"><i></i><em>High</em><b>$6,500</b></span><span class="you" style="left:21.4%"><b>Your price ~$380</b><i></i></span></div></div>
+        <div class="cmp-item"><div class="cmp-name">Automatic Google reviews</div><div class="cmp-note">Review-request apps run about $29–$125 a month; platforms $300+ a month.</div><div class="cmp-track" role="img" aria-label="Automatic Google reviews: market low $350, typical $900, high $3,600; your price $350"><span class="tk" style="left:6.2%"><i></i><em>Low</em><b>$350</b></span><span class="tk" style="left:42.5%"><i></i><em>Typical</em><b>$900</b></span><span class="tk" style="left:95.7%"><i></i><em>High</em><b>$3,600</b></span><span class="you" style="left:6.2%"><b>Your price $350</b><i></i></span></div></div>
+        <p class="cmp-src">Sources: websitesetup.org · levitate.ai · slashpost.ai · merchynt.com · flexbooker.com · softwareadvice.com · dont-miss-the-lead.pages.dev · anchord-co.pages.dev · truereview.co · getapp. Approximate; many are providers’ own published prices.</p>
+      </div>
+      <div class="extras-h">Build your quote</div>
+      <div class="quote" id="quoteBuilder">
+        <ul class="qlist">
+          <li><label><input type="checkbox" checked disabled data-name="Website &amp; Google profile" data-desc="Website on your domain, gallery &amp; reels, reviews, estimate form, Google Business Profile, review link, owner dashboard &amp; app, setup walkthrough" data-price="750"><span>Website &amp; Google profile</span><b>$750</b></label></li>
+          <li><label><input type="checkbox" data-name="Book a visit" data-desc="Online booking: day and arrival window" data-price="400"><span>Book a visit</span><b>+$400</b></label></li>
+          <li><label><input type="checkbox" data-name="Missed-call text-back" data-desc="Instant text to every missed call; calls in your dashboard inbox" data-price="300"><span>Missed-call text-back</span><b>+$300</b></label></li>
+          <li><label><input type="checkbox" data-name="Automatic Google reviews" data-desc="Review request after every finished job" data-price="350"><span>Automatic Google reviews</span><b>+$350</b></label></li>
+          <li><label><input type="checkbox" data-name="Growth package" data-desc="AI website chat &amp; phone receptionist, scheduling &amp; dispatch, reports, payroll &amp; analytics, accounting sync" data-quote="from $3,500 — quoted after a call"><span>Growth package</span><b>from $3,500</b></label></li>
+          <li><label><input type="checkbox" data-name="Essential care" data-desc="Hosting, updates, backups, small changes, monthly report. Cancel anytime." data-monthly="99"><span>Essential care plan</span><b>$99/mo</b></label></li>
+        </ul>
+        <div class="qtotal"><div>Setup total <b id="qSetup">$750</b></div><div>Monthly <b id="qMonthly">$0</b><small> + tools ≈ $10/mo</small></div></div>
+        <button type="button" class="try" id="qReview">Review &amp; sign</button>
+      </div>
       <div class="ex">Example: website + booking + text-back = <b>$1,450</b>. All three add-ons (the “Get More Jobs” package) = <b>$1,800</b>.</div>
     </div>
   </section>
@@ -1525,6 +1604,71 @@ window.OWNER_DASH_CONFIG = {
   form.addEventListener('submit', function(e){ e.preventDefault();
     var ok=form.estJob.value && form.name.value.trim() && form.phone.value.trim() && form.addr.value.trim();
     if(!ok){ err.hidden=false; return; } form.hidden=true; done.hidden=false; done.querySelector('button').focus(); });
+})();
+</script>
+
+<!-- Itemized quote: review, sign on screen, print or save as PDF -->
+<div id="quoteOverlay" aria-hidden="true">
+  <div class="qsheet" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+    <div class="qbar no-print"><b>Your quote</b><button type="button" class="qx" aria-label="Close">×</button></div>
+    <div class="qdoc">
+      <div class="qhead"><div><div class="qbrand">Lost Pines Creative LLC</div><div class="qsub">Groundwork · lostpinescreative.com</div></div>
+        <div class="qmeta"><h2 id="qTitle">Quote</h2><div>No. <span id="qNo"></span></div><div>Date <span id="qDate"></span></div><div>Valid for 30 days</div></div></div>
+      <div class="qfor"><span>Prepared for</span><b>Chip Gosnell</b><div>Handyman an Sons · Bastrop, TX</div></div>
+      <table class="qtable"><thead><tr><th>Item</th><th>Details</th><th class="r">Price</th></tr></thead><tbody id="qRows"></tbody>
+        <tfoot><tr><td colspan="2">Setup total</td><td class="r" id="qT1"></td></tr>
+        <tr class="dep"><td colspan="2">Deposit to start (50%)</td><td class="r" id="qDep"></td></tr>
+        <tr class="dep"><td colspan="2">Balance at launch (50%)</td><td class="r" id="qBal"></td></tr>
+        <tr id="qMoRow"><td colspan="2">Monthly</td><td class="r" id="qMo"></td></tr></tfoot></table>
+      <ul class="qterms"><li>Everything is set up in Handyman an Sons' name — you own it all.</li><li>Tools are billed to you directly (about $10/mo: domain, phone line &amp; texts). No markup.</li><li>About 2 weeks from kickoff; business-texting approval can take up to 2 more weeks.</li><li id="qGrowthNote" hidden>Growth package is quoted separately after a short call and is not in the setup total.</li></ul>
+      <div class="qsign"><div class="qsig-box"><canvas id="qSig" aria-label="Sign here with your finger or mouse"></canvas><span class="qsig-hint no-print">Sign here</span></div>
+        <div class="qsig-row"><label>Name <input id="qName" value="Chip Gosnell" autocomplete="name"></label><div>Date <span id="qDate2"></span></div></div></div>
+      <p class="qfine no-print">Demo: signing here makes a printable copy. The binding agreement and deposit happen in your Groundwork onboarding.</p>
+    </div>
+    <div class="qactions no-print"><button type="button" class="qbtn ghost" id="qClear">Clear signature</button><button type="button" class="qbtn" id="qPrint">Print / Save as PDF</button></div>
+  </div>
+</div>
+<script>
+(function(){
+  var qb=document.getElementById('quoteBuilder'), ov=document.getElementById('quoteOverlay'); if(!qb||!ov) return;
+  var boxes=[].slice.call(qb.querySelectorAll('input[type=checkbox]'));
+  function money(n){ return '$'+n.toLocaleString('en-US'); }
+  function sums(){ var s=0,m=0; boxes.forEach(function(b){ if(!b.checked) return; s+=+(b.dataset.price||0); m+=+(b.dataset.monthly||0); }); return {s:s,m:m}; }
+  function refresh(){ var t=sums(); document.getElementById('qSetup').textContent=money(t.s); document.getElementById('qMonthly').textContent=t.m?money(t.m)+'/mo':'$0'; }
+  boxes.forEach(function(b){ b.addEventListener('change', refresh); }); refresh();
+  var today=new Date(), ds=today.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  function esc(s){ var d=document.createElement('div'); d.innerHTML=s; return d.innerHTML; }
+  function build(){
+    var t=sums(), rows='', growth=false;
+    boxes.forEach(function(b){ if(!b.checked) return;
+      var price=b.dataset.price?money(+b.dataset.price):b.dataset.monthly?money(+b.dataset.monthly)+'/mo':b.dataset.quote;
+      if(b.dataset.quote) growth=true;
+      rows+='<tr><td><b>'+b.dataset.name+'</b></td><td>'+b.dataset.desc+'</td><td class="r">'+price+'</td></tr>'; });
+    document.getElementById('qRows').innerHTML=rows;
+    document.getElementById('qT1').textContent=money(t.s);
+    document.getElementById('qDep').textContent=money(Math.round(t.s/2));
+    document.getElementById('qBal').textContent=money(t.s-Math.round(t.s/2));
+    document.getElementById('qMoRow').hidden=!t.m; document.getElementById('qMo').textContent=money(t.m)+'/mo';
+    document.getElementById('qGrowthNote').hidden=!growth;
+    document.getElementById('qDate').textContent=ds; document.getElementById('qDate2').textContent=ds;
+    document.getElementById('qNo').textContent='HAS-'+today.toISOString().slice(0,10).replace(/-/g,'');
+  }
+  /* signature pad */
+  var cv=document.getElementById('qSig'), cx=cv.getContext('2d'), drawing=false, signed=false;
+  function sizePad(){ var r=cv.getBoundingClientRect(), d=window.devicePixelRatio||1; cv.width=r.width*d; cv.height=r.height*d; cx.setTransform(d,0,0,d,0,0); cx.lineWidth=2.2; cx.lineCap='round'; cx.lineJoin='round'; cx.strokeStyle='#1d2a44'; }
+  function pt(e){ var r=cv.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; }
+  cv.addEventListener('pointerdown', function(e){ drawing=true; cv.setPointerCapture(e.pointerId); var p=pt(e); cx.beginPath(); cx.moveTo(p[0],p[1]); e.preventDefault(); });
+  cv.addEventListener('pointermove', function(e){ if(!drawing) return; var p=pt(e); cx.lineTo(p[0],p[1]); cx.stroke(); if(!signed){ signed=true; ov.classList.add('signed'); } });
+  cv.addEventListener('pointerup', function(){ drawing=false; });
+  document.getElementById('qClear').onclick=function(){ cx.clearRect(0,0,cv.width,cv.height); signed=false; ov.classList.remove('signed'); };
+  var opener=null;
+  function close(){ ov.classList.remove('open'); ov.setAttribute('aria-hidden','true'); document.body.style.overflow=''; if(opener&&opener.focus) opener.focus(); }
+  document.getElementById('qReview').onclick=function(){ opener=this; build(); ov.classList.add('open'); ov.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+    requestAnimationFrame(function(){ sizePad(); signed=false; ov.classList.remove('signed'); ov.querySelector('.qx').focus(); }); };
+  ov.querySelector('.qx').onclick=close; ov.addEventListener('click', function(e){ if(e.target===ov) close(); });
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape'&&ov.classList.contains('open')) close(); });
+  document.getElementById('qPrint').onclick=function(){ document.body.classList.add('q-print'); window.print(); setTimeout(function(){ document.body.classList.remove('q-print'); }, 500); };
+  window.addEventListener('afterprint', function(){ document.body.classList.remove('q-print'); });
 })();
 </script>
 </body>
