@@ -344,15 +344,11 @@
   /* ---- hero life: birds + kayakers (decorative, tap to add more) ---- */
   .hero .badge-card{ top:30px; bottom:auto; }
   .hero-fx{ position:absolute; inset:0; z-index:2; pointer-events:none; overflow:hidden; }
-  .hero-fx .bird, .hero-fx .kayak, .hero-fx .ripple{ position:absolute; left:0; top:0; will-change:transform; }
+  .hero-fx .bird{ position:absolute; left:0; top:0; will-change:transform; }
   .hero-fx .bird svg{ display:block; width:100%; height:auto; overflow:visible; animation:flap .42s ease-in-out infinite alternate; transform-origin:50% 60%; }
   .hero-fx .bird path{ fill:none; stroke:#1d150d; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
   @keyframes flap{ from{ transform:scaleY(1); } to{ transform:scaleY(-.45); } }
-  .hero-fx .kayak svg{ display:block; width:100%; height:auto; overflow:visible; }
-  .hero-fx .kayak .paddle{ transform-origin:24px 7px; animation:paddle 1.1s ease-in-out infinite alternate; }
-  @keyframes paddle{ from{ transform:rotate(-24deg); } to{ transform:rotate(24deg); } }
-  .hero-fx .ripple{ border:1.5px solid rgba(246,236,218,.45); border-top-color:transparent; border-radius:50%; animation:ripple 2.4s ease-out forwards; }
-  @keyframes ripple{ from{ opacity:.7; transform:var(--t) scale(.5); } to{ opacity:0; transform:var(--t) scale(1.5); } }
+  .hero-fx canvas{ position:absolute; inset:0; }
   .hero .fx-hint{ margin-top:16px; font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:#d8c7a6; opacity:.85; }
   @media (prefers-reduced-motion:reduce){ .hero-fx, .hero .fx-hint{ display:none; } }
 </style>
@@ -941,68 +937,129 @@ window.OWNER_DASH_CONFIG = {
   var hero=document.querySelector('.hero.has-photo'); if(!hero) return;
   if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var IW=1024, IH=1536, POSY=0.4;                 /* photo size and its background-position y */
+  var SQ=0.55;                                     /* the photo looks down at the river: foreshorten depth */
   /* river centreline in photo coordinates (0–1), upstream bend first */
-  var RIVER=[[.74,.548],[.79,.566],[.835,.595],[.83,.632],[.77,.66],[.71,.686],[.645,.712],[.585,.742],[.52,.772],[.47,.792]];
+  var RIVER=[[.735,.547],[.765,.556],[.80,.572],[.83,.596],[.835,.618],[.815,.638],[.775,.656],[.72,.679],[.66,.704],[.60,.732],[.54,.763],[.48,.79]];
   var fx=document.createElement('div'); fx.className='hero-fx'; fx.setAttribute('aria-hidden','true');
+  var cv=document.createElement('canvas'); fx.appendChild(cv); var cx=cv.getContext('2d');
   hero.insertBefore(fx, hero.querySelector('.hero-inner'));
   var hint=hero.querySelector('.fx-hint'); if(hint) hint.hidden=false;
-  var W,H,s,ox,oy;
-  function measure(){ W=hero.clientWidth; H=hero.clientHeight; s=Math.max(W/IW,H/IH); ox=(W-IW*s)*0.5; oy=(H-IH*s)*POSY; }
+
+  var W,H,s,ox,oy,dpr,path=[],cum=[],L=0;
   function toPx(p){ return [ox+p[0]*IW*s, oy+p[1]*IH*s]; }
   function toImg(x,y){ return [(x-ox)/(IW*s), (y-oy)/(IH*s)]; }
+  /* Catmull-Rom through the river points, sampled densely, in pixels */
+  function buildPath(){
+    var P=RIVER.map(toPx), out=[];
+    for(var i=0;i<P.length-1;i++){
+      var p0=P[Math.max(0,i-1)], p1=P[i], p2=P[i+1], p3=P[Math.min(P.length-1,i+2)];
+      for(var t=0;t<1;t+=0.05){ var t2=t*t, t3=t2*t;
+        out.push([0.5*((2*p1[0])+(-p0[0]+p2[0])*t+(2*p0[0]-5*p1[0]+4*p2[0]-p3[0])*t2+(-p0[0]+3*p1[0]-3*p2[0]+p3[0])*t3),
+                  0.5*((2*p1[1])+(-p0[1]+p2[1])*t+(2*p0[1]-5*p1[1]+4*p2[1]-p3[1])*t2+(-p0[1]+3*p1[1]-3*p2[1]+p3[1])*t3)]); }
+    }
+    out.push(P[P.length-1]); path=out; cum=[0]; L=0;
+    for(var j=1;j<path.length;j++){ L+=Math.hypot(path[j][0]-path[j-1][0],path[j][1]-path[j-1][1]); cum.push(L); }
+  }
+  function measure(){
+    W=hero.clientWidth; H=hero.clientHeight; s=Math.max(W/IW,H/IH); ox=(W-IW*s)*0.5; oy=(H-IH*s)*POSY;
+    dpr=Math.min(2,window.devicePixelRatio||1); cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+'px'; cv.style.height=H+'px';
+    buildPath();
+  }
   measure(); window.addEventListener('resize', measure);
+  function at(d){ d=Math.max(0,Math.min(L,d)); var lo=0, hi=cum.length-1; while(hi-lo>1){ var m=(lo+hi)>>1; if(cum[m]<d) lo=m; else hi=m; }
+    var a=path[lo], b=path[hi], l=cum[hi]-cum[lo], t=l?(d-cum[lo])/l:0; return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, b[0]-a[0], b[1]-a[1]]; }
+  function nearest(x,y){ var best=1e9, bd=0; for(var i=0;i<path.length;i++){ var d=Math.hypot(x-path[i][0],y-path[i][1]); if(d<best){ best=d; bd=cum[i]; } } return [best,bd]; }
 
+  /* ---------- birds (DOM) ---------- */
   var BIRD='<svg viewBox="0 0 24 12"><path d="M1 4 Q6.5 0.5 12 7 Q17.5 0.5 23 4"/></svg>';
-  var KAYAK='<svg viewBox="0 0 48 18"><path d="M1 12 Q24 7 47 12 Q24 16.5 1 12Z" fill="#b4472a"/><path d="M4 12 Q24 9.6 44 12" fill="none" stroke="#e8a25a" stroke-width=".9"/>'
-    +'<ellipse cx="24" cy="11.6" rx="5" ry="1.6" fill="#1d150d"/><path d="M22 11 L22.6 6 L25.4 6 L26 11 Z" fill="#1d150d"/><circle cx="24" cy="4" r="2.3" fill="#1d150d"/>'
-    +'<g class="paddle"><line x1="9" y1="7" x2="39" y2="7" stroke="#1d150d" stroke-width="1.4" stroke-linecap="round"/><rect x="5.5" y="5.4" width="4.5" height="3.2" rx="1.2" fill="#1d150d"/><rect x="38" y="5.4" width="4.5" height="3.2" rx="1.2" fill="#1d150d"/></g></svg>';
-
-  var birds=[], kayaks=[], last=0, running=false, visible=true;
-
+  var birds=[];
   function flock(x,y,n,dir){
     n=n||(3+Math.floor(Math.random()*3)); dir=dir||(Math.random()<.5?1:-1);
     for(var i=0;i<n;i++){
       var el=document.createElement('div'); el.className='bird'; el.innerHTML=BIRD;
       var size=(16+Math.random()*10)*Math.max(.7,Math.min(1.2,s*1.1)); el.style.width=size+'px';
-      el.querySelector('svg').style.animationDelay=(-Math.random()*.4)+'s';
-      el.querySelector('svg').style.animationDuration=(.32+Math.random()*.2)+'s';
+      var sv=el.querySelector('svg'); sv.style.animationDelay=(-Math.random()*.4)+'s'; sv.style.animationDuration=(.32+Math.random()*.2)+'s';
       fx.appendChild(el);
-      birds.push({el:el, x:x-dir*i*(14+Math.random()*10), y:y+(i%2?1:-1)*i*6+Math.random()*6, vx:dir*(34+Math.random()*16), vy:0, ph:Math.random()*6.28, size:size});
+      birds.push({el:el, x:x-dir*i*(14+Math.random()*10), y:y+(i%2?1:-1)*i*6+Math.random()*6, vx:dir*(34+Math.random()*16), vy:0, ph:Math.random()*6.28});
     }
   }
-  function ambientFlock(){
-    var dir=Math.random()<.5?1:-1, sky=toPx([0,.23+Math.random()*.15])[1];
-    flock(dir>0?-40:W+40, Math.max(24,sky), 0, dir);
-  }
-  /* path helpers */
-  function pathPx(){ return RIVER.map(toPx); }
-  function lengthOf(p){ var L=0; for(var i=1;i<p.length;i++) L+=Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]); return L; }
-  function at(p,d){ for(var i=1;i<p.length;i++){ var a=p[i-1], b=p[i], l=Math.hypot(b[0]-a[0],b[1]-a[1]); if(d<=l){ var t=l?d/l:0; return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, b[0]-a[0]]; } d-=l; } var e=p[p.length-1]; return [e[0],e[1],-1]; }
-  function nearestDist(x,y){ var p=pathPx(), best=1e9, bd=0, acc=0;
-    for(var i=1;i<p.length;i++){ var a=p[i-1], b=p[i], dx=b[0]-a[0], dy=b[1]-a[1], l2=dx*dx+dy*dy, t=l2?Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/l2)):0;
-      var px=a[0]+dx*t, py=a[1]+dy*t, d=Math.hypot(x-px,y-py); if(d<best){ best=d; bd=acc+Math.sqrt(l2)*t; } acc+=Math.sqrt(l2); }
-    return [best, bd]; }
-  function kayak(startD, dir){
-    var el=document.createElement('div'); el.className='kayak'; el.innerHTML=KAYAK;
-    var w=Math.max(24, 56*s); el.style.width=w+'px'; fx.appendChild(el);
-    kayaks.push({el:el, d:startD||0, dir:dir||1, w:w, rip:0});
-  }
-  function ripple(x,y,w){ var r=document.createElement('div'); r.className='ripple'; r.style.width=w+'px'; r.style.height=(w*.26)+'px';
-    r.style.setProperty('--t','translate('+(x-w/2)+'px,'+(y-w*.16)+'px)'); fx.appendChild(r); setTimeout(function(){ r.remove(); }, 2500); }
+  function ambientFlock(){ var dir=Math.random()<.5?1:-1, sky=toPx([0,.23+Math.random()*.15])[1]; flock(dir>0?-40:W+40, Math.max(24,sky), 0, dir); }
 
-  function tick(t){
+  /* ---------- kayaks (canvas) ---------- */
+  var kayaks=[], splashes=[], PALETTE=[['#8f4632','#b8694a'],['#8a6a2c','#b8913f'],['#4a5233','#6f7748']];
+  function kayak(startD, dir){
+    var c=PALETTE[Math.floor(Math.random()*PALETTE.length)];
+    kayaks.push({d:startD||0, dir:dir||1, len:Math.max(11, 20*s), ph:Math.random()*6.28, rate:1.5+Math.random()*.4, base:Math.max(4,8.5*s)*(.85+Math.random()*.3),
+      hull:c[0], hi:c[1], trail:[], tt:0, side:1, born:0});
+  }
+  function splash(x,y,r){ for(var i=0;i<3;i++) splashes.push({x:x+(Math.random()-.5)*r, y:y+(Math.random()-.5)*r*.4, r:.6+Math.random()*.8, a:.9, vy:-(4+Math.random()*6)}); }
+  function ringAt(x,y,w){ splashes.push({ring:true, x:x, y:y, r:w*.15, R:w, a:.35}); }
+
+  function drawKayak(q, now){
+    var pt=at(q.d), hx=pt[2]*q.dir, hy=pt[3]*q.dir, ang=Math.atan2(hy/SQ, hx);       /* heading on the un-foreshortened water plane */
+    var fade=Math.max(0,Math.min(1, q.born, Math.min(q.d, L-q.d)/(q.len*3)));
+    var bob=Math.sin(now*2.1+q.ph)*.35*s, x=pt[0], y=pt[1]+bob, l=q.len, w=l*.17;
+    /* wake: two lines spreading from the stern, fading with age */
+    var tr=q.trail; if(tr.length>2){
+      cx.lineCap='round';
+      for(var side=-1; side<=1; side+=2){
+        cx.beginPath();
+        for(var i=0;i<tr.length;i++){ var p=tr[i], age=(now-p.t), spread=(1.5+age*3.2)*s*side;
+          var nx=-Math.sin(p.a)*spread, ny=Math.cos(p.a)*spread*SQ; i?cx.lineTo(p.x+nx,p.y+ny):cx.moveTo(p.x+nx,p.y+ny); }
+        var g=cx.createLinearGradient(tr[0].x,tr[0].y,tr[tr.length-1].x,tr[tr.length-1].y);
+        g.addColorStop(0,'rgba(240,226,200,0)'); g.addColorStop(1,'rgba(240,226,200,'+(.42*fade)+')');
+        cx.strokeStyle=g; cx.lineWidth=Math.max(.7,.9*s); cx.stroke();
+      }
+    }
+    cx.save(); cx.globalAlpha=fade;
+    /* soft shadow/reflection on the water */
+    cx.save(); cx.translate(x,y+w*.9); cx.scale(1,SQ); cx.rotate(ang); cx.fillStyle='rgba(10,8,6,.25)';
+    cx.beginPath(); cx.ellipse(0,0,l*.5,w*.9,0,0,6.283); cx.fill(); cx.restore();
+    /* hull, seen from above at an angle */
+    cx.save(); cx.translate(x,y); cx.scale(1,SQ); cx.rotate(ang);
+    cx.beginPath(); cx.moveTo(-l/2,0); cx.quadraticCurveTo(0,-w*1.4,l/2,0); cx.quadraticCurveTo(0,w*1.4,-l/2,0); cx.closePath();
+    var hg=cx.createLinearGradient(0,-w,0,w); hg.addColorStop(0,q.hi); hg.addColorStop(1,q.hull); cx.fillStyle=hg; cx.fill();
+    cx.fillStyle='rgba(20,14,9,.85)'; cx.beginPath(); cx.ellipse(-l*.04,0,l*.11,w*.55,0,0,6.283); cx.fill();
+    cx.restore();
+    /* paddler: torso + head, upright, lit from the sunset side */
+    var px=x-Math.cos(ang)*l*.04, py=y-Math.sin(ang)*l*.04*SQ, body=Math.max(1.6,l*.11);
+    cx.fillStyle='#22180f'; cx.beginPath(); cx.ellipse(px,py-body*.9,body*.75,body*1.05,0,0,6.283); cx.fill();
+    cx.beginPath(); cx.arc(px,py-body*2.15,body*.62,0,6.283); cx.fill();
+    /* paddle: shaft across the boat, alternating strokes — the dipping blade sinks, the other lifts */
+    var st=Math.sin(q.ph), sweep=st*.5, pa=ang+Math.PI/2+sweep, half=l*.46, lift=body*1.1;
+    var ax=px+Math.cos(pa)*half, ay=py-body*1.3+Math.sin(pa)*half*SQ+st*lift, bx=px-Math.cos(pa)*half, by=py-body*1.3-Math.sin(pa)*half*SQ-st*lift;
+    cx.strokeStyle='#1a120b'; cx.lineWidth=Math.max(.8,l*.045); cx.lineCap='round';
+    cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(bx,by); cx.stroke();
+    cx.lineWidth=Math.max(1.6,l*.1);
+    cx.beginPath(); cx.moveTo(ax,ay); cx.lineTo(ax+(ax-bx)*.08,ay+(ay-by)*.08); cx.stroke();
+    cx.beginPath(); cx.moveTo(bx,by); cx.lineTo(bx-(ax-bx)*.08,by-(ay-by)*.08); cx.stroke();
+    cx.restore();
+    /* a splash where the blade enters the water */
+    var side=st>0?1:-1; if(side!==q.side){ q.side=side; var sx=side>0?ax:bx, sy=(side>0?ay:by)+lift*.2; splash(sx,sy,l*.2); ringAt(sx,sy+l*.05,l*.22); }
+  }
+
+  var last=0, running=false, visible=true;
+  function tick(ms){
     if(!running) return;
-    var dt=Math.min(.05,(t-(last||t))/1000); last=t;
+    var now=ms/1000, dt=Math.min(.05, last?now-last:0); last=now;
     for(var i=birds.length-1;i>=0;i--){ var b=birds[i];
       b.ph+=dt*2.2; b.x+=b.vx*dt; b.vy*=0.985; b.y+=(b.vy+Math.sin(b.ph)*6)*dt;
       b.el.style.transform='translate('+b.x+'px,'+b.y+'px)'+(b.vx<0?' scaleX(-1)':'');
       if(b.x<-80||b.x>W+80||b.y<-80){ b.el.remove(); birds.splice(i,1); } }
-    var p=pathPx(), L=lengthOf(p), sp=Math.max(7,15*s);
+    cx.setTransform(dpr,0,0,dpr,0,0); cx.clearRect(0,0,W,H);
+    for(var j=splashes.length-1;j>=0;j--){ var sp=splashes[j];
+      if(sp.ring){ sp.r+=(sp.R-sp.r)*dt*1.6; sp.a-=dt*.45; cx.strokeStyle='rgba(240,226,200,'+Math.max(0,sp.a)+')'; cx.lineWidth=Math.max(.6,.7*s);
+        cx.beginPath(); cx.ellipse(sp.x,sp.y,sp.r,sp.r*SQ*.6,0,0,6.283); cx.stroke(); }
+      else { sp.vy+=30*dt; sp.y+=sp.vy*dt; sp.a-=dt*2.2; cx.fillStyle='rgba(250,240,220,'+Math.max(0,sp.a)+')'; cx.beginPath(); cx.arc(sp.x,sp.y,sp.r*Math.max(.6,s),0,6.283); cx.fill(); }
+      if(sp.a<=0) splashes.splice(j,1); }
     for(var k=kayaks.length-1;k>=0;k--){ var q=kayaks[k];
-      q.d+=sp*dt*q.dir; var pt=at(p,q.d);
-      q.el.style.transform='translate('+(pt[0]-q.w/2)+'px,'+(pt[1]-q.w*.3)+'px)'+((pt[2]*q.dir)<0?' scaleX(-1)':'');
-      q.rip-=dt; if(q.rip<=0){ q.rip=1.1; var bk=at(p,Math.max(0,q.d-q.w*.55*q.dir)); ripple(bk[0],bk[1]+q.w*.12,q.w*.9); }
-      if(q.d>L||q.d<0||pt[1]>H+20){ q.el.remove(); kayaks.splice(k,1); } }
+      q.born=Math.min(1,q.born+dt*.8); q.ph+=dt*Math.PI*q.rate;
+      var surge=.7+.45*Math.abs(Math.sin(q.ph));                         /* glide between strokes, push on each */
+      q.d+=q.base*surge*dt*q.dir;
+      var pt=at(q.d); q.tt-=dt;
+      if(q.tt<=0){ q.tt=.09; var back=at(q.d-q.len*.5*q.dir); q.trail.push({x:back[0],y:back[1],a:Math.atan2(pt[3]*q.dir/SQ,pt[2]*q.dir),t:now}); if(q.trail.length>34) q.trail.shift(); }
+      drawKayak(q, now);
+      if(q.d>L||q.d<0||pt[1]>H+30){ kayaks.splice(k,1); } }
     requestAnimationFrame(tick);
   }
   function start(){ if(running||!visible||document.hidden) return; running=true; last=0; requestAnimationFrame(tick); }
@@ -1011,18 +1068,18 @@ window.OWNER_DASH_CONFIG = {
   if('IntersectionObserver' in window){ new IntersectionObserver(function(es){ visible=es[0].isIntersecting; visible?start():stop(); }).observe(hero); }
 
   /* ambient life */
-  kayak(lengthOf(pathPx())*0.05, 1);
+  kayak(L*0.08, 1); kayaks[0].born=1;
   setTimeout(ambientFlock, 900);
   setInterval(function(){ if(running && birds.length<14) ambientFlock(); }, 11000);
-  setInterval(function(){ if(running && kayaks.length<2) kayak(0,1); }, 17000);
+  setInterval(function(){ if(running && kayaks.length<2) kayak(0,1); }, 19000);
 
   /* tap the sky -> flock from there (and scatter nearby birds); tap the river -> launch a kayak */
   hero.addEventListener('click', function(e){
     if(e.target.closest('a,button,input,textarea,.badge-card')) return;
-    var r=hero.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, img=toImg(x,y), nd=nearestDist(x,y);
-    if(nd[0] < Math.max(26, 60*s) && kayaks.length<5){ kayak(nd[1], Math.random()<.85?1:-1); ripple(x,y,40*s+12); }
+    var r=hero.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top, img=toImg(x,y), nd=nearest(x,y);
+    if(nd[0] < Math.max(26, 60*s) && kayaks.length<5){ kayak(nd[1], Math.random()<.8?1:-1); ringAt(x,y,30*s+10); }
     else if(img[1] < .5){
-      birds.forEach(function(b){ var dx=b.x-x, dy=b.y-y, d=Math.hypot(dx,dy); if(d<160){ b.vy-=60+Math.random()*40; b.vx*=1.6; } });
+      birds.forEach(function(b){ var dx=b.x-x, dy=b.y-y; if(Math.hypot(dx,dy)<160){ b.vy-=60+Math.random()*40; b.vx*=1.6; } });
       if(birds.length<24) flock(x,y,4);
     }
     start();
