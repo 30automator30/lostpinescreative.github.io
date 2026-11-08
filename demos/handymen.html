@@ -1212,6 +1212,7 @@ window.OWNER_DASH_CONFIG = {
       var kids=[].filter.call(s.children, function(k){ return k.offsetHeight>40 && !k.classList.contains('head'); });
       addSt(kids[kids.length-1] || s, 'ground');
     });
+    addSt(document.querySelector('.site-end-copy'), 'ground');      /* the 'behind the scenes' intro */
     addSt(document.querySelector('footer'), 'ground', true);
     stations.sort(function(a,b){ return a.floor-b.floor; });
   }
