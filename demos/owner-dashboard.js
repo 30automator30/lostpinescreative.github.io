@@ -199,7 +199,14 @@
       b.onclick = function () {
         var sh = l.shots[+b.getAttribute('data-k')], z = overlay.querySelector('.oda-zoom');
         z.querySelector('img').src = sh.src; z.querySelector('img').alt = sh.alt || sh.cap; z.querySelector('p').textContent = sh.cap;
-        z.classList.add('open');
+        z.classList.remove('wide'); z.classList.add('open');
+      };
+    });
+    Array.prototype.forEach.call(main.querySelectorAll('[data-zoom]'), function (b) {
+      b.onclick = function () {
+        var img = b.querySelector('img') || b, z = overlay.querySelector('.oda-zoom');
+        z.querySelector('img').src = img.src; z.querySelector('img').alt = img.alt; z.querySelector('p').textContent = b.getAttribute('data-zoom');
+        z.classList.add('wide'); z.classList.add('open');
       };
     });
     Array.prototype.forEach.call(main.querySelectorAll('[data-a]'), function (b) {
