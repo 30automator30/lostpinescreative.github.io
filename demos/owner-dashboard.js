@@ -10,6 +10,7 @@
   var T = cfg.terms || {};
   var CUR = cfg.cur || '$';
   var overlay, main, state, built = false, active = 'overview';
+  var LEVELS = cfg.levels || null, level = null;
 
   /* ---- helpers ---- */
   function esc(s) {
@@ -46,6 +47,7 @@
   function svg(p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; }
 
   var TABS = [
+    { id: 'level', label: 'What you get', icon: '<path d="M5 12l4 4L19 6"/>', render: renderLevel, only: !!LEVELS },
     { id: 'overview', label: 'Overview', icon: ICON.grid, render: renderOverview },
     { id: 'inbox', label: 'Inbox', icon: ICON.cal, render: renderInbox, only: !!cfg.inbox },
     { id: 'appointments', label: (T.schedule || 'Appointments'), icon: ICON.cal, render: renderAppointments },
@@ -60,6 +62,7 @@
      kpis[].inc / kpis[].soon put a pill on a tile. */
   var SOON = cfg.soon || {}, L = cfg.labels || {};
   function pill(kind) {
+    if (LEVELS) return '';
     if (kind === 'inc') return '<span class="oda-pill inc">' + esc(L.inc || 'Included') + '</span>';
     if (kind === 'soon') return '<span class="oda-pill soon">' + esc(L.soon || 'Coming soon') + '</span>';
     return '';
@@ -87,22 +90,91 @@
         '<span class="oda-live"><span class="pip"></span>' + esc(cfg.liveLabel || 'Live') + ' · ' + esc(cfg.today || 'Today') + '</span>' +
         '<button class="oda-close" aria-label="Close dashboard">×</button>' +
       '</div>' +
+      (LEVELS ? '<div class="oda-levels" id="odaLevels" role="tablist" aria-label="Package level"></div>' : '') +
       '<div class="oda-tabs" id="odaTabs"></div>' +
       '<div class="oda-main"><div class="oda-wrap" id="odaMain"></div></div>';
 
     document.body.appendChild(overlay);
     main = overlay.querySelector('#odaMain');
+    buildTabs();
+    if (LEVELS) {
+      var lv = overlay.querySelector('#odaLevels');
+      LEVELS.forEach(function (l) {
+        var b = document.createElement('button');
+        b.className = 'oda-level';
+        b.setAttribute('role', 'tab');
+        b.setAttribute('data-level', l.id);
+        b.innerHTML = '<b>' + esc(l.name) + '</b><span class="pr">' + esc(l.price) + '</span><span class="tg">' + esc(l.tag || '') + '</span>';
+        b.onclick = function () { setLevel(l.id); };
+        lv.appendChild(b);
+      });
+      var zoom = document.createElement('div');
+      zoom.className = 'oda-zoom';
+      zoom.innerHTML = '<img alt=""><p></p>';
+      zoom.onclick = function () { zoom.classList.remove('open'); };
+      overlay.appendChild(zoom);
+    }
+    overlay.querySelector('.oda-close').onclick = closeOwnerDash;
+    built = true;
+  }
+
+  function buildTabs() {
     var tabsEl = overlay.querySelector('#odaTabs');
-    TABS.forEach(function (t) {
+    tabsEl.innerHTML = '';
+    var ids = LEVELS ? ((level && level.tabs) || ['level']) : null;
+    var list = TABS.filter(function (t) { return !ids || ids.indexOf(t.id) > -1; });
+    tabsEl.style.display = list.length > 1 ? '' : 'none';
+    list.forEach(function (t) {
       var b = document.createElement('button');
       b.className = 'oda-tab' + (t.id === active ? ' on' : '');
       b.setAttribute('data-tab', t.id);
-      b.innerHTML = svg(t.icon) + esc(t.label) + (SOON[t.id] ? ' <span class="oda-pill soon sm">' + esc(L.soonShort || 'Soon') + '</span>' : '');
+      b.innerHTML = svg(t.icon) + esc(t.label) + (SOON[t.id] && !LEVELS ? ' <span class="oda-pill soon sm">' + esc(L.soonShort || 'Soon') + '</span>' : '');
       b.onclick = function () { show(t.id); };
       tabsEl.appendChild(b);
     });
-    overlay.querySelector('.oda-close').onclick = closeOwnerDash;
-    built = true;
+  }
+  function setLevel(id) {
+    level = LEVELS.filter(function (l) { return l.id === id; })[0] || LEVELS[0];
+    Array.prototype.forEach.call(overlay.querySelectorAll('.oda-level'), function (b) {
+      var on = b.getAttribute('data-level') === level.id;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    active = 'level';
+    buildTabs();
+    show('level');
+  }
+
+  /* ---- Package level: what to expect, with screens from the Lost Pines app ---- */
+  function renderLevel() {
+    var l = level, i = LEVELS.indexOf(l);
+    var li = function (xs, cls) { return '<ul class="' + cls + '">' + (xs || []).map(function (x) {
+      return '<li>' + (typeof x === 'string' ? esc(x) : '<b>' + esc(x.t) + '</b>' + (x.p ? ' <span class="pr">' + esc(x.p) + '</span>' : '') + (x.d ? '<span>' + esc(x.d) + '</span>' : '')) + '</li>';
+    }).join('') + '</ul>'; };
+    var shots = (l.shots || []).map(function (sh, k) {
+      return '<figure class="oda-shot"><button class="oda-phone" data-k="' + k + '" aria-label="Enlarge: ' + esc(sh.cap) + '"><img src="' + esc(sh.src) + '" alt="' + esc(sh.alt || sh.cap) + '" loading="lazy"></button><figcaption>' + esc(sh.cap) + '</figcaption></figure>';
+    }).join('');
+    var next = LEVELS[i + 1];
+    main.innerHTML =
+      '<div class="oda-lvhead"><div><p class="oda-eyebrow">' + esc(l.name) + ' · ' + esc(l.price) + '</p>' +
+        '<h2 class="oda-h">' + esc(l.title) + '</h2><p class="oda-sub">' + esc(l.intro) + '</p></div></div>' +
+      '<div class="oda-lvgrid">' +
+        '<div class="oda-card"><h3>What you get</h3>' + li(l.gets, 'oda-gets') +
+          (l.later && l.later.length ? '<h3 class="mt">Not in this level</h3>' + li(l.later, 'oda-later') : '') +
+          (l.note ? '<p class="oda-sub oda-note">' + esc(l.note) + '</p>' : '') + '</div>' +
+        '<div class="oda-shots-wrap"><h3 class="oda-h" style="font-size:1rem">' + esc(l.shotsTitle || 'In the Lost Pines app') + '</h3><div class="oda-shots">' + shots + '</div></div>' +
+      '</div>' +
+      (l.tabs && l.tabs.length > 1 ? '<div class="oda-row oda-sec"><span class="oda-sub" style="margin:0">' + esc(l.more || 'More in the tabs above.') + '</span><button class="oda-btn oda-btn-accent" id="odaMore">' + esc(l.moreBtn || 'Open the dashboard') + ' →</button></div>' : '') +
+      (next ? '<div class="oda-row oda-sec"><span class="oda-sub" style="margin:0">' + esc(l.teaser || '') + '</span><button class="oda-btn" id="odaNext">See ' + esc(next.name) + ' →</button></div>' : '');
+    Array.prototype.forEach.call(main.querySelectorAll('.oda-phone'), function (b) {
+      b.onclick = function () {
+        var sh = l.shots[+b.getAttribute('data-k')], z = overlay.querySelector('.oda-zoom');
+        z.querySelector('img').src = sh.src; z.querySelector('img').alt = sh.alt || sh.cap; z.querySelector('p').textContent = sh.cap;
+        z.classList.add('open');
+      };
+    });
+    var m = main.querySelector('#odaMore'); if (m) m.onclick = function () { show(l.tabs[1]); };
+    var n = main.querySelector('#odaNext'); if (n) n.onclick = function () { setLevel(next.id); };
   }
 
   function show(id) {
@@ -136,7 +208,7 @@
     var onjob = team.filter(function (m) { return /job|route/i.test(m.status); }).length;
 
     var key = '';
-    if (cfg.included || cfg.soonList) {
+    if (!LEVELS && (cfg.included || cfg.soonList)) {
       var li = function (xs) { return '<ul>' + (xs || []).map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>'; };
       key = '<div class="oda-key">' +
         '<div><h3>' + pill('inc') + ' ' + esc(L.keyInc || 'In your build') + '</h3>' + li(cfg.included) + '</div>' +
@@ -336,20 +408,23 @@
       payrollRun: false
     };
   }
-  window.openOwnerDash = function () {
+  window.openOwnerDash = function (levelId) {
     if (!built) build();
     resetState();
     active = 'overview';
     overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
-    show('overview');
+    if (LEVELS) setLevel(typeof levelId === 'string' ? levelId : (cfg.startLevel || LEVELS[0].id));
+    else show('overview');
   };
   window.closeOwnerDash = function () {
     if (overlay) overlay.classList.remove('open');
     document.body.style.overflow = '';
   };
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && overlay && overlay.classList.contains('open')) closeOwnerDash();
+    if (e.key !== 'Escape' || !overlay || !overlay.classList.contains('open')) return;
+    var z = overlay.querySelector('.oda-zoom.open');
+    if (z) z.classList.remove('open'); else closeOwnerDash();
   });
   document.addEventListener('click', function (e) {
     if (!overlay) return;
