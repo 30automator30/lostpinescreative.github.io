@@ -678,7 +678,7 @@
 
       <div class="extras-h">Keep it running — optional</div>
       <ul class="addons">
-        <li><span class="amt">$99/mo</span><div><b>Essential care</b><small>Hosting, updates, backups, small changes &amp; a monthly report. Cancel anytime.</small></div><button type="button" class="try" onclick="openOwnerDash()">See the dashboard</button></li>
+        <li><span class="amt">$99/mo</span><div><b>Essential care</b><small>Hosting, updates, backups, small changes &amp; a monthly report. Cancel anytime.</small></div><button type="button" class="try" onclick="if(window.openOwnerDash){openOwnerDash();}else{var e=[].find.call(document.querySelectorAll('.eyebrow'),function(x){return /competition/.test(x.textContent);});if(e)e.closest('section').scrollIntoView({behavior:'smooth',block:'start'});}">See the dashboard</button></li>
         <li><span class="amt">from $3,500</span><div><b>Growth — AI phone receptionist</b><small>Answers when you can't and books estimates. Quoted after a short call.</small></div></li>
       </ul>
 
