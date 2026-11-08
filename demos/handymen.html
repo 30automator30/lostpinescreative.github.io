@@ -398,10 +398,11 @@
   .dog .rig .hn{ clip-path:polygon(12.21% 64.66%,27.89% 64.66%,27.38% 72.18%,25.32% 84.21%,27.25% 100.00%,13.37% 100.00%,12.47% 84.21%,12.72% 72.18%); transform-origin:19.92% 66.47%; }
   .dog .rig .fn{ clip-path:polygon(54.76% 65.56%,71.72% 65.56%,71.21% 75.19%,71.21% 92.03%,68.38% 100.00%,55.01% 100.00%,55.78% 84.21%,56.30% 72.18%); transform-origin:63.24% 67.67%; }
   .dog .rig .ff{ clip-path:polygon(54.76% 65.56%,71.72% 65.56%,71.21% 75.19%,71.21% 92.03%,68.38% 100.00%,55.01% 100.00%,55.78% 84.21%,56.30% 72.18%); transform-origin:63.24% 67.67%; filter:brightness(.82) sepia(.18) saturate(1.05); translate:-4% 0; }
-  .dog.walk .rig{ animation:rigBob var(--gait,.4s) linear infinite; }
-  .dog.walk .rig .fn, .dog.walk .rig .ff{ animation:legFront var(--gait,.4s) linear infinite; }
-  .dog.walk .rig .hn, .dog.walk .rig .hf{ animation:legHind var(--gait,.4s) linear infinite; }
-  .dog.walk .rig .ff, .dog.walk .rig .hn{ animation-delay:calc(var(--gait,.4s) * -.5); }   /* diagonal pairs: near-front with far-hind, far-front with near-hind */
+  .dog.walk .rig{ animation:rigBob 1s linear infinite paused; animation-delay:calc(var(--ph,0) * -1s); }
+  .dog.walk .rig .fn, .dog.walk .rig .ff{ animation:legFront 1s linear infinite paused; animation-delay:calc(var(--ph,0) * -1s); }
+  .dog.walk .rig .hn, .dog.walk .rig .hf{ animation:legHind 1s linear infinite paused; animation-delay:calc(var(--ph,0) * -1s); }
+  .dog.walk .rig .ff, .dog.walk .rig .hn{ animation-delay:calc((var(--ph,0) + .5) * -1s); }
+  .dog .rig i{ transition:transform .18s ease; }   /* settle to standing when he stops */   /* diagonal pairs: near-front with far-hind, far-front with near-hind */
   .dog.paused .rig, .dog.paused .rig i{ animation-play-state:paused; }
   @keyframes legFront{ 0%{ transform:rotate(-20deg); } 50%{ transform:rotate(17deg); } 64%{ transform:rotate(10deg) scaleY(.82); } 84%{ transform:rotate(-14deg) scaleY(.9); } 100%{ transform:rotate(-20deg); } }
   @keyframes legHind{ 0%{ transform:rotate(-15deg); } 50%{ transform:rotate(20deg); } 66%{ transform:rotate(8deg) scaleY(.84); } 86%{ transform:rotate(-11deg) scaleY(.93); } 100%{ transform:rotate(-15deg); } }
@@ -1169,7 +1170,7 @@ window.OWNER_DASH_CONFIG = {
   document.body.appendChild(dog);
   var still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var cards=[].slice.call(document.querySelectorAll('.builds .build'));
-  var x=0, y=0, v=0, dir=1, state='rest', tgt=null, timer=1.5, hop=null, at=null, last=0, running=false, since=0, route=[], pauseIn=2+Math.random()*3, leaving=false, pending=null;
+  var x=0, y=0, v=0, dir=1, state='rest', tgt=null, timer=1.5, hop=null, at=null, last=0, running=false, since=0, route=[], pauseIn=2+Math.random()*3, leaving=false, pending=null, ph=0;   /* ph: where he is in his stride, 0..1 */
   var G=1500;                                   /* gravity for hops, px/s² */
   function dw(){ return dog.offsetWidth; } function dh(){ return dog.offsetHeight; }
   function docRect(el){ var r=el.getBoundingClientRect(); return {l:r.left+scrollX, r:r.right+scrollX, t:r.top+scrollY, b:r.bottom+scrollY}; }
@@ -1289,7 +1290,7 @@ window.OWNER_DASH_CONFIG = {
       var dx=tgt.x-x; faceTo(tgt.x);
       if(pauseIn<=0 && Math.abs(dx)>80 && !route.length && !leaving){ pauseIn=3+Math.random()*4; state='pause'; timer=.35+Math.random()*.5; dog.classList.add('paused'); }
       else { pauseIn-=dt; var wantV=Math.min(92, Math.abs(dx)*2.4+10); v+=(wantV-v)*Math.min(1,dt*(wantV>v?3.5:7));
-        dog.style.setProperty('--gait', Math.max(.3, Math.min(.65, 36/Math.max(v,1))).toFixed(3)+'s');
+        ph=(ph + v*dt/(36*dw()/124))%1; dog.style.setProperty('--ph', ph.toFixed(4));   /* legs advance with distance walked: one stride ~36px */
         if(Math.abs(dx)<=v*dt+.5){ x=tgt.x; v=0; arrive(); } else x+=(dx>0?1:-1)*v*dt; } }
     else if(state==='pause'){ timer-=dt; v*=.8; if(timer<=0){ state='walk'; dog.classList.remove('paused'); } }
     else if(state==='crouch'){ timer-=dt; if(timer<=0) launch(); }
