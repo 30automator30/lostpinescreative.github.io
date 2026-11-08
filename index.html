@@ -20,12 +20,16 @@
 <script>/* Real visits only, so local testing never reaches the live analytics property. */
 if (location.hostname === 'lostpinescreative.com') { var ga = document.createElement('script'); ga.src = '/analytics.js'; document.head.appendChild(ga); }</script>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-<link rel="preload" as="image" type="image/webp" href="home/forest-back-small.webp" media="(max-width: 760px)">
-<link rel="preload" as="image" type="image/webp" href="home/forest-back.webp" media="(min-width: 761px)">
+<link rel="preload" as="image" type="image/webp" href="home/hero-back-small.webp" media="(max-width: 760px)">
+<link rel="preload" as="image" type="image/webp" href="home/hero-back.webp" media="(min-width: 761px)">
+<script>/* The intro: first visit only, never with reduced motion or data saver. Decided before first paint. */
+try { if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !(navigator.connection && navigator.connection.saveData) && !localStorage.getItem('lpc-intro-seen')) document.documentElement.classList.add('intro'); } catch (e) {}</script>
 <style>
 :root {
     --ink: #060a07; --cream: #efe9cf; --soft: #c9c6ad; --muted: #a9a78f; --amber: #cfa957; --line: rgba(239, 233, 207, .16);
     --glass: rgba(14, 22, 15, .62); --serif: 'Instrument Serif', Georgia, serif;
+    /* The same circuit colors as Groundwork */
+    --energy: #ffd089; --accent-hi: #e2c988; --land-amber: #a58a5c; --land-amber-hi: #cfa957; --trace: #80703f;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html { background: var(--ink); }
@@ -33,12 +37,10 @@ body { font-family: Archivo, -apple-system, 'Segoe UI', sans-serif; color: var(-
 a { color: inherit; }
 img { display: block; max-width: 100%; }
 .wrap { width: min(1240px, 100% - 56px); margin: 0 auto; }
-/* The film: one forest behind the whole page. Far and near layers move apart as the camera pushes in. */
+/* The film: the woods behind the house, behind the whole page. The camera pushes in as you scroll. */
 .film { position: fixed; inset: 0; overflow: hidden; background: #050705; }
 .film > * { position: absolute; inset: 0; will-change: transform, opacity; }
-.back, .front { background-position: 62% 50%; background-size: cover; background-repeat: no-repeat; transform-origin: 45% 58%; }
-.back { background-image: url(home/forest-back.webp); }
-.front { background-image: url(home/forest-front.webp); }
+.back { background: url(home/hero-back.webp) 70% 50% / cover no-repeat; transform-origin: 45% 58%; }
 /* The sun's position in the image, kept in step by script */
 .sun { background: radial-gradient(circle at var(--sx, 88%) var(--sy, 31%), rgba(255, 196, 112, .62), rgba(255, 170, 84, .17) 17%, transparent 42%); mix-blend-mode: screen; animation: breathe 11s ease-in-out infinite; }
 .mist { inset: -12% -40%; background: radial-gradient(38% 15% at 28% 74%, rgba(226, 205, 168, .19), transparent 72%), radial-gradient(30% 12% at 66% 69%, rgba(246, 214, 164, .17), transparent 72%), radial-gradient(44% 16% at 88% 80%, rgba(214, 200, 170, .13), transparent 72%); mix-blend-mode: screen; animation: drift 58s ease-in-out infinite alternate; }
@@ -60,11 +62,48 @@ img { display: block; max-width: 100%; }
     html { scroll-behavior: auto; }
 }
 @media (max-width: 760px) {
-    .back { background-image: url(home/forest-back-small.webp); background-position: 82% 50%; }
-    .front { background-image: url(home/forest-front-small.webp); background-position: 82% 50%; }
+    .back { background-image: url(home/hero-back-small.webp); background-position: 50% 50%; }
     .shade { background: linear-gradient(180deg, rgba(5, 7, 5, .58) 0%, rgba(5, 7, 5, .42) 42%, rgba(5, 7, 5, .86) 100%); }
     .mist { mix-blend-mode: normal; opacity: .6; }
 }
+/* The intro: an overlay that hands off to the hero. The headline waits for the hand-off. */
+.intro-layer { display: none; }
+html.intro .intro-layer, .intro-layer.leaving { display: block; position: fixed; inset: 0; z-index: 2147483001; overflow: hidden; background: var(--ink); cursor: pointer; transition: opacity .9s ease; }
+html.intro .hero h1, html.intro .hero .lede, html.intro .hero .cta, html.intro .live { animation-play-state: paused; }
+.i-stage { position: absolute; transform-origin: 0 0; transition: transform 1.25s cubic-bezier(.62, 0, .2, 1); }
+.i-stage video { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1.15s ease; }
+.fall .i-stage video { opacity: 1; }
+.i-soil { position: absolute; left: 0; right: 0; bottom: 0; background: var(--ink); opacity: .55; }
+.i-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.i-stage svg path { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1; stroke-dashoffset: 1; }
+.i-under { stroke: var(--trace); stroke-width: 5; opacity: .4; }
+.i-lane { stroke: var(--land-amber-hi); stroke-width: 1.8; }
+.i-rootglow { stroke: var(--land-amber-hi); stroke-width: 6; opacity: .3; }
+.i-root { stroke: var(--energy); stroke-width: 2; }
+.i-stage svg .i-pulse { stroke: var(--energy); stroke-width: 2.6; stroke-dasharray: .035 1; stroke-dashoffset: .035; }
+.i-stage svg .i-trunk { stroke: var(--energy); stroke-width: 3; stroke-dasharray: .09 1; stroke-dashoffset: .09; }
+.i-pad { fill: var(--ink); stroke: var(--land-amber-hi); stroke-width: 1.4; opacity: 0; }
+.go .i-under, .go .i-lane { animation: i-draw 1s cubic-bezier(.3, 0, .2, 1) var(--d) forwards; }
+.go .i-pulse { animation: rootp var(--t) var(--w) linear infinite; }
+.go .i-pad { animation: i-on .25s var(--d) forwards; }
+.lit .i-root, .lit .i-rootglow { animation: i-draw .55s ease-out var(--d) forwards; }
+.lit svg .i-trunk { animation: i-climb .7s ease-in .35s forwards; }
+.lit .i-halo { animation: i-halo 1.9s ease-out .4s forwards; }
+.i-halo { position: absolute; aspect-ratio: 1; opacity: 0; transform: translate(-50%, -50%); background: radial-gradient(closest-side, var(--energy), transparent); mix-blend-mode: screen; pointer-events: none; }
+.i-seed { position: absolute; width: 9px; height: 13px; opacity: 0; border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%; background: var(--energy); box-shadow: 0 0 12px 3px var(--land-amber-hi), 0 0 42px 14px var(--land-amber); transform: translate(-50%, -50%) translateY(-46vh); animation: i-appear .6s ease-out .15s forwards; }
+.fall .i-seed { animation: i-fall 1.15s cubic-bezier(.45, .05, .75, .55) forwards; }
+.landed .i-seed { animation: i-bury 1.2s ease-out forwards; }
+.i-skip { position: absolute; right: 20px; top: 20px; min-height: 44px; padding: 0 18px; border: 1px solid var(--line); border-radius: 22px; background: var(--glass); color: var(--cream); font: inherit; font-size: .92rem; cursor: pointer; }
+.i-skip:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+@keyframes i-appear { to { opacity: 1; } }
+@keyframes i-fall { from { opacity: 1; transform: translate(-50%, -50%) translateY(-46vh); } to { opacity: 1; transform: translate(-50%, -50%); } }
+@keyframes i-bury { 0% { opacity: 1; transform: translate(-50%, -50%) scale(1); } 30% { opacity: 1; transform: translate(-50%, -50%) scale(1.5); } 100% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } }
+@keyframes i-draw { to { stroke-dashoffset: 0; } }
+@keyframes i-on { to { opacity: 1; } }
+@keyframes i-climb { to { stroke-dashoffset: -1; } }
+@keyframes i-halo { 0% { opacity: 0; } 40% { opacity: .5; } 100% { opacity: .18; } }
+/* Same travelling-light technique as the Groundwork roots */
+@keyframes rootp { 0% { stroke-dashoffset: .035; } 55%, 100% { stroke-dashoffset: -1; } }
 .page { position: relative; z-index: 1; }
 
 .bar { position: absolute; top: 0; left: 0; right: 0; z-index: 3; }
@@ -151,11 +190,14 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 </style>
 </head>
 <body>
+<div class="intro-layer" id="intro">
+    <div class="i-stage" aria-hidden="true"><video muted playsinline preload="auto" tabindex="-1"></video><div class="i-soil"></div><div class="i-halo"></div><svg></svg><div class="i-seed"></div></div>
+    <button class="i-skip" type="button">Skip intro</button>
+</div>
 <div class="film" id="film" aria-hidden="true">
     <div class="back" id="back"></div>
     <div class="sun" id="sun"></div>
     <div class="mist"></div>
-    <div class="front" id="front"></div>
     <div class="mist two"></div>
     <div class="shade"></div>
     <div class="dim" id="dim"></div>
@@ -255,6 +297,7 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 <script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
 <script src="groundwork/portal/config.js"></script>
 <script src="groundwork/assistant.js" defer></script>
+<script src="home/intro.js" defer></script>
 <script>
 /* The hero card hands its question to the site's real assistant */
 (function () {
@@ -277,16 +320,23 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
 /* The camera: one slow push through the trees as you scroll, a little drift with the pointer */
 (function () {
-    var back = document.getElementById('back'), front = document.getElementById('front'), sun = document.getElementById('sun'), dim = document.getElementById('dim');
+    var back = document.getElementById('back'), sun = document.getElementById('sun'), dim = document.getElementById('dim');
     var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
     var phone = innerWidth <= 760;
-    var IMG = 2400 / 1018, SUNX = .915, SUNY = .31, POS = phone ? .82 : .62;
+    /* Where things sit in each photo crop, as fractions of the image: the sun */
+    var P = phone ? { img: 800 / 1147, pos: .5, sx: 0.925, sy: 0.415 }
+                  : { img: 2048 / 857, pos: .7, sx: .918, sy: .31 };
     var at = 0, mx = 0, mxNow = 0, last = -1;
 
+    function plate() {
+        var w = innerWidth, h = innerHeight, iw = Math.max(w, h * P.img), ih = iw / P.img;
+        return { w: w, h: h, iw: iw, ih: ih, x: (w - iw) * P.pos, y: (h - ih) * .5 };
+    }
+    window.heroPlate = plate;
     /* Finds where the image's sun lands on this screen, so the glow sits on it at any window shape */
     function placeSun(scale) {
-        var w = innerWidth, h = innerHeight, iw = Math.max(w, h * IMG), ih = iw / IMG;
-        var x = (w - iw) * POS + iw * SUNX, y = (h - ih) * .5 + ih * SUNY;
+        var p = plate(), w = p.w, h = p.h;
+        var x = p.x + p.iw * P.sx, y = p.y + p.ih * P.sy;
         var ox = w * .45, oy = h * .58;
         sun.style.setProperty('--sx', (ox + (x - ox) * scale) + 'px');
         sun.style.setProperty('--sy', (oy + (y - oy) * scale) + 'px');
@@ -299,11 +349,9 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
         if (Math.abs(at - last) > .0002 || Math.abs(mx - mxNow) > .0005) {
             last = at;
             var push = Math.min(1, at / .34), ease = 1 - Math.pow(1 - push, 2);
-            var b = 1.03 + ease * .12 + at * .05, f = 1.05 + ease * .62;
-            back.style.transform = 'translate3d(' + (-mxNow * 10) + 'px,0,0) scale(' + b + ')';
-            front.style.transform = 'translate3d(' + (-mxNow * 42) + 'px,' + (ease * 3) + '%,0) scale(' + f + ')';
-            /* The near trunks pass the camera, then the forest settles back behind the content */
-            front.style.opacity = Math.max(0, 1 - Math.max(0, push - .55) / .45);
+            var b = 1.03 + ease * .17 + at * .05;
+            back.style.transform = 'translate3d(' + (-mxNow * 14) + 'px,0,0) scale(' + b + ')';
+            /* The woods settle back behind the content */
             dim.style.opacity = (.62 * Math.min(1, Math.max(0, (at - .1) / .25))).toFixed(3);
             placeSun(b);
         }
@@ -312,7 +360,9 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
     addEventListener('pointermove', function (e) { mx = e.clientX / innerWidth - .5; }, { passive: true });
     addEventListener('resize', function () { last = -1; if (still) render(); });
     render();
+
 })();
+
 </script>
 </body>
 </html>
