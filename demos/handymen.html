@@ -351,6 +351,41 @@
   .hero-fx canvas{ position:absolute; inset:0; }
   .hero .fx-hint{ margin-top:16px; font-family:var(--mono); font-size:.68rem; letter-spacing:.12em; text-transform:uppercase; color:#d8c7a6; opacity:.85; }
   @media (prefers-reduced-motion:reduce){ .hero-fx, .hero .fx-hint{ display:none; } }
+
+  /* ---- the crew dog ---- */
+  .builds{ position:relative; }
+  .builds .build.sniffed{ border-color:var(--cedar) !important; box-shadow:0 0 0 3px color-mix(in srgb,var(--cedar) 22%,transparent), var(--shadow); transition:border-color .3s, box-shadow .3s; }
+  .dog{ position:absolute; left:0; top:0; z-index:4; width:92px; height:60px; padding:0; border:0; background:none; cursor:pointer; will-change:transform; -webkit-tap-highlight-color:transparent; }
+  .dog:focus-visible{ outline:3px solid var(--amber); outline-offset:4px; border-radius:12px; }
+  .dog svg{ display:block; width:100%; height:100%; overflow:visible; }
+  .dog .flip{ transform-origin:50% 50%; transition:transform .18s; }
+  .dog.left .flip{ transform:scaleX(-1); }
+  .dog .body, .dog .head, .dog .tail, .dog .leg{ transform-box:view-box; }
+  .dog .tail{ transform-origin:21px 27px; }
+  .dog .head{ transform-origin:64px 26px; transition:transform .25s; }
+  .dog .leg.back{ transform-origin:29px 36px; } .dog .leg.front{ transform-origin:62px 36px; }
+  .dog .body{ transform-origin:28px 44px; transition:transform .25s; }
+  .dog.walk .bodyall{ animation:dogBob .34s ease-in-out infinite alternate; }
+  .dog.walk .leg.a{ animation:legA .34s ease-in-out infinite alternate; }
+  .dog.walk .leg.b{ animation:legA .34s ease-in-out infinite alternate-reverse; }
+  .dog.walk .tail, .dog.wag .tail{ animation:wag .22s ease-in-out infinite alternate; }
+  .dog.sniff .head{ transform:rotate(30deg) translateY(1px); }
+  .dog.sniff .snout{ animation:sniffy .16s ease-in-out infinite alternate; transform-box:fill-box; transform-origin:0 50%; }
+  .dog.sniff .tail{ animation:wag .3s ease-in-out infinite alternate; }
+  .dog .bodyall{ transform-box:view-box; transform-origin:27px 58px; transition:transform .25s; }
+  .dog.sit .bodyall{ transform:translateY(6px) rotate(-22deg); }
+  .dog.sit .leg.front{ transform:rotate(22deg) scaleY(1.12); }
+  .dog.sit .leg.back{ transform:rotate(-78deg) scaleY(.62); }
+  .dog.sit .head{ transform:rotate(14deg); }
+  .dog.air .leg.front{ transform:rotate(-35deg); } .dog.air .leg.back{ transform:rotate(35deg); }
+  @keyframes legA{ from{ transform:rotate(-26deg); } to{ transform:rotate(26deg); } }
+  @keyframes wag{ from{ transform:rotate(-14deg); } to{ transform:rotate(22deg); } }
+  @keyframes dogBob{ from{ transform:translateY(0); } to{ transform:translateY(-1.5px); } }
+  @keyframes sniffy{ from{ transform:scaleX(1); } to{ transform:scaleX(1.06); } }
+  .dog-puff{ position:absolute; z-index:5; pointer-events:none; font-family:var(--mono); font-size:.62rem; letter-spacing:.06em; color:var(--muted); animation:puff 1.1s ease-out forwards; white-space:nowrap; }
+  .dog-bubble{ position:absolute; z-index:5; pointer-events:none; font-family:var(--slab); font-weight:800; font-size:.9rem; color:var(--ink); background:var(--card); border:1.5px solid var(--cedar); border-radius:12px; padding:4px 10px; box-shadow:var(--shadow); animation:puff 1.6s ease-out forwards; }
+  @keyframes puff{ 0%{ opacity:0; transform:translateY(4px); } 15%{ opacity:1; } 100%{ opacity:0; transform:translateY(-22px); } }
+  @media (max-width:720px){ .dog{ width:76px; height:50px; } }
 </style>
   <script src="/analytics.js"></script>
 </head>
@@ -1085,6 +1120,69 @@ window.OWNER_DASH_CONFIG = {
     start();
   });
   start();
+})();
+</script>
+
+<script>
+/* The crew dog: trots along the bottoms of the "What we build" boxes, sniffs them, hops between rows. Tap him to say hi. */
+(function(){
+  var wrap=document.querySelector('.builds'); if(!wrap) return;
+  var cards=[].slice.call(wrap.querySelectorAll('.build')); if(!cards.length) return;
+  var dog=document.createElement('button'); dog.type='button'; dog.className='dog sit';
+  dog.setAttribute('aria-label','The crew dog. Tap to say hi.'); dog.innerHTML='<svg viewBox="0 0 100 64" aria-hidden="true"><g class="flip"><g class="bodyall">  <g class="tail"><path d="M22 27 Q9 22 6 9" fill="none" stroke="#b86d34" stroke-width="5" stroke-linecap="round"/><path d="M7.5 13 Q6 10.5 6 9" fill="none" stroke="#2b1d12" stroke-width="5" stroke-linecap="round"/></g>  <g class="leg back b"><rect x="25" y="34" width="6.5" height="24" rx="3.2" fill="#9a5726"/><ellipse cx="29" cy="58" rx="4.6" ry="2.6" fill="#efe7da"/></g>  <g class="leg front b"><rect x="59" y="34" width="6.5" height="24" rx="3.2" fill="#9a5726"/><ellipse cx="63" cy="58" rx="4.6" ry="2.6" fill="#efe7da"/></g>  <g class="body"><path d="M18 30 Q20 18 40 19 L60 19 Q71 20 70 32 Q69 43 58 44 L30 44 Q18 43 18 30 Z" fill="#c27a3e"/>    <path d="M26 41 Q44 47 62 41 Q60 44 56 45 L32 45 Q27 44 26 41 Z" fill="#e2b380"/><path d="M30 22 Q44 19 58 22" fill="none" stroke="#a8622d" stroke-width="3" stroke-linecap="round" opacity=".55"/></g>  <g class="leg back a"><rect x="23" y="34" width="7" height="25" rx="3.4" fill="#c27a3e"/><ellipse cx="27" cy="59" rx="5" ry="2.8" fill="#f4eee4"/></g>  <g class="leg front a"><rect x="62" y="34" width="7" height="25" rx="3.4" fill="#c27a3e"/><ellipse cx="66" cy="59" rx="5" ry="2.8" fill="#f4eee4"/></g>  <g class="head">    <path d="M60 30 Q61 20 70 17 L74 25 Q70 32 64 34 Z" fill="#c27a3e"/>    <path d="M61 27 Q66 25 71 22" fill="none" stroke="#2b1d12" stroke-width="3.2" stroke-linecap="round"/><circle cx="68" cy="25.5" r="1.4" fill="#c9a24a"/>    <path d="M70 6 L74 15 L68 15 Z" fill="#c27a3e"/><path d="M70 6 L72 10.5 L69 10.5 Z" fill="#2b1d12"/>    <path d="M77 5 L80 15 L74 14.5 Z" fill="#b86d34"/><path d="M77 5 L78.6 10 L75.6 9.8 Z" fill="#2b1d12"/>    <ellipse cx="76" cy="18" rx="9" ry="7.5" fill="#c27a3e"/>    <g class="snout"><path d="M80 16 Q90 16 93 20 Q93 24 86 24.5 L80 24 Z" fill="#d9cdbd"/><ellipse cx="92.5" cy="19.6" rx="2.2" ry="1.8" fill="#1d140c"/>      <path d="M84 24 Q88 25.5 91 23.5" fill="none" stroke="#6b5a48" stroke-width=".9" stroke-linecap="round"/></g>    <circle cx="79.5" cy="15.6" r="1.6" fill="#1d140c"/><circle cx="80" cy="15.1" r=".5" fill="#fff"/>  </g></g></g></svg>';
+  wrap.appendChild(dog);
+  var still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var x=0, y=0, dir=1, state='idle', tgt=null, timer=0, air=null, running=false, visible=false, last=0;
+  function dw(){ return dog.offsetWidth; } function dh(){ return dog.offsetHeight; }
+  function floorOf(c){ return c.offsetTop+c.offsetHeight-2; }
+  function place(){ dog.style.transform='translate('+(x-dw()/2)+'px,'+(y-dh())+'px)'; dog.classList.toggle('left',dir<0); }
+  function setPose(p){ dog.classList.remove('walk','sniff','sit','air','wag'); if(p) p.split(' ').forEach(function(k){ dog.classList.add(k); }); }
+  function rows(){ var m={}; cards.forEach(function(c){ var f=floorOf(c); (m[f]=m[f]||[]).push(c); }); return m; }
+  function puff(text, cls, px, py){ var e=document.createElement('div'); e.className=cls||'dog-puff'; e.textContent=text; e.style.left=px+'px'; e.style.top=py+'px'; wrap.appendChild(e); setTimeout(function(){ e.remove(); }, cls?1700:1200); }
+
+  var lastCard=null;
+  function pickTarget(){
+    var opts=cards.filter(function(c){ return c!==lastCard; });
+    /* prefer boxes on this row or the next one, so hops stay small */
+    var near=opts.filter(function(c){ return Math.abs(floorOf(c)-y) < 300; }); if(near.length) opts=near;
+    var c=opts[Math.floor(Math.random()*opts.length)]; lastCard=c;
+    var nose=dw()*0.46, edge=c.offsetLeft+16+Math.random()*(c.offsetWidth-32);
+    var fromLeft = edge > x;                                  /* walk up so the nose ends at the box */
+    tgt={card:c, x: fromLeft ? edge-nose : edge+nose, y: floorOf(c)};
+    tgt.x=Math.max(dw()/2, Math.min(wrap.clientWidth-dw()/2, tgt.x));
+    if(Math.abs(tgt.y-y)>4){ air={x0:x, y0:y, x1:tgt.x, y1:tgt.y, t:0, T:.7}; dir=tgt.x>=x?1:-1; setPose('air'); state='hop'; }
+    else { setPose('walk'); state='walk'; }
+  }
+  function sniff(){
+    state='sniff'; setPose('sniff'); timer=1.6+Math.random()*1.2;
+    var c=tgt.card; c.classList.add('sniffed'); setTimeout(function(){ c.classList.remove('sniffed'); }, 1900);
+    var nx=x+dir*dw()*0.42; puff('sniff', 0, nx-10, y-dh()*0.9); setTimeout(function(){ if(state==='sniff') puff('sniff', 0, nx-4, y-dh()*0.95); }, 600);
+  }
+  function rest(){ state='rest'; setPose('sit wag'); timer=1.4+Math.random()*1.6; }
+  function tick(ms){
+    if(!running) return; var now=ms/1000, dt=Math.min(.05, last?now-last:0); last=now;
+    if(state==='walk'){ var sp=110, dx=tgt.x-x; dir=dx>=0?1:-1; if(Math.abs(dx)<=sp*dt){ x=tgt.x; sniff(); } else x+=dir*sp*dt; }
+    else if(state==='hop'){ air.t+=dt; var k=Math.min(1,air.t/air.T); x=air.x0+(air.x1-air.x0)*k;
+      var arc=Math.max(40, Math.abs(air.y1-air.y0)*.35); y=air.y0+(air.y1-air.y0)*k - Math.sin(k*Math.PI)*arc;
+      if(k>=1){ y=air.y1; setPose('walk'); state='walk'; } }
+    else if(state==='sniff'||state==='rest'||state==='hi'){ timer-=dt; if(timer<=0){ if(state==='sniff' && Math.random()<.3) rest(); else pickTarget(); } }
+    place(); requestAnimationFrame(tick);
+  }
+  function start(){ if(running||!visible||document.hidden||still) return; running=true; last=0; requestAnimationFrame(tick); }
+  function stop(){ running=false; }
+
+  /* start: sitting by the last box on the bottom row */
+  function home(){ var r=rows(), keys=Object.keys(r).map(Number).sort(function(a,b){return a-b;}), row=r[keys[keys.length-1]], c=row[row.length-1];
+    y=floorOf(c); x=Math.min(wrap.clientWidth-dw()/2, c.offsetLeft+c.offsetWidth-dw()*.3); dir=-1; place(); }
+  home(); window.addEventListener('resize', function(){ if(state==='idle'||still) home(); else { y=tgt?tgt.y:y; place(); } });
+
+  dog.addEventListener('click', function(e){ e.stopPropagation();
+    state='hi'; setPose('sit wag'); timer=2; puff('Woof!', 'dog-bubble', x-22, y-dh()-30);
+    if(!running){ start(); } });
+  document.addEventListener('visibilitychange', function(){ document.hidden?stop():start(); });
+  if(still){ return; }
+  new IntersectionObserver(function(es){ visible=es[0].isIntersecting;
+    if(visible){ if(state==='idle'){ state='rest'; timer=.8; setPose('sit wag'); } start(); } else stop(); },{threshold:.25}).observe(wrap);
 })();
 </script>
 </body>
