@@ -174,7 +174,13 @@ section { padding: clamp(84px, 13vh, 150px) 0; }
 .gwa-launch, .gwa-send, .gwa-head, .gwa-user { background: var(--amber) !important; }
 footer { position: relative; z-index: 1; padding: 26px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: .9rem; background: rgba(6, 10, 7, .55); }
 footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 22px; justify-content: space-between; }
-footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+footer nav { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; }
+.replay { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -14px -14px -14px -8px; border: 0; background: none; color: var(--muted); opacity: .6; cursor: pointer; }
+.replay:hover, .replay:focus-visible { color: var(--cream); opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .replay { display: none; } }
+/* On phones the chat button sits at the right edge, so the arrow takes its own row on the left */
+@media (max-width: 760px) { .replay { order: -1; margin: -8px calc(100% - 30px) -6px -14px; } }
+.replay svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 @media (max-width: 980px) {
     .hero .wrap, .built, .who, .end { grid-template-columns: 1fr; }
@@ -291,7 +297,7 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
 <footer><div class="wrap">
     <span>&copy; 2026 Lost Pines Creative LLC, Bastrop, Texas &middot; <a href="mailto:ddesmit@lostpinescreative.com">ddesmit@lostpinescreative.com</a></span>
-    <nav aria-label="Footer"><a href="groundwork/portal/">Client login</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="https://www.linkedin.com/company/lost-pines-creative-llc/">LinkedIn</a></nav>
+    <nav aria-label="Footer"><a href="groundwork/portal/">Client login</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="https://www.linkedin.com/company/lost-pines-creative-llc/">LinkedIn</a><button class="replay" id="replay" type="button" aria-label="Replay the intro" title="Replay the intro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.700L3 8"/><path d="M3 3v5h5"/></svg></button></nav>
 </div></footer>
 
 <script>if ('serviceWorker' in navigator) addEventListener('load', function () { navigator.serviceWorker.register('/sw.js').catch(function () {}); });</script>
@@ -299,6 +305,13 @@ footer nav { display: flex; flex-wrap: wrap; gap: 6px 18px; }
 <script src="groundwork/assistant.js" defer></script>
 <script src="home/intro.js" defer></script>
 <script>
+/* The footer arrow forgets the intro was seen and plays it again from the top */
+document.getElementById('replay').addEventListener('click', function () {
+    try { localStorage.removeItem('lpc-intro-seen'); } catch (e) { /* the page just reloads */ }
+    history.scrollRestoration = 'manual';
+    location.reload();
+});
+
 /* The hero card hands its question to the site's real assistant */
 (function () {
     function ask(text) {
