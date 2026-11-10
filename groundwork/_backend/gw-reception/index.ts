@@ -192,6 +192,7 @@ type Line = {
   client_id: string; ai_number: string | null; owner_alert_number: string | null;
   cal_event_type_id: number | null; booking_url: string | null; timezone: string;
   voice_id: string | null; enabled: boolean;
+  public_number?: string | null; // 019: the published number, when gw-ring answers first
   ai_enabled?: boolean; // 008: the owner's AI switch; off = fallback + text-back. Absent = on.
   texting_enabled?: boolean; // 012: off until the number is approved for texting. Absent = on.
   business_name: string; client_status: string; settings: Settings;
@@ -272,15 +273,20 @@ or question whether they dialed correctly. Accept the name they give, even if
 it matches the owner's. If they ask for someone, say you'll pass along a message
 and ask once what it's about. If they don't say or you've asked once already,
 take the message anyway.
-3. Confirm the best number to reach them. Caller ID shows ${caller ? caller : "no number (blocked)"} —
-   ask if that's the right one${caller ? "" : ", and get a number"}.
+3. ${caller
+    ? `Confirm the best number to reach them. Caller ID shows ${caller} — ask if that's the right one.`
+    : `Ask for the best number to reach them. Their caller ID is hidden, so don't mention caller ID or say any number they didn't give you.`}
+   The moment you have a number, before reading anything back, call take_message
+   with what they need and any number they gave as callback_number. Callers can
+   hang up at any time. Then read a new number back to confirm it. If they correct
+   it, call take_message again with the same message and the corrected number.
 ${canBook(line)
   ? `4. If they want an appointment, visit, or consultation: call check_availability,
    offer two or three times, confirm the one they pick back to them, then call
    book_appointment. If nothing works or booking fails, take a message instead.
-5. Otherwise call take_message with a clear summary of what they need.`
-  : `4. Call take_message with a clear summary of what they need. You can't book
-   appointments directly — say the owner will reach out to set a time.`}
+5. If they add anything new, call take_message with just the new details.`
+  : `4. If they add anything new, call take_message with just the new details. You
+   can't book appointments directly — say the owner will reach out to set a time.`}
 Before ending, tell them what happens next (${texts(line)
     ? "they'll get a text from this number and the owner will follow up"
     : "the owner will call them back — don't promise a text, none will be sent"}), ask if
@@ -318,7 +324,7 @@ function tools(line: Line) {
           type: "object",
           properties: {
             name: { type: "string", description: "Caller's name, if given." },
-            callback_number: { type: "string", description: "Best number to reach them, if different from caller ID." },
+            callback_number: { type: "string", description: "Best number to reach them, in digits, if different from caller ID." },
             message: { type: "string", description: "What they need, summarized in one or two sentences." },
             urgent: { type: "boolean", description: "True if they said it's urgent or time-sensitive." },
           },
@@ -399,6 +405,7 @@ function receptionist(line: Line, caller: string | null) {
       tools: tools(line),
     },
     voice: { provider: "vapi", voiceId: line.voice_id || DEFAULT_VOICE },
+    backgroundSound: "off", // Vapi plays office noise on phone calls unless told not to
     transcriber: { provider: "deepgram", model: "nova-3", language: "en" },
     server: vapiServer(),
     serverMessages: ["tool-calls", "end-of-call-report"],
@@ -429,6 +436,7 @@ function fallback(name: string | null, then: "text" | "callback" | "none") {
       tools: [{ type: "endCall" }],
     },
     voice: { provider: "vapi", voiceId: DEFAULT_VOICE },
+    backgroundSound: "off",
     transcriber: { provider: "deepgram", model: "nova-3", language: "en" },
     server: vapiServer(),
     serverMessages: ["end-of-call-report"],
@@ -443,9 +451,16 @@ const lineLive = (line: Line) => line.enabled && line.client_status !== "cancell
 // line's switch is on, nothing is texted or promised — the owner is emailed instead.
 const texts = (line: Line) => line.texting_enabled !== false;
 
+// gw-ring dials the AI showing the published number when the real caller is
+// hidden, so that number means "no caller ID", never the customer's number.
+// deno-lint-ignore no-explicit-any
+function callerOf(msg: any, line: Line): string | null {
+  const caller = toE164(msg?.call?.customer?.number ?? msg?.customer?.number);
+  return caller && caller === toE164(line.public_number) ? null : caller;
+}
+
 // deno-lint-ignore no-explicit-any
 async function onAssistantRequest(msg: any, traceId: string, t0: number): Promise<Response> {
-  const caller = toE164(msg?.call?.customer?.number ?? msg?.customer?.number);
   let line: Line | null = null;
   let enabled = true, budget = true;
   try {
@@ -463,7 +478,7 @@ async function onAssistantRequest(msg: any, traceId: string, t0: number): Promis
     return json({ assistant: fallback(line?.business_name ?? null, then) });
   }
   trace({ traceId, type: "assistant-request", outcome: "ok", booking: canBook(line), ms: Date.now() - t0 });
-  return json({ assistant: receptionist(line, caller) });
+  return json({ assistant: receptionist(line, callerOf(msg, line)) });
 }
 
 // ============================================================
@@ -615,7 +630,10 @@ async function takeMessage(
   const message = clip(args.message);
   if (!message) return "Ask what they need first.";
   const existing = await getRow(callId).catch(() => null);
-  const body = existing?.body ? `${existing.body}\n${message}`.slice(0, 2000) : message;
+  // A number correction re-sends the same message; don't stack it.
+  const body = !existing?.body ? message
+    : existing.body.includes(message) ? existing.body
+    : `${existing.body}\n${message}`.slice(0, 2000);
   await upsertCall(callId, line.client_id, {
     kind: "lead",
     from_name: clip(args.name, 120) || existing?.from_name || null,
@@ -630,11 +648,11 @@ async function takeMessage(
 // deno-lint-ignore no-explicit-any
 async function onToolCalls(msg: any, traceId: string, t0: number): Promise<Response> {
   const callId = clip(msg?.call?.id, 100);
-  const caller = toE164(msg?.call?.customer?.number ?? msg?.customer?.number);
   // deno-lint-ignore no-explicit-any
   const calls: any[] = Array.isArray(msg?.toolCallList) ? msg.toolCallList.slice(0, 5) : [];
   let line: Line | null = null;
   try { line = await lookupLine(msg); } catch (e) { console.error("tool lookup failed", String(e)); }
+  const caller = line ? callerOf(msg, line) : null;
 
   const results = [];
   for (const tc of calls) {
@@ -857,7 +875,7 @@ async function onEndOfCall(msg: any, traceId: string, t0: number): Promise<Respo
     trace({ traceId, type: "end-of-call", outcome: "no_line", ms: Date.now() - t0 });
     return json({});
   }
-  const caller = toE164(msg?.call?.customer?.number ?? msg?.customer?.number);
+  const caller = callerOf(msg, line);
   // deno-lint-ignore no-explicit-any
   const turns: any[] = msg?.artifact?.messages ?? msg?.call?.artifact?.messages ?? [];
   const talked = turns.some((m) => m?.role === "user" && clip(m?.message ?? m?.content, 10));

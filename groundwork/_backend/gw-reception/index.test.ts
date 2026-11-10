@@ -16,6 +16,7 @@ Deno.env.set("RL_EMAIL_DAY", "3");
 const CLIENT = "c-1";
 const line = {
   client_id: CLIENT, vapi_phone_number_id: "pn_1", ai_number: "+15125550100",
+  public_number: "+17375550100",
   owner_alert_number: null, cal_event_type_id: 42, booking_url: "https://cal.com/desmit",
   timezone: "America/Chicago", voice_id: null, enabled: true, texting_enabled: true,
   client: { business_name: "DeSmit Designs", status: "active", owner_id: "u-1" as string | null,
@@ -358,6 +359,55 @@ Deno.test("blocked caller ID: booking asks for a number instead of looping on Ca
       arguments: JSON.stringify({ start: SLOT1, name: "Q" }) } }] })).json();
   assertMatch(r.results[0].result, /callback number first/);
   assertEquals(calBookings.length, 0);
+});
+
+const takeMsg = (id: string, customer: string, args: unknown) =>
+  vapi({ type: "tool-calls", call: call(id, customer), toolCallList: [{ id: "t1", type: "function",
+    function: { name: "take_message", arguments: JSON.stringify(args) } }] });
+
+Deno.test("hidden caller arrives showing the business number: the AI never reads it back", async () => {
+  reset();
+  const r = await (await vapi({ type: "assistant-request", call: call("h1", line.public_number) })).json();
+  const prompt = r.assistant.model.messages[0].content;
+  assert(!prompt.includes(line.public_number));
+  assertMatch(prompt, /caller ID is hidden/);
+});
+
+Deno.test("hidden caller: the number they give is saved, the business number never is", async () => {
+  reset();
+  await takeMsg("h2", line.public_number, { message: "Wants a quote", callback_number: "+15125559876" });
+  assertEquals(messages[0].from_phone, "+15125559876");
+  reset();
+  await takeMsg("h3", line.public_number, { message: "Wants a quote" });
+  assertEquals(messages[0].from_phone, null);
+});
+
+Deno.test("hidden caller who leaves no message: no record of, or text to, the business number", async () => {
+  reset();
+  await vapi({ type: "end-of-call-report", call: call("h4", line.public_number), endedReason: "customer-ended-call",
+    artifact: { messages: [] }, analysis: {} });
+  assertEquals(messages[0].from_phone, null);
+  assertEquals(sms.length, 0);
+});
+
+Deno.test("number saved before the read-back, and a correction replaces it without repeating the message", async () => {
+  reset();
+  const prompt = (await (await vapi({ type: "assistant-request", call: call("s0") })).json()).assistant.model.messages[0].content;
+  assertMatch(prompt, /before reading anything back/);
+  await takeMsg("s1", "+15125551234", { message: "Wants a quote", callback_number: "+15125559876" });
+  await takeMsg("s1", "+15125551234", { message: "Wants a quote", callback_number: "+15125559877" });
+  assertEquals(messages[0].from_phone, "+15125559877");
+  assertEquals(messages[0].body, "Wants a quote");
+});
+
+Deno.test("no fake call-center ambience on the main or fallback assistant", async () => {
+  reset();
+  let r = await (await vapi({ type: "assistant-request", call: call("b1") })).json();
+  assertEquals(r.assistant.backgroundSound, "off");
+  aiEnabled = false;
+  r = await (await vapi({ type: "assistant-request", call: call("b2") })).json();
+  assertEquals(r.assistant.name, "Fallback desk");
+  assertEquals(r.assistant.backgroundSound, "off");
 });
 
 globalThis.addEventListener("unload", () => { globalThis.fetch = realFetch; });
