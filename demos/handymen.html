@@ -1788,7 +1788,7 @@ window.OWNER_DASH_CONFIG = {
         <tr class="dep"><td colspan="2">Deposit to start (50%)</td><td class="r" id="qDep"></td></tr>
         <tr class="dep"><td colspan="2">Balance at launch (50%)</td><td class="r" id="qBal"></td></tr>
         <tr id="qMoRow"><td colspan="2">Monthly</td><td class="r" id="qMo"></td></tr></tfoot></table>
-      <ul class="qterms"><li>Everything is set up in Handyman an Sons' name — you own it all.</li><li>Any tools are billed to you directly at cost. No markup.</li><li id="qTimeNote">About 2 weeks from kickoff.</li><li id="qDealNote" hidden></li><li id="qNoCareNote" hidden>No care plan: includes 30 days of fixes after launch; changes after that are quoted per request.</li><li>Domain: handymanansons.com, $11.17/yr, on your own account and paid with your card. We set it up together on your phone or laptop; that help is included in the $500.</li><li id="qGrowthNote" hidden>Growth and Full build are quoted separately after a short call and are not in the setup total.</li></ul>
+      <ul class="qterms"><li>Everything is set up in Handyman an Sons' name — you own it all.</li><li>Any tools are billed to you directly at cost. No markup.</li><li id="qTimeNote">About 2 weeks from kickoff.</li><li id="qDealNote" hidden></li><li id="qCareStart" hidden></li><li id="qNoCareNote" hidden>No care plan: includes 30 days of fixes after launch; changes after that are quoted per request.</li><li>Domain: handymanansons.com, $11.17/yr, on your own account and paid with your card. We set it up together on your phone or laptop; that help is included in the $500.</li><li id="qGrowthNote" hidden>Growth and Full build are quoted separately after a short call and are not in the setup total.</li></ul>
       <div class="qsign"><div class="qsig-box"><canvas id="qSig" aria-label="Sign here with your finger or mouse"></canvas><span class="qsig-hint no-print">Sign here</span></div>
         <div class="qsig-row"><label>Name <input id="qName" value="Chip Gosnell" autocomplete="name"></label><div>Date <span id="qDate2"></span></div></div></div>
       <p class="qfine no-print">Demo: signing here makes a printable copy. The binding agreement and deposit happen in your Groundwork onboarding.</p>
@@ -1829,6 +1829,8 @@ window.OWNER_DASH_CONFIG = {
     document.getElementById('qMoRow').hidden=!t.m; document.getElementById('qMo').textContent=money(t.m)+'/mo';
     document.getElementById('qGrowthNote').hidden=!growth;
     document.getElementById('qNoCareNote').hidden=!!t.m;
+    var cs=document.getElementById('qCareStart'); cs.hidden=!t.m;
+    if(t.m) cs.textContent='Care plan starts the day your site goes live: '+money(t.s-Math.round(t.s/2)+t.m)+' due at launch ('+money(t.s-Math.round(t.s/2))+' balance + first month), then '+money(t.m)+'/mo.';
     var tb=boxes.some(function(b){ return b.checked&&/^Missed-call/.test(b.dataset.name); });
     document.getElementById('qTimeNote').textContent='About 2 weeks from kickoff'+(tb?'; business-texting approval can take up to 2 more weeks.':'.');
     var d=disc.checked?null:deal(), dn=document.getElementById('qDealNote'); dn.hidden=!d;
