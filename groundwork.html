@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>/* Facebook and Instagram open links in their own in-app browser, which has far less graphics memory than Chrome or Safari and drops tiles under the moving forest. Flag it so it gets a still backdrop. */
+if (/FBAN|FBAV|FB_IAB|FBIOS|Instagram/.test(navigator.userAgent)) document.documentElement.classList.add('iab');</script>
 <title>Groundwork — Business Systems &amp; AI Integration for Small Business | Lost Pines Creative</title>
     <meta name="description" content="Groundwork by Lost Pines Creative: I connect your business tools — website, payments, booking, accounting — and add AI, into one system you own and I run for you. A systems-and-integration engineer, not an ad agency. Bastrop &amp; Central Texas.">
     <meta property="og:title" content="Groundwork — Business Systems &amp; AI Integration for Small Business">
@@ -630,6 +632,12 @@ h2 { font-size: clamp(2.2rem, 3.6vw, 3.5rem); }
     .in { background: rgba(7, 11, 8, .68); }
 }
 @media (prefers-reduced-motion: reduce) { .sun, .mist { animation: none; } .dawn { display: none; } }
+/* In-app browsers (Facebook, Instagram): one still photo behind the windows, nothing redrawn while swiping */
+.iab .sun, .iab .mist, .iab .front, .iab .grain, .iab .dawn { display: none; }
+.iab .back { will-change: auto; transform: scale(1.03); }
+.iab .dim { opacity: .4; }
+.iab .lens { -webkit-backdrop-filter: none; backdrop-filter: none; }
+.iab .link::after { animation: none; }
 </style>
 </head>
 <body>
@@ -1385,6 +1393,7 @@ if (location.hostname === 'lostpinescreative.com') { var ga = document.createEle
 <script>
 /* The camera: traveling sideways through the windows pushes through the trees */
 (function () {
+    if (document.documentElement.classList.contains('iab')) return;
     var track = document.getElementById('track'), back = document.getElementById('back'), front = document.getElementById('front'), sun = document.getElementById('sun'), dim = document.getElementById('dim');
     var still = matchMedia('(prefers-reduced-motion: reduce)').matches, phone = innerWidth <= 760;
     var IMG = 2400 / 1018, SUNX = .915, SUNY = .31, POS = phone ? .82 : .62, ZOOM = phone ? .2 : .62, FADE = phone ? .35 : .55, at = 0, last = -1, running = false;
