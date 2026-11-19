@@ -90,14 +90,14 @@ async function loadIdeas() {
 async function loadDesigns() {
   const box = $("q-list");
   const { data, error } = await sb.from("tp_designs")
-    .select("id,method,compliance,compliance_notes,mockup_path,preview_path,created_at," +
+    .select("id,method,compliance,compliance_notes,mockup_path,preview_path,print_path,created_at," +
       "concept:tp_concepts(phrase,niche:tp_niches(section,name)),listing:tp_listings(title,tags,price_cents)")
     .eq("review", "pending").neq("compliance", "block").order("created_at").limit(50);
   if (error) { box.innerHTML = '<div class="empty">Couldn\'t load designs: ' + esc(error.message) + "</div>"; return; }
   $("q-designs-n").textContent = data.length ? "(" + data.length + ")" : "";
   if (!data.length) { box.innerHTML = '<div class="empty">Nothing to review. The crew is quiet.</div>'; return; }
 
-  const paths = data.map((d) => d.mockup_path || d.preview_path).filter(Boolean);
+  const paths = data.flatMap((d) => [d.mockup_path || d.preview_path, d.print_path]).filter(Boolean);
   const urls = {};
   if (paths.length) {
     const { data: signed } = await sb.storage.from("tp-designs").createSignedUrls(paths, 3600);
@@ -108,8 +108,10 @@ async function loadDesigns() {
     const c = one(d.concept) || {}, n = one(c.niche) || {}, l = one(d.listing) || {};
     const img = urls[d.mockup_path || d.preview_path];
     const ok = canApprove(d);
+    zoomSrc[d.id] = { mockup: img || null, print: urls[d.print_path] || null, title: c.phrase || l.title || "Design" };
     return '<div class="card design" data-card="d-' + d.id + '">' +
-      (img ? '<img src="' + esc(img) + '" alt="Mockup: ' + esc(c.phrase || "design") + '" loading="lazy">' : '<div class="noimg">no image yet</div>') +
+      (img ? '<button type="button" class="thumb" data-zoom="' + d.id + '" aria-label="Expand: ' + esc(c.phrase || "design") + '">' +
+        '<img src="' + esc(img) + '" alt="Mockup: ' + esc(c.phrase || "design") + '" loading="lazy"></button>' : '<div class="noimg">no image yet</div>') +
       "<div>" +
       '<div class="meta">' + esc(SECTION[n.section] || n.section || "") + (n.name ? " · " + esc(n.name) : "") + "</div>" +
       '<div class="d-title">' + esc(l.title || c.phrase || "Untitled") + "</div>" +
@@ -123,6 +125,7 @@ async function loadDesigns() {
       '<button class="btn btn-danger" data-design="' + d.id + '" data-d="rejected">Reject</button>' +
       "</div></div></div>";
   }).join("");
+  box.querySelectorAll("[data-zoom]").forEach((b) => b.addEventListener("click", () => openZoom(b.dataset.zoom)));
   box.querySelectorAll("[data-design]").forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.d === "tweak") return openTweak(b.dataset.design);
     decide("design", b.dataset.design, b.dataset.d, "");
@@ -222,3 +225,52 @@ function subscribe() {
     .subscribe();
 }
 function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } }
+
+/* ---------- expand + zoom (tap a design) ---------- */
+const zoomSrc = {};
+let zoomId = null;
+function setZoomView(view) {
+  const s = zoomSrc[zoomId]; if (!s) return;
+  const src = s[view] || s.mockup;
+  const stage = $("zoom-stage");
+  let img = stage.querySelector("img");
+  if (!img) { img = document.createElement("img"); stage.append(img); }
+  stage.classList.remove("zoomed");
+  $("zoom-toggle").setAttribute("aria-pressed", "false");
+  $("zoom-toggle").textContent = "Zoom";
+  $("zoom-stage").classList.toggle("print", view === "print");
+  img.src = src;
+  img.alt = (view === "print" ? "Print file: " : "Mockup: ") + s.title;
+  document.querySelectorAll("#zoom [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
+  $("zoom-print").disabled = !s.print;
+}
+function openZoom(id) {
+  zoomId = id;
+  $("zoom-title").textContent = zoomSrc[id]?.title || "Design";
+  setZoomView("mockup");
+  $("zoom").showModal();
+}
+document.querySelectorAll("#zoom [data-view]").forEach((b) => b.addEventListener("click", () => setZoomView(b.dataset.view)));
+$("zoom-close").addEventListener("click", () => $("zoom").close());
+$("zoom").addEventListener("click", (e) => { if (e.target === $("zoom")) $("zoom").close(); });
+function toggleZoom(fx = 0.5, fy = 0.5) {
+  const stage = $("zoom-stage"), img = stage.querySelector("img");
+  if (!img) return;
+  const on = stage.classList.toggle("zoomed");
+  $("zoom-toggle").setAttribute("aria-pressed", String(on));
+  $("zoom-toggle").textContent = on ? "Zoom out" : "Zoom";
+  if (on) {
+    requestAnimationFrame(() => {
+      stage.scrollLeft = fx * img.offsetWidth - stage.clientWidth / 2;
+      stage.scrollTop = fy * img.offsetHeight - stage.clientHeight / 2;
+    });
+  }
+}
+// Keyboard and screen-reader users zoom with the button; pointer users can also tap the image at the spot they want.
+$("zoom-toggle").addEventListener("click", () => toggleZoom());
+$("zoom-stage").addEventListener("click", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  const r = img.getBoundingClientRect();
+  toggleZoom((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+});
