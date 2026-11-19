@@ -68,10 +68,12 @@ async function cnt(table, apply) {
 }
 
 async function loadSummary() {
-  const [ddOpen, ddQuote, ddLeads, gwActive, gwOnb, gwMsgs, gwLeads, onbPipe, onbSubmit] = await Promise.all([
-    cnt("dd_projects", (q) => q.not("status", "in", "(complete,cancelled)")),
-    cnt("dd_projects", (q) => q.eq("status", "requested")),
-    cnt("dd_inquiries", (q) => q.eq("status", "new")),
+  const dayAgo = new Date(Date.now() - 86400000).toISOString();
+  const [tpPending, tpIdeas, tpFlagged, tpAlerts, gwActive, gwOnb, gwMsgs, gwLeads, onbPipe, onbSubmit] = await Promise.all([
+    cnt("tp_designs", (q) => q.eq("review", "pending").neq("compliance", "block")),
+    cnt("tp_concepts", (q) => q.eq("review", "pending")),
+    cnt("tp_designs", (q) => q.eq("review", "pending").eq("compliance", "flag")),
+    cnt("tp_agent_runs", (q) => q.in("status", ["failed", "capped"]).gte("started_at", dayAgo)),
     cnt("gw_clients", (q) => q.eq("status", "active")),
     cnt("gw_clients", (q) => q.eq("status", "onboarding")),
     cnt("gw_messages", (q) => q.eq("status", "new")),
@@ -80,8 +82,9 @@ async function loadSummary() {
     cnt("onb_intakes", (q) => q.eq("status", "submitted")),
   ]);
 
-  setKpi("dd", ddOpen, "open project" + (ddOpen === 1 ? "" : "s"),
-    [part(ddQuote, "awaiting quote"), part(ddLeads, "new lead" + (ddLeads === 1 ? "" : "s"))]);
+  setKpi("tp", tpPending + tpIdeas, "to review",
+    [part(tpIdeas, "idea" + (tpIdeas === 1 ? "" : "s")), part(tpFlagged, "flagged"),
+     part(tpAlerts, "crew alert" + (tpAlerts === 1 ? "" : "s"))]);
   const gwInbox = gwMsgs + gwLeads;
   setKpi("gw", gwActive, "active client" + (gwActive === 1 ? "" : "s"),
     [part(gwOnb, "onboarding"), part(gwInbox, "in inbox")]);
@@ -214,8 +217,8 @@ function subscribe() {
   if (channel) return;
   channel = sb.channel("lpc-hub")
     .on("postgres_changes", { event: "*", schema: "public", table: "lpc_assets" }, load)
-    .on("postgres_changes", { event: "*", schema: "public", table: "dd_projects" }, loadSummary)
-    .on("postgres_changes", { event: "*", schema: "public", table: "dd_inquiries" }, loadSummary)
+    .on("postgres_changes", { event: "*", schema: "public", table: "tp_concepts" }, loadSummary)
+    .on("postgres_changes", { event: "*", schema: "public", table: "tp_designs" }, loadSummary)
     .on("postgres_changes", { event: "*", schema: "public", table: "gw_messages" }, loadSummary)
     .on("postgres_changes", { event: "*", schema: "public", table: "onb_intakes" }, loadSummary)
     .subscribe();
