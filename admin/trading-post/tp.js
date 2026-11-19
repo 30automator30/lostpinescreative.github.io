@@ -236,6 +236,8 @@ function setZoomView(view) {
   let img = stage.querySelector("img");
   if (!img) { img = document.createElement("img"); stage.append(img); }
   stage.classList.remove("zoomed");
+  $("zoom-toggle").setAttribute("aria-pressed", "false");
+  $("zoom-toggle").textContent = "Zoom";
   $("zoom-stage").classList.toggle("print", view === "print");
   img.src = src;
   img.alt = (view === "print" ? "Print file: " : "Mockup: ") + s.title;
@@ -251,16 +253,24 @@ function openZoom(id) {
 document.querySelectorAll("#zoom [data-view]").forEach((b) => b.addEventListener("click", () => setZoomView(b.dataset.view)));
 $("zoom-close").addEventListener("click", () => $("zoom").close());
 $("zoom").addEventListener("click", (e) => { if (e.target === $("zoom")) $("zoom").close(); });
-$("zoom-stage").addEventListener("click", (e) => {
-  const stage = $("zoom-stage"), img = e.target;
-  if (!(img instanceof HTMLImageElement)) return;
-  const r = img.getBoundingClientRect();
-  const fx = (e.clientX - r.left) / r.width, fy = (e.clientY - r.top) / r.height; // where you tapped, 0–1
-  stage.classList.toggle("zoomed");
-  if (stage.classList.contains("zoomed")) {
+function toggleZoom(fx = 0.5, fy = 0.5) {
+  const stage = $("zoom-stage"), img = stage.querySelector("img");
+  if (!img) return;
+  const on = stage.classList.toggle("zoomed");
+  $("zoom-toggle").setAttribute("aria-pressed", String(on));
+  $("zoom-toggle").textContent = on ? "Zoom out" : "Zoom";
+  if (on) {
     requestAnimationFrame(() => {
       stage.scrollLeft = fx * img.offsetWidth - stage.clientWidth / 2;
       stage.scrollTop = fy * img.offsetHeight - stage.clientHeight / 2;
     });
   }
+}
+// Keyboard and screen-reader users zoom with the button; pointer users can also tap the image at the spot they want.
+$("zoom-toggle").addEventListener("click", () => toggleZoom());
+$("zoom-stage").addEventListener("click", (e) => {
+  const img = e.target;
+  if (!(img instanceof HTMLImageElement)) return;
+  const r = img.getBoundingClientRect();
+  toggleZoom((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
 });
