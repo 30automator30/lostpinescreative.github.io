@@ -23,7 +23,8 @@
     .kpi:hover { border-color:var(--accent); transform:translateY(-2px); }
     .kpi .kpi-label { display:flex; align-items:center; gap:7px; font-size:.74rem; text-transform:uppercase; letter-spacing:.6px; color:var(--text-dim); }
     .kpi .kpi-label .dot { width:8px; height:8px; border-radius:50%; background:var(--accent); }
-    .kpi.dd .dot{ background:#3b82f6; } .kpi.gw .dot{ background:#34d399; } .kpi.onb .dot{ background:#f59e0b; } .kpi.ops .dot{ background:#a78bfa; }
+    .kpi.tp .dot{ background:#d4956a; } .kpi.dd .dot{ background:#3b82f6; }
+    .console-card.dormant { opacity:.7; } .console-card.dormant small { color:var(--text-dim); font-weight:400; } .kpi.gw .dot{ background:#34d399; } .kpi.onb .dot{ background:#f59e0b; } .kpi.ops .dot{ background:#a78bfa; }
     .kpi b { display:block; font-family:'Rajdhani',sans-serif; font-size:2rem; line-height:1.1; color:var(--text); margin:6px 0 2px; }
     .kpi .kpi-sub { font-size:.78rem; color:var(--text-muted); }
     .kpi .kpi-sub .hot { color:var(--accent-light); font-weight:600; }
@@ -93,9 +94,9 @@
 
     <div class="section-label">At a glance</div>
     <div class="kpi-row">
-      <a class="kpi dd" href="/desmitdesigns/admin/">
-        <span class="kpi-label"><span class="dot"></span>DeSmit Designs</span>
-        <b id="k-dd">—</b><span class="kpi-sub" id="k-dd-sub">&nbsp;</span>
+      <a class="kpi tp" href="/admin/trading-post/">
+        <span class="kpi-label"><span class="dot"></span>Trading Post</span>
+        <b id="k-tp">—</b><span class="kpi-sub" id="k-tp-sub">&nbsp;</span>
       </a>
       <a class="kpi gw" href="/groundwork/admin/">
         <span class="kpi-label"><span class="dot"></span>Groundwork</span>
@@ -117,8 +118,8 @@
     <div class="section-label">Consoles</div>
     <div class="console-grid">
       <div class="console-card">
-        <b>DeSmit Designs</b><p>Client projects, quotes, files &amp; the AI assistant.</p>
-        <div class="links"><a href="/desmitdesigns/admin/">Admin →</a><a href="/desmitdesigns/portal/">Portal ↗</a><a href="/desmitdesigns/">Site ↗</a></div>
+        <b>Trading Post</b><p>Agent-run Etsy shop: approval queue, scorecard, crew.</p>
+        <div class="links"><a href="/admin/trading-post/#queue">Queue →</a><a href="/admin/trading-post/#scorecard">Scorecard →</a></div>
       </div>
       <div class="console-card">
         <b>Groundwork</b><p>Reception clients, care plans, missed-call &amp; lead inbox.</p>
@@ -131,6 +132,10 @@
       <div class="console-card">
         <b>Public</b><p>The Lost Pines Creative site &amp; demos.</p>
         <div class="links"><a href="/">Home ↗</a><a href="/demos/">Demos ↗</a></div>
+      </div>
+      <div class="console-card dormant">
+        <b>DeSmit Designs <small>(dormant)</small></b><p>Client projects, quotes, files &amp; the AI assistant.</p>
+        <div class="links"><a href="/desmitdesigns/admin/">Admin →</a><a href="/desmitdesigns/portal/">Portal ↗</a><a href="/desmitdesigns/">Site ↗</a></div>
       </div>
     </div>
 
