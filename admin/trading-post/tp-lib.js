@@ -32,6 +32,16 @@ export async function fetchAll(page, size = 1000) {
   }
 }
 
+/* Newest run per agent, whatever order the rows arrive in. */
+export function latestPerAgent(runs) {
+  const best = new Map();
+  for (const r of runs) {
+    const cur = best.get(r.agent);
+    if (!cur || Date.parse(r.started_at) > Date.parse(cur.started_at)) best.set(r.agent, r);
+  }
+  return [...best.values()].sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at));
+}
+
 const ratio = (a, b) => (b > 0 ? a / b : null);
 const sum = (rows, k) => rows.reduce((t, r) => t + (r[k] || 0), 0);
 

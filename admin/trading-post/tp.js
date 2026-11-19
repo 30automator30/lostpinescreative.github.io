@@ -5,7 +5,7 @@
  * ============================================================ */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { initAuth, isRecovering } from "/portal-auth.js";
-import { bySection, canApprove, decisionUpdate, fetchAll, fmt, validateDecision } from "./tp-lib.js";
+import { bySection, canApprove, decisionUpdate, fetchAll, fmt, latestPerAgent, validateDecision } from "./tp-lib.js";
 
 const CFG = window.LPC_CONFIG || {};
 const CONFIGURED = CFG.SUPABASE_URL && CFG.SUPABASE_URL.indexOf("REPLACE_ME") === -1;
@@ -191,7 +191,9 @@ async function loadScorecard() {
 async function loadCrew() {
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
   const [rr, cr, st] = await Promise.all([
-    sb.from("tp_agent_runs").select("agent,status,started_at,finished_at,summary").order("started_at", { ascending: false }).limit(200),
+    // ponytail: 35-day window covers weekly agents with margin; an agent silent longer drops off the list. Move to a DB view if that matters.
+    fetchAll((a, b) => sb.from("tp_agent_runs").select("id,agent,status,started_at,finished_at,summary")
+      .gte("started_at", new Date(Date.now() - 35 * 86400000).toISOString()).order("id").range(a, b)),
     fetchAll((a, b) => sb.from("tp_agent_runs").select("id,cost_cents").gte("started_at", monthStart.toISOString()).order("id").range(a, b)),
     sb.from("tp_settings").select("monthly_cap_cents").single(),
   ]);
@@ -201,9 +203,7 @@ async function loadCrew() {
   const cap = (st.data.monthly_cap_cents || 0) / 100;
   capBox.innerHTML = '<span class="cap">' + fmt(spent, "usd") + "</span> of " + fmt(cap, "usd") + " cap " +
     (cap > 0 && spent >= cap ? '<span class="st over">cap reached: agents stopped</span>' : "");
-  const latest = [];
-  const seen = new Set();
-  for (const r of rr.data) if (!seen.has(r.agent)) { seen.add(r.agent); latest.push(r); }
+  const latest = latestPerAgent(rr.data);
   if (!latest.length) { list.innerHTML = '<div class="empty">No agent runs yet. The crew starts in Phase 2.</div>'; return; }
   list.innerHTML = latest.map((r) =>
     '<div class="card crew-row"><div class="c-main"><b>' + esc(r.agent) + "</b>" +

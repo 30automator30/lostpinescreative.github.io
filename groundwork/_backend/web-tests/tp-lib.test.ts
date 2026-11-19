@@ -2,7 +2,7 @@
 // Run: deno test -A groundwork/_backend/web-tests/
 import { assertEquals } from "jsr:@std/assert@1";
 // @ts-ignore plain JS module served by the site
-import { bySection, canApprove, decisionUpdate, fetchAll, fmt, scorecard, validateDecision } from "../../../admin/trading-post/tp-lib.js";
+import { bySection, canApprove, decisionUpdate, fetchAll, fmt, latestPerAgent, scorecard, validateDecision } from "../../../admin/trading-post/tp-lib.js";
 
 const DAY = 86400000;
 const now = new Date("2026-11-19T12:00:00Z");
@@ -111,6 +111,15 @@ Deno.test("fetchAll: pages past Supabase's 1,000-row cap", async () => {
 Deno.test("fetchAll: stops and reports the first error", async () => {
   const out = await fetchAll(() => Promise.resolve({ data: null, error: { message: "boom" } }));
   assertEquals(out.error, { message: "boom" });
+});
+
+Deno.test("latestPerAgent: keeps each agent's newest run, even behind many runs of another", () => {
+  const busy = Array.from({ length: 300 }, (_, i) => ({ agent: "publisher", status: "ok", started_at: ago(i / 100) }));
+  const quiet = [{ agent: "scout", status: "failed", started_at: ago(6) }, { agent: "scout", status: "ok", started_at: ago(13) }];
+  const out = latestPerAgent([...quiet, ...busy]);
+  assertEquals(out.map((r: { agent: string }) => r.agent).sort(), ["publisher", "scout"]);
+  assertEquals(out.find((r: { agent: string }) => r.agent === "scout").status, "failed");
+  assertEquals(out.find((r: { agent: string }) => r.agent === "publisher").started_at, ago(0));
 });
 
 Deno.test("fmt: formats each kind", () => {
