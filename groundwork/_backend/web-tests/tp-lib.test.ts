@@ -77,6 +77,12 @@ Deno.test("scorecard: a sale older than the stats window still counts as the fir
   assertEquals(s.conversion, 0.025); // rolling metrics still use only the recent window
 });
 
+Deno.test("scorecard: a sale on the publish day is 0 days, whatever the publish time", () => {
+  const listings = [{ id: "a", section: "texas", status: "published", published_at: "2026-11-18T18:00:00Z" }];
+  const sales = [{ listing_id: "a", day: "2026-11-18", orders: 1 }];
+  assertEquals(scorecard(listings, [], now, sales).medianDaysToFirstSale, 0);
+});
+
 Deno.test("bySection: an all key plus one per section present", () => {
   const listings = [
     { id: "a", section: "texas", status: "published", published_at: ago(40) },

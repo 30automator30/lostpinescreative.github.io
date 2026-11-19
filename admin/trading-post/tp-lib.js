@@ -56,7 +56,9 @@ export function scorecard(listings, stats, now, sales = stats) {
 
   const firstSale = pub.map((l) => {
     const days = of(sold, l.id).filter((s) => s.orders > 0).map((s) => Date.parse(s.day + "T00:00:00Z")).sort((a, b) => a - b);
-    return days.length ? Math.round((days[0] - Date.parse(l.published_at)) / DAY) : null;
+    // Stats days are UTC dates, so compare against the publish date, not its time of day.
+    const pubDay = Date.parse(String(l.published_at).slice(0, 10) + "T00:00:00Z");
+    return days.length ? Math.round((days[0] - pubDay) / DAY) : null;
   }).filter((d) => d !== null).sort((a, b) => a - b);
   const mid = firstSale.length >> 1;
   const median = !firstSale.length ? null
