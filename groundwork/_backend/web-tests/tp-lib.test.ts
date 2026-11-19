@@ -2,7 +2,7 @@
 // Run: deno test -A groundwork/_backend/web-tests/
 import { assertEquals } from "jsr:@std/assert@1";
 // @ts-ignore plain JS module served by the site
-import { bySection, canApprove, decisionUpdate, fmt, scorecard, validateDecision } from "../../../admin/trading-post/tp-lib.js";
+import { bySection, canApprove, decisionUpdate, fetchAll, fmt, scorecard, validateDecision } from "../../../admin/trading-post/tp-lib.js";
 
 const DAY = 86400000;
 const now = new Date("2026-11-19T12:00:00Z");
@@ -77,6 +77,24 @@ Deno.test("bySection: an all key plus one per section present", () => {
   assertEquals(Object.keys(out).sort(), ["all", "cars", "texas"]);
   assertEquals(out.all.listings, 2);
   assertEquals(out.texas.listings, 1);
+});
+
+Deno.test("fetchAll: pages past Supabase's 1,000-row cap", async () => {
+  const rows = Array.from({ length: 2500 }, (_, i) => ({ i }));
+  const calls: number[][] = [];
+  const page = (from: number, to: number) => {
+    calls.push([from, to]);
+    return Promise.resolve({ data: rows.slice(from, Math.min(to + 1, from + 1000)), error: null });
+  };
+  const out = await fetchAll(page);
+  assertEquals(out.data!.length, 2500);
+  assertEquals(out.error, null);
+  assertEquals(calls, [[0, 999], [1000, 1999], [2000, 2999]]);
+});
+
+Deno.test("fetchAll: stops and reports the first error", async () => {
+  const out = await fetchAll(() => Promise.resolve({ data: null, error: { message: "boom" } }));
+  assertEquals(out.error, { message: "boom" });
 });
 
 Deno.test("fmt: formats each kind", () => {

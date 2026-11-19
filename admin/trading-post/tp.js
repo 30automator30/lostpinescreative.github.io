@@ -5,7 +5,7 @@
  * ============================================================ */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { initAuth, isRecovering } from "/portal-auth.js";
-import { bySection, canApprove, decisionUpdate, fmt, validateDecision } from "./tp-lib.js";
+import { bySection, canApprove, decisionUpdate, fetchAll, fmt, validateDecision } from "./tp-lib.js";
 
 const CFG = window.LPC_CONFIG || {};
 const CONFIGURED = CFG.SUPABASE_URL && CFG.SUPABASE_URL.indexOf("REPLACE_ME") === -1;
@@ -163,8 +163,8 @@ async function loadScorecard() {
   const box = $("sc-body");
   const since = new Date(Date.now() - 120 * 86400000).toISOString().slice(0, 10);
   const [lr, sr] = await Promise.all([
-    sb.from("tp_listings").select("id,status,published_at,design:tp_designs(concept:tp_concepts(niche:tp_niches(section)))"),
-    sb.from("tp_listing_stats").select("listing_id,day,views,favorites,orders,profit_cents").gte("day", since),
+    fetchAll((a, b) => sb.from("tp_listings").select("id,status,published_at,design:tp_designs(concept:tp_concepts(niche:tp_niches(section)))").order("id").range(a, b)),
+    fetchAll((a, b) => sb.from("tp_listing_stats").select("listing_id,day,views,favorites,orders,profit_cents").gte("day", since).order("listing_id").order("day").range(a, b)),
   ]);
   if (lr.error || sr.error) { box.innerHTML = '<div class="empty">Couldn\'t load the scorecard: ' + esc((lr.error || sr.error).message) + "</div>"; return; }
   const listings = lr.data.map((l) => {

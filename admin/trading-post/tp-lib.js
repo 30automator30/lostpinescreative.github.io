@@ -21,6 +21,17 @@ export function decisionUpdate(decision, note, nowIso) {
   return { values: { review: decision, owner_note: n || null, reviewed_at: nowIso }, match: { review: "pending" } };
 }
 
+/* Supabase returns at most 1,000 rows per request. page(from, to) runs one ranged query. */
+export async function fetchAll(page, size = 1000) {
+  const all = [];
+  for (let from = 0; ; from += size) {
+    const { data, error } = await page(from, from + size - 1);
+    if (error) return { data: null, error };
+    all.push(...data);
+    if (data.length < size) return { data: all, error: null };
+  }
+}
+
 const ratio = (a, b) => (b > 0 ? a / b : null);
 const sum = (rows, k) => rows.reduce((t, r) => t + (r[k] || 0), 0);
 
