@@ -162,17 +162,19 @@ $("tw-save").addEventListener("click", async () => {
 async function loadScorecard() {
   const box = $("sc-body");
   const since = new Date(Date.now() - 120 * 86400000).toISOString().slice(0, 10);
-  const [lr, sr] = await Promise.all([
+  const [lr, sr, xr] = await Promise.all([
     fetchAll((a, b) => sb.from("tp_listings").select("id,status,published_at,design:tp_designs(concept:tp_concepts(niche:tp_niches(section)))").order("id").range(a, b)),
     fetchAll((a, b) => sb.from("tp_listing_stats").select("listing_id,day,views,favorites,orders,profit_cents").gte("day", since).order("listing_id").order("day").range(a, b)),
+    fetchAll((a, b) => sb.from("tp_listing_stats").select("listing_id,day,orders").gt("orders", 0).order("listing_id").order("day").range(a, b)),
   ]);
-  if (lr.error || sr.error) { box.innerHTML = '<div class="empty">Couldn\'t load the scorecard: ' + esc((lr.error || sr.error).message) + "</div>"; return; }
+  const fail = lr.error || sr.error || xr.error;
+  if (fail) { box.innerHTML = '<div class="empty">Couldn\'t load the scorecard: ' + esc(fail.message) + "</div>"; return; }
   const listings = lr.data.map((l) => {
     const d = one(l.design) || {}, c = one(d.concept) || {}, n = one(c.niche) || {};
     return { id: l.id, status: l.status, published_at: l.published_at, section: n.section || "unknown" };
   });
   if (!listings.some((l) => l.status === "published")) { box.innerHTML = '<div class="empty">No published listings yet.</div>'; return; }
-  const sc = bySection(listings, sr.data, new Date());
+  const sc = bySection(listings, sr.data, new Date(), xr.data);
   const rows = ["all", ...Object.keys(SECTION)].filter((k) => sc[k] && sc[k].listings);
   const COLS = [["listings", "Listings", "int"], ["viewsPer30d", "Views / listing (30d)", "int"], ["favoriteRate", "Favorite rate", "pct"],
     ["zeroViewShare30d", "Zero-view share", "pct"], ["conversion", "Conversion", "pct"], ["saleShare60d", "With a sale (60d)", "pct"],
@@ -190,7 +192,7 @@ async function loadCrew() {
   const monthStart = new Date(); monthStart.setDate(1); monthStart.setHours(0, 0, 0, 0);
   const [rr, cr, st] = await Promise.all([
     sb.from("tp_agent_runs").select("agent,status,started_at,finished_at,summary").order("started_at", { ascending: false }).limit(200),
-    sb.from("tp_agent_runs").select("cost_cents").gte("started_at", monthStart.toISOString()),
+    fetchAll((a, b) => sb.from("tp_agent_runs").select("id,cost_cents").gte("started_at", monthStart.toISOString()).order("id").range(a, b)),
     sb.from("tp_settings").select("monthly_cap_cents").single(),
   ]);
   const capBox = $("crew-cap"), list = $("crew-list");

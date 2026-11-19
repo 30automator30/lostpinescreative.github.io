@@ -35,7 +35,8 @@ export async function fetchAll(page, size = 1000) {
 const ratio = (a, b) => (b > 0 ? a / b : null);
 const sum = (rows, k) => rows.reduce((t, r) => t + (r[k] || 0), 0);
 
-export function scorecard(listings, stats, now) {
+/* stats: the recent window (rolling metrics). sales: all-time rows with orders > 0 (first-sale metrics). */
+export function scorecard(listings, stats, now, sales = stats) {
   const t = now.getTime();
   const pub = listings.filter((l) => l.status === "published");
   if (!pub.length) {
@@ -44,6 +45,7 @@ export function scorecard(listings, stats, now) {
   }
   const ids = new Set(pub.map((l) => l.id));
   const st = stats.filter((s) => ids.has(s.listing_id));
+  const sold = sales.filter((s) => ids.has(s.listing_id));
   const recent = st.filter((s) => Date.parse(s.day + "T00:00:00Z") >= t - 30 * DAY);
   const age = (l) => (t - Date.parse(l.published_at)) / DAY;
   const of = (rows, id) => rows.filter((s) => s.listing_id === id);
@@ -53,7 +55,7 @@ export function scorecard(listings, stats, now) {
   const views = sum(st, "views"), orders = sum(st, "orders");
 
   const firstSale = pub.map((l) => {
-    const days = of(st, l.id).filter((s) => s.orders > 0).map((s) => Date.parse(s.day + "T00:00:00Z")).sort((a, b) => a - b);
+    const days = of(sold, l.id).filter((s) => s.orders > 0).map((s) => Date.parse(s.day + "T00:00:00Z")).sort((a, b) => a - b);
     return days.length ? Math.round((days[0] - Date.parse(l.published_at)) / DAY) : null;
   }).filter((d) => d !== null).sort((a, b) => a - b);
   const mid = firstSale.length >> 1;
@@ -67,7 +69,7 @@ export function scorecard(listings, stats, now) {
     favoriteRate: ratio(sum(st, "favorites"), views),
     zeroViewShare30d: ratio(c30.filter((l) => sum(of(recent, l.id), "views") === 0).length, c30.length),
     conversion: ratio(orders, views),
-    saleShare60d: ratio(c60.filter((l) => sum(of(st, l.id), "orders") > 0).length, c60.length),
+    saleShare60d: ratio(c60.filter((l) => sum(of(sold, l.id), "orders") > 0).length, c60.length),
     medianDaysToFirstSale: median,
     profitPerSale: ratio(sum(st, "profit_cents") / 100, orders),
     profitPerListingMonth: pplm,
@@ -75,10 +77,10 @@ export function scorecard(listings, stats, now) {
   };
 }
 
-export function bySection(listings, stats, now) {
-  const out = { all: scorecard(listings, stats, now) };
+export function bySection(listings, stats, now, sales = stats) {
+  const out = { all: scorecard(listings, stats, now, sales) };
   for (const sec of new Set(listings.map((l) => l.section))) {
-    out[sec] = scorecard(listings.filter((l) => l.section === sec), stats, now);
+    out[sec] = scorecard(listings.filter((l) => l.section === sec), stats, now, sales);
   }
   return out;
 }

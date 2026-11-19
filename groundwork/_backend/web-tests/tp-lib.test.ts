@@ -67,6 +67,16 @@ Deno.test("scorecard: worked example from the plan", () => {
   assertEquals(s.medianDaysToFirstSale, 21); // a: 35 days, c: 7 days → median 21
 });
 
+Deno.test("scorecard: a sale older than the stats window still counts as the first sale", () => {
+  const listings = [{ id: "a", section: "texas", status: "published", published_at: ago(180) }];
+  const recent = [{ listing_id: "a", day: dayAgo(10), views: 40, favorites: 2, orders: 1, profit_cents: 600 }];
+  const sales = [{ listing_id: "a", day: dayAgo(179), orders: 1 }, { listing_id: "a", day: dayAgo(10), orders: 1 }];
+  const s = scorecard(listings, recent, now, sales);
+  assertEquals(s.medianDaysToFirstSale, 1);
+  assertEquals(s.saleShare60d, 1);
+  assertEquals(s.conversion, 0.025); // rolling metrics still use only the recent window
+});
+
 Deno.test("bySection: an all key plus one per section present", () => {
   const listings = [
     { id: "a", section: "texas", status: "published", published_at: ago(40) },
