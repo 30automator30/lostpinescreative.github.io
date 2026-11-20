@@ -14,7 +14,7 @@ const sb = CONFIGURED ? createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY) : 
 const REDIRECT = location.origin + "/admin/trading-post/";
 const $ = (id) => document.getElementById(id);
 const SECTION = { texas: "Texas", christian: "Christian", cars: "Cars & Motorcycles", engineering: "Engineering", outdoors: "Outdoors" };
-const METHOD = { svg: "text design", raster: "illustration", pattern: "pattern" };
+const METHOD = { svg: "text design", raster: "illustration", pattern: "pattern", book: "Coloring book" };
 
 let user = null, channel = null, noteFor = null;
 
@@ -101,7 +101,7 @@ async function loadDesigns() {
         "concept:tp_concepts(phrase,niche:tp_niches(section,name)),listing:tp_listings(title,tags,price_cents)")
       .eq("review", "pending").neq("compliance", "block").order("created_at").limit(50),
     sb.from("kdp_books")
-      .select("id,version,title,subtitle,page_count,contact_path,cover_thumb_path,compliance,compliance_notes,keywords,categories,description")
+      .select("id,version,title,subtitle,kdp_pages(position),contact_path,cover_thumb_path,compliance,compliance_notes,keywords,categories,description")
       .eq("status", "ready").order("created_at").limit(20),
   ]);
   const error = dr.error || br.error, data = dr.data, books = br.data;
@@ -158,6 +158,8 @@ async function signedUrls(bucket, paths) {
 /* A ready book in the Designs stack: cover, contact sheet, compliance notes, listing text. */
 function bookCard(b, urls) {
   const cover = urls[b.cover_thumb_path], sheet = urls[b.contact_path], name = b.title || "Untitled book";
+  // Distinct positions = drawings in the book (redraws add newer versions at the same positions).
+  const drawings = new Set((b.kdp_pages || []).map((p) => p.position)).size;
   zoomSrc["b-" + b.id] = { mockup: cover || sheet || null, print: sheet || null, title: name, labels: ["Cover", "Contact sheet"] };
   const thumb = (src, view, what) => src
     ? '<button type="button" class="thumb" data-zoom="b-' + b.id + '" data-view="' + view + '" aria-label="Expand ' + what.toLowerCase() + ": " + esc(name) + '">' +
@@ -166,7 +168,7 @@ function bookCard(b, urls) {
   return '<div class="card design" data-card="b-' + b.id + '">' +
     '<div class="b-imgs">' + thumb(cover, "mockup", "Cover") + thumb(sheet, "print", "Contact sheet") + "</div>" +
     "<div>" +
-    '<div class="meta"><span class="badge new">Book</span> v' + esc(b.version) + (b.page_count ? " · " + esc(b.page_count) + " pages" : "") + "</div>" +
+    '<div class="meta"><span class="badge new">Book</span> v' + esc(b.version) + (drawings ? " · " + esc(drawings) + " drawings" : "") + "</div>" +
     '<div class="d-title">' + esc(name) + "</div>" +
     (b.subtitle ? '<div class="meta">' + esc(b.subtitle) + "</div>" : "") +
     (b.keywords && b.keywords.length ? '<div class="tags">' + b.keywords.map((t) => "<span>" + esc(t) + "</span>").join("") + "</div>" : "") +
