@@ -5,7 +5,8 @@
  * ============================================================ */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
 import { initAuth, isRecovering } from "/portal-auth.js";
-import { bySection, canApprove, decisionUpdate, fetchAll, fmt, latestPerAgent, validateDecision } from "./tp-lib.js";
+import { bookDecisionUpdate, bySection, canApprove, decisionUpdate, fetchAll, fmt, kdpSlotsUsed, latestPerAgent, parsePageList, uploadKit,
+  validateDecision } from "./tp-lib.js";
 
 const CFG = window.LPC_CONFIG || {};
 const CONFIGURED = CFG.SUPABASE_URL && CFG.SUPABASE_URL.indexOf("REPLACE_ME") === -1;
@@ -42,7 +43,7 @@ async function routeSession(session) {
   if (!me || !me.is_admin) { showView("view-denied"); return; }
   showView("view-dash");
   selectTab((location.hash || "#queue").slice(1));
-  await Promise.all([loadQueue(), loadScorecard(), loadCrew()]);
+  await Promise.all([loadQueue(), loadScorecard(), loadBookScore(), loadCrew()]);
   subscribe();
 }
 $("signout").addEventListener("click", () => sb.auth.signOut());
@@ -62,7 +63,7 @@ TABS.forEach((t) => $("tab-" + t).addEventListener("click", () => selectTab(t)))
 window.addEventListener("hashchange", () => selectTab(location.hash.slice(1)));
 
 /* ---------- queue: ideas ---------- */
-async function loadQueue() { await Promise.all([loadIdeas(), loadDesigns()]); }
+async function loadQueue() { await Promise.all([loadIdeas(), loadDesigns(), loadKdp()]); }
 
 async function loadIdeas() {
   const box = $("q-ideas");
@@ -94,22 +95,25 @@ async function loadIdeas() {
 /* ---------- queue: designs ---------- */
 async function loadDesigns() {
   const box = $("q-list");
-  const { data, error } = await sb.from("tp_designs")
-    .select("id,method,compliance,compliance_notes,mockup_path,preview_path,print_path,created_at," +
-      "concept:tp_concepts(phrase,niche:tp_niches(section,name)),listing:tp_listings(title,tags,price_cents)")
-    .eq("review", "pending").neq("compliance", "block").order("created_at").limit(50);
+  const [dr, br] = await Promise.all([
+    sb.from("tp_designs")
+      .select("id,method,compliance,compliance_notes,mockup_path,preview_path,print_path,created_at," +
+        "concept:tp_concepts(phrase,niche:tp_niches(section,name)),listing:tp_listings(title,tags,price_cents)")
+      .eq("review", "pending").neq("compliance", "block").order("created_at").limit(50),
+    sb.from("kdp_books")
+      .select("id,version,title,subtitle,page_count,contact_path,cover_thumb_path,compliance,compliance_notes,keywords,categories,description")
+      .eq("status", "ready").order("created_at").limit(20),
+  ]);
+  const error = dr.error || br.error, data = dr.data, books = br.data;
   if (error) { box.innerHTML = '<div class="empty">Couldn\'t load designs: ' + esc(error.message) + "</div>"; return; }
-  $("q-designs-n").textContent = data.length ? "(" + data.length + ")" : "";
-  if (!data.length) { box.innerHTML = '<div class="empty">Nothing to review. The crew is quiet.</div>'; return; }
+  const total = data.length + books.length;
+  $("q-designs-n").textContent = total ? "(" + total + ")" : "";
+  if (!total) { box.innerHTML = '<div class="empty">Nothing to review. The crew is quiet.</div>'; return; }
+  const bookUrls = await signedUrls("kdp-books", books.flatMap((b) => [b.cover_thumb_path, b.contact_path]));
 
-  const paths = data.flatMap((d) => [d.mockup_path || d.preview_path, d.print_path]).filter(Boolean);
-  const urls = {};
-  if (paths.length) {
-    const { data: signed } = await sb.storage.from("tp-designs").createSignedUrls(paths, 3600);
-    (signed || []).forEach((s) => { if (s.signedUrl) urls[s.path] = s.signedUrl; });
-  }
+  const urls = await signedUrls("tp-designs", data.flatMap((d) => [d.mockup_path || d.preview_path, d.print_path]));
 
-  box.innerHTML = data.map((d) => {
+  box.innerHTML = books.map((b) => bookCard(b, bookUrls)).join("") + data.map((d) => {
     const c = one(d.concept) || {}, n = one(c.niche) || {}, l = one(d.listing) || {};
     const img = urls[d.mockup_path || d.preview_path];
     const ok = canApprove(d);
@@ -130,48 +134,182 @@ async function loadDesigns() {
       '<button class="btn btn-danger" data-design="' + d.id + '" data-d="rejected">Reject</button>' +
       "</div></div></div>";
   }).join("");
-  box.querySelectorAll("[data-zoom]").forEach((b) => b.addEventListener("click", () => openZoom(b.dataset.zoom)));
+  box.querySelectorAll("[data-zoom]").forEach((b) => b.addEventListener("click", () => openZoom(b.dataset.zoom, b.dataset.view)));
   box.querySelectorAll("[data-design]").forEach((b) => b.addEventListener("click", () => {
     if (b.dataset.d === "tweak") return openNote("design", b.dataset.design);
     decide("design", b.dataset.design, b.dataset.d, "");
   }));
+  box.querySelectorAll("[data-book]").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.d === "tweak") return openNote("book", b.dataset.book);
+    decide("book", b.dataset.book, b.dataset.d, "");
+  }));
+}
+
+/* path -> signed URL (1 h) for the paths that exist. */
+async function signedUrls(bucket, paths) {
+  const urls = {};
+  paths = paths.filter(Boolean);
+  if (!paths.length) return urls;
+  const { data: signed } = await sb.storage.from(bucket).createSignedUrls(paths, 3600);
+  (signed || []).forEach((s) => { if (s.signedUrl) urls[s.path] = s.signedUrl; });
+  return urls;
+}
+
+/* A ready book in the Designs stack: cover, contact sheet, compliance notes, listing text. */
+function bookCard(b, urls) {
+  const cover = urls[b.cover_thumb_path], sheet = urls[b.contact_path], name = b.title || "Untitled book";
+  zoomSrc["b-" + b.id] = { mockup: cover || sheet || null, print: sheet || null, title: name, labels: ["Cover", "Contact sheet"] };
+  const thumb = (src, view, what) => src
+    ? '<button type="button" class="thumb" data-zoom="b-' + b.id + '" data-view="' + view + '" aria-label="Expand ' + what.toLowerCase() + ": " + esc(name) + '">' +
+      '<img src="' + esc(src) + '" alt="' + what + ": " + esc(name) + '" loading="lazy"></button>'
+    : '<div class="noimg">no ' + what.toLowerCase() + "</div>";
+  return '<div class="card design" data-card="b-' + b.id + '">' +
+    '<div class="b-imgs">' + thumb(cover, "mockup", "Cover") + thumb(sheet, "print", "Contact sheet") + "</div>" +
+    "<div>" +
+    '<div class="meta"><span class="badge new">Book</span> v' + esc(b.version) + (b.page_count ? " · " + esc(b.page_count) + " pages" : "") + "</div>" +
+    '<div class="d-title">' + esc(name) + "</div>" +
+    (b.subtitle ? '<div class="meta">' + esc(b.subtitle) + "</div>" : "") +
+    (b.keywords && b.keywords.length ? '<div class="tags">' + b.keywords.map((t) => "<span>" + esc(t) + "</span>").join("") + "</div>" : "") +
+    (b.compliance === "flag" ? '<div class="flag">Flagged: ' + esc(b.compliance_notes || "check before approving") + "</div>"
+      : b.compliance_notes ? '<div class="meta">Compliance: ' + esc(b.compliance_notes) + "</div>" : "") +
+    '<details class="listing"><summary>Listing text</summary>' +
+    (b.categories && b.categories.length ? '<div class="meta">Categories</div><div class="kv">' + esc(b.categories.join("\n")) + "</div>" : "") +
+    '<div class="meta">Description</div><div class="kv">' + esc(b.description || "—") + "</div></details>" +
+    '<div class="d-actions">' +
+    '<button class="btn btn-primary" data-book="' + b.id + '" data-d="approved"' + (canApprove(b) ? "" : " disabled") + ' aria-label="Approve book: ' + esc(name) + '">Approve</button>' +
+    '<button class="btn btn-ghost" data-book="' + b.id + '" data-d="tweak" aria-label="Tweak book: ' + esc(name) + '">Tweak</button>' +
+    '<button class="btn btn-danger" data-book="' + b.id + '" data-d="rejected" aria-label="Reject book: ' + esc(name) + '">Reject</button>' +
+    "</div></div></div>";
+}
+
+/* ---------- queue: KDP (upload kit for approved books, Live for submitted ones) ---------- */
+const kitVals = {};
+async function loadKdp() {
+  const box = $("q-kdp");
+  // 8 days always covers the current Sunday-to-Saturday week; kdpSlotsUsed does the exact cut.
+  const since = new Date(Date.now() - 8 * 86400000).toISOString();
+  const [br, sr, wr] = await Promise.all([
+    sb.from("kdp_books").select("id,title,subtitle,description,keywords,categories,interior_path,cover_path,status,submitted_at")
+      .in("status", ["approved", "submitted"]).order("created_at").limit(50),
+    sb.from("tp_settings").select("kdp_brand,kdp_weekly_cap").single(),
+    sb.from("kdp_books").select("submitted_at").gte("submitted_at", since),
+  ]);
+  const error = br.error || sr.error || wr.error;
+  if (error) { box.innerHTML = '<div class="empty">Couldn\'t load KDP books: ' + esc(error.message) + "</div>"; return; }
+  const used = kdpSlotsUsed(wr.data.map((r) => r.submitted_at), new Date().toISOString()), cap = sr.data.kdp_weekly_cap;
+  $("kdp-slots").innerHTML = "Weekly KDP slots: <b>" + used + "/" + esc(cap) + "</b>" +
+    (used >= cap ? ' <span class="st over">full until Sunday 00:00 UTC</span>' : "");
+  const books = br.data;
+  $("q-kdp-n").textContent = books.length ? "(" + books.length + ")" : "";
+  if (!books.length) { box.innerHTML = '<div class="empty">No books waiting for KDP.</div>'; return; }
+  const urls = await signedUrls("kdp-books", books.filter((b) => b.status === "approved").flatMap((b) => [b.interior_path, b.cover_path]));
+  box.innerHTML = books.map((b) => {
+    const name = b.title || "Untitled book";
+    if (b.status === "submitted") {
+      return '<div class="card" data-card="k-' + b.id + '"><div class="meta"><span class="badge new">Book</span> submitted ' + esc(when(b.submitted_at)) + "</div>" +
+        '<div class="d-title">' + esc(name) + "</div>" +
+        '<div class="field"><label for="asin-' + b.id + '">ASIN (once Amazon approves it)</label>' +
+        '<input id="asin-' + b.id + '" maxlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="10 letters or digits"></div>' +
+        '<div class="d-actions"><button class="btn btn-primary" data-live="' + b.id + '">Live</button></div></div>';
+    }
+    kitVals[b.id] = uploadKit(b, sr.data);
+    const dl = (path, label) => urls[path]
+      ? '<a class="btn btn-ghost" href="' + esc(urls[path]) + '" target="_blank" rel="noopener">' + label + "</a>"
+      : '<span class="meta">' + label + ": file missing</span>";
+    return '<div class="card" data-card="k-' + b.id + '"><div class="meta"><span class="badge new">Book</span> approved · upload kit</div>' +
+      '<div class="d-title">' + esc(name) + "</div>" +
+      '<div class="d-actions">' + dl(b.interior_path, "Interior PDF") + dl(b.cover_path, "Cover PDF") + "</div>" +
+      '<div class="kit">' + kitVals[b.id].map((r, i) =>
+        '<div class="kit-row"><div class="kit-main"><div class="meta">' + esc(r.label) + '</div><div class="kv">' + (r.value ? esc(r.value) : "—") + "</div></div>" +
+        '<button class="btn btn-ghost btn-sm" data-copy="' + b.id + '" data-i="' + i + '" aria-label="Copy ' + esc(r.label) + '"' + (r.value ? "" : " disabled") + ">Copy</button></div>").join("") +
+      "</div>" +
+      '<p class="meta">Upload both files, check KDP\'s previewer, set the price and submit. Then tap below.</p>' +
+      '<div class="d-actions"><button class="btn btn-primary" data-submitted="' + b.id + '">Submitted to KDP</button></div></div>';
+  }).join("");
+  box.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => copyText(kitVals[b.dataset.copy][b.dataset.i])));
+  box.querySelectorAll("[data-submitted]").forEach((b) => b.addEventListener("click", () =>
+    bookStep(b.dataset.submitted, { submitted_at: new Date().toISOString(), status: "submitted" }, "approved", "Marked as submitted.")));
+  box.querySelectorAll("[data-live]").forEach((b) => b.addEventListener("click", () => {
+    const asin = $("asin-" + b.dataset.live).value.trim().toUpperCase();
+    if (!/^[A-Z0-9]{10}$/.test(asin)) return toast("An ASIN is 10 letters or digits.", "err");
+    bookStep(b.dataset.live, { asin, live_at: new Date().toISOString(), status: "live" }, "submitted", "Live. It's on the Scorecard now.");
+  }));
+}
+
+async function copyText(row) {
+  try {
+    await navigator.clipboard.writeText(row.value);
+    toast("Copied " + row.label + ".", "ok");
+  } catch {
+    toast("Couldn't copy. Press and hold the text to copy it by hand.", "err");
+  }
+}
+
+/* Move a book one status forward, only from the status its card showed. */
+async function bookStep(id, values, from, done) {
+  const card = document.querySelector('[data-card="k-' + id + '"]');
+  if (card) card.querySelectorAll("button").forEach((b) => (b.disabled = true));
+  const { data, error } = await sb.from("kdp_books").update(values).eq("id", id).eq("status", from).select("id");
+  if (error) { toast(error.message, "err"); if (card) card.querySelectorAll("button").forEach((b) => (b.disabled = false)); return; }
+  toast(data.length ? done : "Already done.", data.length ? "ok" : "");
+  loadKdp();
+  if (values.status === "live") loadBookScore();
 }
 
 /* ---------- decisions ---------- */
-async function decide(kind, id, decision, note) {
-  const err = validateDecision(kind, decision, note);
-  if (err) return err;
-  const card = document.querySelector('[data-card="' + (kind === "concept" ? "c-" : "d-") + id + '"]');
+const KIND = { concept: ["c-", "tp_concepts"], design: ["d-", "tp_designs"], book: ["b-", "kdp_books"] };
+async function decide(kind, id, decision, note, pages = []) {
+  let values, match;
+  if (kind === "book") {
+    try { values = bookDecisionUpdate(decision, note, pages, new Date().toISOString()); } catch (e) { return e.message; }
+    match = { status: "ready" };
+  } else {
+    const err = validateDecision(kind, decision, note);
+    if (err) return err;
+    ({ values, match } = decisionUpdate(decision, note, new Date().toISOString()));
+  }
+  const card = document.querySelector('[data-card="' + KIND[kind][0] + id + '"]');
   if (card) card.querySelectorAll("button").forEach((b) => (b.disabled = true));
-  const { values, match } = decisionUpdate(decision, note, new Date().toISOString());
-  const { data, error } = await sb.from(kind === "concept" ? "tp_concepts" : "tp_designs")
-    .update(values).eq("id", id).match(match).select("id");
+  const { data, error } = await sb.from(KIND[kind][1]).update(values).eq("id", id).match(match).select("id");
   if (error) { toast(error.message, "err"); if (card) card.querySelectorAll("button").forEach((b) => (b.disabled = false)); return error.message; }
   if (card) card.remove();
-  const DONE = { approved: "Approved.", rejected: "Rejected.", tweak: "Sent back to the Designer.",
+  const DONE = { approved: kind === "book" ? "Approved. The upload kit is under KDP." : "Approved.", rejected: "Rejected.",
+    tweak: kind === "book" ? "Those pages get redrawn tonight." : "Sent back to the Designer.",
     revise: "Sent back to the Brainstormer.", regenerate: "A new idea on the same theme comes tonight." };
   toast(!data.length ? "Already decided." : DONE[decision], data.length ? "ok" : "");
   loadQueue();
   return null;
 }
 
-// One note modal: Tweak on a design (to the Designer), Revise on an idea (to the Brainstormer).
+// One note modal: Tweak on a design (to the Designer) or a book (pages to redraw), Revise on an idea (to the Brainstormer).
+const NOTE = { design: ["What should change?", "Note for the Designer"], concept: ["How should this idea change?", "Note for the Brainstormer"],
+  book: ["Which pages should be redrawn?", "What's wrong with them"] };
 function openNote(kind, id) {
-  noteFor = { kind, id };
-  $("tw-title").textContent = kind === "design" ? "What should change?" : "How should this idea change?";
-  $("tw-label").textContent = kind === "design" ? "Note for the Designer" : "Note for the Brainstormer";
-  $("tw-note").value = ""; $("tw-error").textContent = ""; $("tw-modal").classList.add("show"); $("tw-note").focus();
+  noteFor = { kind, id, max: 40 };
+  $("tw-title").textContent = NOTE[kind][0];
+  $("tw-label").textContent = NOTE[kind][1];
+  $("tw-pages-field").hidden = kind !== "book";
+  $("tw-note").value = ""; $("tw-pages").value = ""; $("tw-error").textContent = ""; $("tw-modal").classList.add("show");
+  (kind === "book" ? $("tw-pages") : $("tw-note")).focus();
+  if (kind === "book") {
+    // Page numbers are drawing positions (1..n, as on the contact sheet), not PDF pages.
+    sb.from("kdp_pages").select("position").eq("book_id", id).order("position", { ascending: false }).limit(1)
+      .then(({ data }) => { if (noteFor && noteFor.id === id && data && data[0]) noteFor.max = data[0].position; });
+  }
 }
 function closeTweak() { noteFor = null; $("tw-modal").classList.remove("show"); }
 $("tw-cancel").addEventListener("click", closeTweak);
 $("tw-modal").addEventListener("click", (e) => { if (e.target === $("tw-modal")) closeTweak(); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && noteFor) closeTweak(); });
 $("tw-save").addEventListener("click", async () => {
-  const { kind, id } = noteFor, note = $("tw-note").value, d = kind === "design" ? "tweak" : "revise";
-  const err = validateDecision(kind, d, note);
+  const { kind, id, max } = noteFor, note = $("tw-note").value, d = kind === "concept" ? "revise" : "tweak";
+  const pages = kind === "book" ? parsePageList($("tw-pages").value, max) : [];
+  let err = null;
+  if (kind === "book") { try { bookDecisionUpdate(d, note, pages, ""); } catch (e) { err = e.message; } }
+  else err = validateDecision(kind, d, note);
   if (err) { $("tw-error").textContent = err; return; }
   closeTweak();
-  await decide(kind, id, d, note);
+  await decide(kind, id, d, note, pages);
 });
 
 /* ---------- scorecard ---------- */
@@ -201,6 +339,42 @@ async function loadScorecard() {
     rows.map((k) => '<tr><th scope="row">' + esc(k === "all" ? "All" : SECTION[k]) + "</th>" +
       COLS.map((c) => "<td>" + fmt(sc[k][c[0]], c[2]) + "</td>").join("") + "</tr>").join("") +
     "</tbody></table></div>";
+}
+
+/* ---------- scorecard: books (royalties typed in from KDP's report; there's no sales API) ---------- */
+async function loadBookScore() {
+  const box = $("sc-books");
+  const { data: books, error } = await sb.from("kdp_books").select("id,title,asin,live_at,kdp_royalties(month,units,royalty_cents)")
+    .eq("status", "live").order("live_at");
+  if (error) { box.innerHTML = '<div class="empty">Couldn\'t load books: ' + esc(error.message) + "</div>"; return; }
+  if (!books.length) { box.innerHTML = '<div class="empty">No live books yet.</div>'; return; }
+  const rows = books.flatMap((b) => (b.kdp_royalties || []).map((r) => ({ b, r }))).sort((x, y) => (x.r.month < y.r.month ? 1 : -1));
+  const name = (b) => esc(b.title || "Untitled") + (b.asin ? ' <span class="meta">' + esc(b.asin) + "</span>" : "");
+  box.innerHTML = '<div class="sc-wrap"><table class="sc"><thead><tr><th scope="col">Book</th><th scope="col">Month</th>' +
+    '<th scope="col">Units</th><th scope="col">Royalty</th></tr></thead><tbody>' +
+    (rows.length ? rows.map(({ b, r }) => '<tr><th scope="row">' + name(b) + "</th><td>" + esc(r.month.slice(0, 7)) + "</td><td>" +
+      fmt(r.units, "int") + "</td><td>" + fmt(r.royalty_cents / 100, "usd") + "</td></tr>").join("")
+      : '<tr><td colspan="4">No royalties entered yet.</td></tr>') + "</tbody></table></div>" +
+    '<form class="card roy" id="roy-form"><b>Enter a month from KDP\'s report</b>' +
+    '<div class="field"><label for="roy-book">Book</label><select id="roy-book">' +
+    books.map((b) => '<option value="' + esc(b.id) + '">' + esc(b.title || "Untitled") + "</option>").join("") + "</select></div>" +
+    '<div class="roy-grid"><div class="field"><label for="roy-month">Month</label><input type="month" id="roy-month" required value="' +
+    new Date().toISOString().slice(0, 7) + '"></div>' +
+    '<div class="field"><label for="roy-units">Units</label><input type="number" id="roy-units" min="0" step="1" inputmode="numeric" required></div>' +
+    '<div class="field"><label for="roy-usd">Royalty ($)</label><input type="number" id="roy-usd" min="0" step="0.01" inputmode="decimal" required></div></div>' +
+    '<div class="d-actions"><button class="btn btn-primary" type="submit">Save</button></div></form>';
+  $("roy-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const month = $("roy-month").value, units = Number($("roy-units").value), usd = Number($("roy-usd").value);
+    if (!/^\d{4}-\d{2}$/.test(month) || !Number.isInteger(units) || units < 0 || !Number.isFinite(usd) || usd < 0) {
+      return toast("Fill in the month, whole units and the royalty in dollars.", "err");
+    }
+    const { error: err } = await sb.from("kdp_royalties").upsert(
+      { book_id: $("roy-book").value, month: month + "-01", units, royalty_cents: Math.round(usd * 100) }, { onConflict: "book_id,month" });
+    if (err) return toast(err.message, "err");
+    toast("Saved.", "ok");
+    loadBookScore();
+  });
 }
 
 /* ---------- crew ---------- */
@@ -253,14 +427,17 @@ function setZoomView(view) {
   $("zoom-toggle").textContent = "Zoom";
   $("zoom-stage").classList.toggle("print", view === "print");
   img.src = src;
-  img.alt = (view === "print" ? "Print file: " : "Mockup: ") + s.title;
+  const [a, b] = s.labels || ["Mockup", "Print file"];
+  img.alt = (view === "print" ? b : a) + ": " + s.title;
   document.querySelectorAll("#zoom [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view)));
   $("zoom-print").disabled = !s.print;
 }
-function openZoom(id) {
+function openZoom(id, view = "mockup") {
   zoomId = id;
+  const [a, b] = zoomSrc[id]?.labels || ["Mockup", "Print file"];
+  $("zoom-mockup").textContent = a; $("zoom-print").textContent = b;
   $("zoom-title").textContent = zoomSrc[id]?.title || "Design";
-  setZoomView("mockup");
+  setZoomView(view);
   $("zoom").showModal();
 }
 document.querySelectorAll("#zoom [data-view]").forEach((b) => b.addEventListener("click", () => setZoomView(b.dataset.view)));
