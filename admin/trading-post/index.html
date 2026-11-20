@@ -26,7 +26,7 @@
     .idea .i-main { flex:1; min-width:0; }
     .idea .i-phrase { font-weight:600; font-size:1.125rem; overflow-wrap:anywhere; }
     .meta { font-size:.72rem; color:var(--text-dim); overflow-wrap:anywhere; }
-    .yesno { display:flex; gap:8px; }
+    .yesno { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
     .yesno .btn, .d-actions .btn { min-height:44px; min-width:44px; }
 
     .design { display:grid; grid-template-columns:160px 1fr; gap:14px; }
@@ -149,7 +149,7 @@
   <div class="modal-back" id="tw-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tw-title">
       <h3 id="tw-title">What should change?</h3>
-      <div class="field"><label for="tw-note">Note for the Designer</label><textarea id="tw-note" style="min-height:80px"></textarea></div>
+      <div class="field"><label for="tw-note" id="tw-label">Note for the Designer</label><textarea id="tw-note" style="min-height:80px"></textarea></div>
       <div class="error-text" id="tw-error"></div>
       <div class="actions">
         <button type="button" class="btn btn-ghost" id="tw-cancel">Cancel</button>
