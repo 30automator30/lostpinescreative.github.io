@@ -10,7 +10,8 @@ export function canApprove(design) {
 
 export function validateDecision(kind, decision, note) {
   if (decision === "approved" || decision === "rejected") return null;
-  if (decision === "tweak" && kind === "design") {
+  if (decision === "regenerate" && kind === "concept") return null;
+  if ((decision === "tweak" && kind === "design") || (decision === "revise" && kind === "concept")) {
     return (note || "").trim().length >= 3 ? null : "Say what to change (a few words).";
   }
   return "Unknown decision.";

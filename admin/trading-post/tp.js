@@ -15,7 +15,7 @@ const $ = (id) => document.getElementById(id);
 const SECTION = { texas: "Texas", christian: "Christian", cars: "Cars & Motorcycles", engineering: "Engineering", outdoors: "Outdoors" };
 const METHOD = { svg: "text design", raster: "illustration", pattern: "pattern" };
 
-let user = null, channel = null, tweakId = null;
+let user = null, channel = null, noteFor = null;
 
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function showView(id) { document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === id)); window.scrollTo({ top: 0 }); }
@@ -79,11 +79,16 @@ async function loadIdeas() {
       '<div class="i-phrase">' + esc(c.phrase) + "</div>" +
       (c.visual ? '<div class="meta">' + esc(c.visual) + "</div>" : "") + "</div>" +
       '<div class="yesno">' +
-      '<button class="btn btn-ghost" data-concept="' + c.id + '" data-d="rejected" aria-label="Reject idea: ' + esc(c.phrase) + '">✗</button>' +
-      '<button class="btn btn-primary" data-concept="' + c.id + '" data-d="approved" aria-label="Approve idea: ' + esc(c.phrase) + '">✓</button>' +
+      '<button class="btn btn-ghost" data-concept="' + c.id + '" data-d="rejected" title="Reject" aria-label="Reject idea: ' + esc(c.phrase) + '">✗</button>' +
+      '<button class="btn btn-ghost" data-concept="' + c.id + '" data-d="regenerate" title="Regenerate (same theme)" aria-label="Regenerate, same theme: ' + esc(c.phrase) + '">↻</button>' +
+      '<button class="btn btn-ghost" data-concept="' + c.id + '" data-d="revise" title="Revise with a note" aria-label="Revise idea: ' + esc(c.phrase) + '">✎</button>' +
+      '<button class="btn btn-primary" data-concept="' + c.id + '" data-d="approved" title="Approve" aria-label="Approve idea: ' + esc(c.phrase) + '">✓</button>' +
       "</div></div>";
   }).join("");
-  box.querySelectorAll("[data-concept]").forEach((b) => b.addEventListener("click", () => decide("concept", b.dataset.concept, b.dataset.d, "")));
+  box.querySelectorAll("[data-concept]").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.d === "revise") return openNote("concept", b.dataset.concept);
+    decide("concept", b.dataset.concept, b.dataset.d, "");
+  }));
 }
 
 /* ---------- queue: designs ---------- */
@@ -127,7 +132,7 @@ async function loadDesigns() {
   }).join("");
   box.querySelectorAll("[data-zoom]").forEach((b) => b.addEventListener("click", () => openZoom(b.dataset.zoom)));
   box.querySelectorAll("[data-design]").forEach((b) => b.addEventListener("click", () => {
-    if (b.dataset.d === "tweak") return openTweak(b.dataset.design);
+    if (b.dataset.d === "tweak") return openNote("design", b.dataset.design);
     decide("design", b.dataset.design, b.dataset.d, "");
   }));
 }
@@ -143,22 +148,30 @@ async function decide(kind, id, decision, note) {
     .update(values).eq("id", id).match(match).select("id");
   if (error) { toast(error.message, "err"); if (card) card.querySelectorAll("button").forEach((b) => (b.disabled = false)); return error.message; }
   if (card) card.remove();
-  toast(!data.length ? "Already decided." : decision === "approved" ? "Approved." : decision === "tweak" ? "Sent back to the Designer." : "Rejected.", data.length ? "ok" : "");
+  const DONE = { approved: "Approved.", rejected: "Rejected.", tweak: "Sent back to the Designer.",
+    revise: "Sent back to the Brainstormer.", regenerate: "A new idea on the same theme comes tonight." };
+  toast(!data.length ? "Already decided." : DONE[decision], data.length ? "ok" : "");
   loadQueue();
   return null;
 }
 
-function openTweak(id) { tweakId = id; $("tw-note").value = ""; $("tw-error").textContent = ""; $("tw-modal").classList.add("show"); $("tw-note").focus(); }
-function closeTweak() { tweakId = null; $("tw-modal").classList.remove("show"); }
+// One note modal: Tweak on a design (to the Designer), Revise on an idea (to the Brainstormer).
+function openNote(kind, id) {
+  noteFor = { kind, id };
+  $("tw-title").textContent = kind === "design" ? "What should change?" : "How should this idea change?";
+  $("tw-label").textContent = kind === "design" ? "Note for the Designer" : "Note for the Brainstormer";
+  $("tw-note").value = ""; $("tw-error").textContent = ""; $("tw-modal").classList.add("show"); $("tw-note").focus();
+}
+function closeTweak() { noteFor = null; $("tw-modal").classList.remove("show"); }
 $("tw-cancel").addEventListener("click", closeTweak);
 $("tw-modal").addEventListener("click", (e) => { if (e.target === $("tw-modal")) closeTweak(); });
-document.addEventListener("keydown", (e) => { if (e.key === "Escape" && tweakId) closeTweak(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && noteFor) closeTweak(); });
 $("tw-save").addEventListener("click", async () => {
-  const id = tweakId, note = $("tw-note").value;
-  const err = validateDecision("design", "tweak", note);
+  const { kind, id } = noteFor, note = $("tw-note").value, d = kind === "design" ? "tweak" : "revise";
+  const err = validateDecision(kind, d, note);
   if (err) { $("tw-error").textContent = err; return; }
   closeTweak();
-  await decide("design", id, "tweak", note);
+  await decide(kind, id, d, note);
 });
 
 /* ---------- scorecard ---------- */

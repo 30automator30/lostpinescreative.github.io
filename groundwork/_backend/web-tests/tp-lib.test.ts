@@ -23,6 +23,11 @@ Deno.test("validateDecision: tweak needs a note and only applies to designs", ()
   assertEquals(validateDecision("concept", "approved", ""), null);
   assertEquals(validateDecision("concept", "rejected", ""), null);
   assertEquals(validateDecision("concept", "tweak", "x y z"), "Unknown decision.");
+  assertEquals(typeof validateDecision("concept", "revise", " "), "string");
+  assertEquals(validateDecision("concept", "revise", "make it funnier"), null);
+  assertEquals(validateDecision("concept", "regenerate", ""), null);
+  assertEquals(validateDecision("design", "regenerate", ""), "Unknown decision.");
+  assertEquals(validateDecision("design", "revise", "x y z"), "Unknown decision.");
   assertEquals(validateDecision("design", "ship", ""), "Unknown decision.");
 });
 
