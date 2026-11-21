@@ -105,3 +105,46 @@ export function fmt(n, kind) {
   if (kind === "days") return Math.round(n) + " d";
   return Math.round(n).toLocaleString("en-US");
 }
+
+/* ---------- KDP books ---------- */
+
+/* KDP's weekly title limit resets at Sunday 00:00 UTC: count submissions since then. */
+export function kdpSlotsUsed(submittedAts, nowIso) {
+  const now = new Date(nowIso);
+  const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) - now.getUTCDay() * DAY;
+  return submittedAts.filter((s) => s && Date.parse(s) >= start).length;
+}
+
+/* "7, 22,22, 41" -> [7, 22]: whole numbers 1..max, no repeats, ascending. */
+export function parsePageList(text, max = 40) {
+  const ok = String(text || "").split(/[\s,]+/).filter((s) => /^\d+$/.test(s)).map(Number).filter((n) => n >= 1 && n <= max);
+  return [...new Set(ok)].sort((a, b) => a - b);
+}
+
+/* Values for kdp_books. kdp_books has no reviewed_at column (migration 008), so nowIso is unused. */
+export function bookDecisionUpdate(decision, note, pages, _nowIso) {
+  if (decision === "approved" || decision === "rejected") return { review: decision, status: decision };
+  if (decision !== "tweak") throw new Error("Unknown decision.");
+  const n = (note || "").trim();
+  if (n.length < 3) throw new Error("Say what to change (a few words).");
+  if (!pages || !pages.length) throw new Error("Say which pages to redraw.");
+  return { review: "tweak", status: "redraw", owner_note: n, redraw_pages: pages };
+}
+
+/* Every KDP field in the order KDP's paperback form asks for it. */
+export function uploadKit(book, settings) {
+  const kw = book.keywords || [];
+  return [
+    { label: "Title", value: book.title || "" },
+    { label: "Subtitle", value: book.subtitle || "" },
+    { label: "Author", value: (settings && settings.kdp_brand) || "" },
+    { label: "Description", value: book.description || "" },
+    ...Array.from({ length: 7 }, (_, i) => ({ label: "Keyword " + (i + 1), value: kw[i] || "" })),
+    { label: "Categories", value: (book.categories || []).join("\n") },
+    { label: "ISBN", value: "free KDP ISBN" },
+    { label: "Interior", value: "black & white, white paper" },
+    { label: "Trim", value: "8.5 × 11 in, no bleed" },
+    { label: "Cover", value: "matte" },
+    { label: "AI-generated content", value: "Yes — images and text" },
+  ];
+}

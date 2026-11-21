@@ -1,8 +1,8 @@
 // Unit tests for /admin/trading-post/tp-lib.js (Trading Post approval + KPI math).
 // Run: deno test -A groundwork/_backend/web-tests/
-import { assertEquals } from "jsr:@std/assert@1";
+import { assertEquals, assertThrows } from "jsr:@std/assert@1";
 // @ts-ignore plain JS module served by the site
-import { bySection, canApprove, decisionUpdate, fetchAll, fmt, latestPerAgent, scorecard, validateDecision } from "../../../admin/trading-post/tp-lib.js";
+import { bookDecisionUpdate, bySection, canApprove, decisionUpdate, fetchAll, fmt, kdpSlotsUsed, latestPerAgent, parsePageList, scorecard, uploadKit, validateDecision } from "../../../admin/trading-post/tp-lib.js";
 
 const DAY = 86400000;
 const now = new Date("2026-11-19T12:00:00Z");
@@ -132,4 +132,51 @@ Deno.test("fmt: formats each kind", () => {
   assertEquals(fmt(6, "usd"), "$6.00");
   assertEquals(fmt(1667, "int"), "1,667");
   assertEquals(fmt(21, "days"), "21 d");
+});
+
+/* ---------- KDP books ---------- */
+// 2026-11-21 is a Saturday, 2026-11-22 a Sunday.
+Deno.test("kdpSlotsUsed: the week resets at Sunday 00:00 UTC", () => {
+  const sat = "2026-11-21T23:59:00Z", sun = "2026-11-22T00:00:00Z";
+  assertEquals(kdpSlotsUsed([sat, sun], "2026-11-22T10:00:00Z"), 1);
+  // Review Focus 4: Sat 23:59 stops counting at Sun 00:00; Sun 00:00 counts from that instant.
+  assertEquals(kdpSlotsUsed([sat], "2026-11-22T00:00:00Z"), 0);
+  assertEquals(kdpSlotsUsed([sun], "2026-11-22T00:00:00Z"), 1);
+  assertEquals(kdpSlotsUsed([sat], "2026-11-21T23:59:30Z"), 1); // still Saturday: same week
+  assertEquals(kdpSlotsUsed([sun], "2026-11-28T23:59:59Z"), 1); // next Saturday: same week
+  assertEquals(kdpSlotsUsed([sun], "2026-11-29T00:00:00Z"), 0); // next Sunday: reset
+  assertEquals(kdpSlotsUsed([null, "", sun], "2026-11-23T08:00:00Z"), 1);
+});
+
+Deno.test("bookDecisionUpdate: approve, reject, tweak with pages", () => {
+  const now = "2026-11-20T12:00:00Z";
+  assertEquals(bookDecisionUpdate("approved", "", [], now), { review: "approved", status: "approved" });
+  assertEquals(bookDecisionUpdate("rejected", "", [], now), { review: "rejected", status: "rejected" });
+  assertEquals(bookDecisionUpdate("tweak", "  too busy ", [3, 9], now),
+    { review: "tweak", status: "redraw", owner_note: "too busy", redraw_pages: [3, 9] });
+  assertThrows(() => bookDecisionUpdate("tweak", "too busy", [], now), Error, "Say which pages to redraw.");
+  assertThrows(() => bookDecisionUpdate("tweak", "ab", [3], now), Error, "Say what to change (a few words).");
+  assertThrows(() => bookDecisionUpdate("maybe", "", [], now), Error, "Unknown decision.");
+});
+
+Deno.test("parsePageList: in range, no repeats", () => {
+  assertEquals(parsePageList("7, 22,22, 41", 40), [7, 22]);
+  assertEquals(parsePageList("7, 22,22, 41"), [7, 22]);
+  assertEquals(parsePageList("3 9", 40), [3, 9]);
+  assertEquals(parsePageList("0, -2, 2.5, x, 40", 40), [40]);
+  assertEquals(parsePageList("", 40), []);
+});
+
+Deno.test("uploadKit: KDP entry order, 7 keywords, AI disclosure last", () => {
+  const book = { title: "T", subtitle: "S", description: "D", keywords: ["a", "b", "c"], categories: ["X > Y", "Z"] };
+  const kit = uploadKit(book, { kdp_brand: "Lost Pines Trading Post" });
+  assertEquals(kit.slice(0, 4).map((r: { label: string }) => r.label), ["Title", "Subtitle", "Author", "Description"]);
+  assertEquals(kit[2].value, "Lost Pines Trading Post");
+  const kw = kit.filter((r: { label: string }) => r.label.startsWith("Keyword "));
+  assertEquals(kw.length, 7);
+  assertEquals(kw.map((r: { value: string }) => r.value), ["a", "b", "c", "", "", "", ""]);
+  assertEquals(kit[11], { label: "Categories", value: "X > Y\nZ" });
+  assertEquals(kit.slice(12).map((r: { label: string; value: string }) => r.label + ": " + r.value), [
+    "ISBN: free KDP ISBN", "Interior: black & white, white paper", "Trim: 8.5 × 11 in, no bleed", "Cover: matte",
+    "AI-generated content: Yes — images and text"]);
 });

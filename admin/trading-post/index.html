@@ -55,6 +55,24 @@
     .tags span { font-size:.72rem; border:1px solid var(--border); border-radius:6px; padding:2px 6px; color:var(--text-muted); }
     .flag { display:inline-block; font-size:.72rem; color:var(--warn); border:1px solid rgba(251,191,36,.4); border-radius:6px; padding:2px 8px; margin:4px 0; }
     .d-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .d-actions a.btn { min-height:44px; display:inline-flex; align-items:center; }
+
+    .b-imgs { display:grid; gap:8px; align-content:start; }
+    @media (max-width:560px){ .b-imgs{ grid-template-columns:1fr 1fr; } }
+    .kv { white-space:pre-wrap; overflow-wrap:anywhere; font-size:.9rem; user-select:all; -webkit-user-select:all; }
+    .listing { margin:6px 0; }
+    .listing summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--accent-light); font-size:.9rem; }
+    .listing summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .kit { margin:10px 0; border-top:1px solid var(--border); }
+    .kit-row { display:flex; gap:10px; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+    .kit-row .kit-main { flex:1; min-width:0; }
+    .kit-row .meta { margin-bottom:2px; }
+    .kit-row .btn { min-height:44px; min-width:64px; }
+    .slots { margin:0 0 10px; color:var(--text-muted); font-size:.9rem; }
+    .roy { margin-top:14px; }
+    .roy-grid { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px; }
+    @media (max-width:560px){ .roy-grid{ grid-template-columns:1fr; } }
+    .roy input, .roy select { min-height:44px; }
 
     .sc-wrap { overflow-x:auto; }
     table.sc { width:100%; border-collapse:collapse; font-size:.9rem; min-width:560px; }
@@ -115,11 +133,16 @@
       <div id="q-ideas"></div>
       <div class="section-label">Designs <span id="q-designs-n"></span></div>
       <div id="q-list"></div>
+      <div class="section-label">KDP <span id="q-kdp-n"></span></div>
+      <p class="slots" id="kdp-slots"></p>
+      <div id="q-kdp"></div>
     </section>
 
     <section class="panel" id="panel-scorecard" role="tabpanel" aria-labelledby="tab-scorecard" hidden>
       <div class="section-label">Scorecard</div>
       <div id="sc-body"></div>
+      <div class="section-label">Books</div>
+      <div id="sc-books"></div>
     </section>
 
     <section class="panel" id="panel-crew" role="tabpanel" aria-labelledby="tab-crew" hidden>
@@ -135,7 +158,7 @@
     <div class="zoom-bar">
       <b id="zoom-title" class="zoom-title">Design</b>
       <div class="zoom-views" role="group" aria-label="Show">
-        <button type="button" class="btn btn-ghost btn-sm" data-view="mockup" aria-pressed="true">Mockup</button>
+        <button type="button" class="btn btn-ghost btn-sm" data-view="mockup" id="zoom-mockup" aria-pressed="true">Mockup</button>
         <button type="button" class="btn btn-ghost btn-sm" data-view="print" id="zoom-print" aria-pressed="false">Print file</button>
         <button type="button" class="btn btn-ghost btn-sm" id="zoom-toggle" aria-pressed="false">Zoom</button>
       </div>
@@ -149,6 +172,7 @@
   <div class="modal-back" id="tw-modal">
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tw-title">
       <h3 id="tw-title">What should change?</h3>
+      <div class="field" id="tw-pages-field" hidden><label for="tw-pages">Pages to redraw</label><input id="tw-pages" inputmode="numeric" autocomplete="off" placeholder="e.g. 7, 22" aria-describedby="tw-pages-hint"><div class="meta" id="tw-pages-hint">Drawing numbers from the contact sheet, separated by commas.</div></div>
       <div class="field"><label for="tw-note" id="tw-label">Note for the Designer</label><textarea id="tw-note" style="min-height:80px"></textarea></div>
       <div class="error-text" id="tw-error"></div>
       <div class="actions">
