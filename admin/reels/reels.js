@@ -64,7 +64,7 @@ async function signed(paths) {
   paths = paths.filter(Boolean);
   if (!paths.length) return {};
   const { data, error } = await sb.storage.from("reels").createSignedUrls(paths, 3600);
-  if (error) { toast("Couldn't load previews: " + error.message, "error"); return {}; }
+  if (error) { toast("Couldn't load previews: " + error.message, "error"); return null; }
   return Object.fromEntries(data.filter((d) => d.signedUrl).map((d) => [d.path, d.signedUrl]));
 }
 
@@ -79,9 +79,11 @@ async function load() {
   // Rebuilding the cards restarts any preview video, so only do it when something actually changed.
   const snapshot = JSON.stringify(data);
   if (snapshot === load.last) return;
-  load.last = snapshot;
   rows = data;
-  const urls = await signed(rows.flatMap((r) => [r.storyboard_path, r.preview_path]));
+  const signedUrls = await signed(rows.flatMap((r) => [r.storyboard_path, r.preview_path]));
+  // Remember this snapshot only when the previews signed, so a storage hiccup is retried on the next load.
+  load.last = signedUrls ? snapshot : null;
+  const urls = signedUrls || {};
   const review = rows.filter((r) => r.status === "review" && (r.stage === "concept" || r.stage === "final"));
   const ready = rows.filter((r) => r.stage === "ready" || r.stage === "posted");
   const pipeline = rows.filter((r) => r.status !== "review" && (r.stage === "concept" || r.stage === "final"));
@@ -210,7 +212,7 @@ $("note-save").addEventListener("click", async () => {
 async function openZoom(id) {
   const r = rows.find((x) => x.id === id);
   if (!r) return;
-  const urls = await signed([r.storyboard_path]);
+  const urls = (await signed([r.storyboard_path])) || {};
   $("zoom-title").textContent = r.title;
   $("zoom-stage").innerHTML = urls[r.storyboard_path] ? `<img src="${esc(urls[r.storyboard_path])}" alt="Storyboard for ${esc(r.title)}">` : '<div class="empty">No storyboard.</div>';
   $("zoom").showModal();
@@ -225,4 +227,4 @@ function subscribe() {
     clearTimeout(subscribe._t); subscribe._t = setTimeout(load, 600);
   }).subscribe();
 }
-function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } }
+function teardown() { load.last = null; if (channel) { sb.removeChannel(channel); channel = null; } }
