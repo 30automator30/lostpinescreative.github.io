@@ -16,7 +16,8 @@ const PLATFORMS = [["youtube", "YouTube"], ["tiktok", "TikTok"], ["facebook", "F
 const WAITING = { approved: "Approved, tonight's run picks it up", revise: "Sent back, tonight's run revises it",
   regenerate: "Regenerate, tonight's run redoes it", working: "The nightly run is working on it" };
 
-let user = null, channel = null, noteFor = null, rows = [];
+let user = null, channel = null, noteFor = null, rows = [], refresher = null;
+const RESIGN_MS = 50 * 60 * 1000; // before the 3,600 s signed-URL lifetime runs out
 
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 function showView(id) { document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === id)); window.scrollTo({ top: 0 }); }
@@ -45,6 +46,7 @@ async function routeSession(session) {
   selectTab((location.hash || "#review").slice(1));
   await load();
   subscribe();
+  refresher = setInterval(load, 5 * 60 * 1000); // load() itself decides whether the links need re-signing
 }
 $("signout").addEventListener("click", () => sb.auth.signOut());
 $("denied-out").addEventListener("click", () => sb.auth.signOut());
@@ -78,11 +80,13 @@ async function load() {
   }
   // Rebuilding the cards restarts any preview video, so only do it when something actually changed.
   const snapshot = JSON.stringify(data);
-  if (snapshot === load.last) return;
+  // Signed links last an hour, so an unchanged page still re-signs after RESIGN_MS.
+  if (snapshot === load.last && Date.now() - load.signedAt < RESIGN_MS) return;
   rows = data;
   const signedUrls = await signed(rows.flatMap((r) => [r.storyboard_path, r.preview_path]));
   // Remember this snapshot only when the previews signed, so a storage hiccup is retried on the next load.
   load.last = signedUrls ? snapshot : null;
+  load.signedAt = Date.now();
   const urls = signedUrls || {};
   const review = rows.filter((r) => r.status === "review" && (r.stage === "concept" || r.stage === "final"));
   const ready = rows.filter((r) => r.stage === "ready" || r.stage === "posted");
@@ -227,4 +231,7 @@ function subscribe() {
     clearTimeout(subscribe._t); subscribe._t = setTimeout(load, 600);
   }).subscribe();
 }
-function teardown() { load.last = null; if (channel) { sb.removeChannel(channel); channel = null; } }
+function teardown() {
+  load.last = null; clearInterval(refresher); refresher = null;
+  if (channel) { sb.removeChannel(channel); channel = null; }
+}
