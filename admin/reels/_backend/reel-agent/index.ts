@@ -28,7 +28,15 @@ function must(r: { data: any; error: any }): any {
 // deno-lint-ignore no-explicit-any
 const HANDLERS: Record<string, (a: any) => Promise<unknown>> = {
   /** Everything, newest first: the run uses it to pick numbers and skip reels already in flight. */
-  "items.list": async () => must(await sb.from("reel_items").select("*").order("updated_at", { ascending: false })),
+  "items.list": async () => {
+    // Paged: PostgREST caps one response (max_rows), and a truncated list would hand out duplicate numbers.
+    const all: unknown[] = [];
+    for (let from = 0; ; from += 1000) {
+      const page = must(await sb.from("reel_items").select("*").order("id").range(from, from + 999));
+      all.push(...page);
+      if (page.length < 1000) return all;
+    }
+  },
   /** Cards the owner has decided and the run hasn't picked up yet. */
   "items.decided": async () => must(await sb.from("reel_items").select("*").in("status", ["approved", "revise", "regenerate"]).order("updated_at")),
   /** Create or update a card. status is "working" (the run has it) or "review" (hand it to the owner). */

@@ -69,8 +69,17 @@ async function signed(paths) {
 }
 
 async function load() {
-  const { data, error } = await sb.from("reel_items").select("*").order("updated_at", { ascending: false });
-  if (error) { toast("Couldn't load reels: " + error.message, "error"); return; }
+  const data = [];
+  for (let from = 0; ; from += 1000) { // paged: one response is capped at the project's max_rows
+    const { data: page, error } = await sb.from("reel_items").select("*").order("updated_at", { ascending: false }).order("id").range(from, from + 999);
+    if (error) { toast("Couldn't load reels: " + error.message, "error"); return; }
+    data.push(...page);
+    if (page.length < 1000) break;
+  }
+  // Rebuilding the cards restarts any preview video, so only do it when something actually changed.
+  const snapshot = JSON.stringify(data);
+  if (snapshot === load.last) return;
+  load.last = snapshot;
   rows = data;
   const urls = await signed(rows.flatMap((r) => [r.storyboard_path, r.preview_path]));
   const review = rows.filter((r) => r.status === "review" && (r.stage === "concept" || r.stage === "final"));
@@ -81,7 +90,8 @@ async function load() {
   render("list-ready", ready, urls, "Nothing ready to post yet.");
   render("list-pipeline", pipeline, urls, "Nothing in progress.");
   $("n-review").textContent = review.length ? `(${review.length})` : "";
-  $("n-ready").textContent = ready.filter((r) => r.stage === "ready").length ? `(${ready.filter((r) => r.stage === "ready").length})` : "";
+  const unposted = ready.filter((r) => r.stage === "ready").length;
+  $("n-ready").textContent = unposted ? `(${unposted})` : "";
   $("n-pipeline").textContent = pipeline.length ? `(${pipeline.length})` : "";
 }
 
@@ -103,6 +113,7 @@ function reviewsHtml(r) {
 }
 
 function actions(r) {
+  if (r.stage === "ready" || r.stage === "posted") return "";
   if (r.status !== "review") return `<div class="meta">${esc(WAITING[r.status] || "")}</div>`;
   if (r.stage === "concept") {
     return `<div class="actions-row">
@@ -209,6 +220,9 @@ $("zoom-close").addEventListener("click", () => $("zoom").close());
 /* ---------- realtime ---------- */
 function subscribe() {
   if (channel) return;
-  channel = sb.channel("reel-studio").on("postgres_changes", { event: "*", schema: "public", table: "reel_items" }, load).subscribe();
+  // Debounced: the run often writes a card several times in a row.
+  channel = sb.channel("reel-studio").on("postgres_changes", { event: "*", schema: "public", table: "reel_items" }, () => {
+    clearTimeout(subscribe._t); subscribe._t = setTimeout(load, 600);
+  }).subscribe();
 }
 function teardown() { if (channel) { sb.removeChannel(channel); channel = null; } }

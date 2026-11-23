@@ -43,6 +43,7 @@ begin
   if p_decision = 'revise' and coalesce(btrim(p_note), '') = '' then
     raise exception 'a revise needs a note';
   end if;
+  if length(coalesce(p_note, '')) > 2000 then raise exception 'note is over 2,000 characters'; end if;
   update public.reel_items
      set status = case p_decision when 'approve' then 'approved' else p_decision end,
          owner_note = nullif(btrim(coalesce(p_note, '')), ''),
@@ -57,7 +58,7 @@ begin
   if not public.dd_is_admin() then raise exception 'not authorized'; end if;
   if p_platform not in ('youtube', 'tiktok', 'facebook', 'instagram', 'x') then raise exception 'bad platform'; end if;
   update public.reel_items
-     set posted = posted || jsonb_build_object(p_platform, now()), updated_at = now()
+     set posted = posted || jsonb_build_object(p_platform, now()), stage = 'posted', updated_at = now()
    where id = p_id and stage in ('ready', 'posted');
   if not found then raise exception 'reel is not ready to post'; end if;
 end $$;
