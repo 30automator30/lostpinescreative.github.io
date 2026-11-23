@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reel Studio — Lost Pines Creative</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/groundwork/portal/portal.css">
+  <script src="/admin/config.js"></script>
+  <style>
+    .section-label { font-family:'Rajdhani',sans-serif; text-transform:uppercase; letter-spacing:1.5px; color:var(--text-dim); font-size:.72rem; margin:22px 0 10px; }
+    .back { font-size:.9rem; color:var(--accent-light); text-decoration:none; }
+    .tabs { display:flex; gap:6px; margin:14px 0 6px; border-bottom:1px solid var(--border); }
+    .tabs button { min-height:44px; padding:0 16px; background:none; border:0; border-bottom:2px solid transparent; color:var(--text-dim); font:inherit; font-weight:600; cursor:pointer; }
+    .tabs button[aria-selected="true"] { color:var(--text); border-bottom-color:var(--accent); }
+    .tabs button:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .panel[hidden] { display:none; }
+    .empty { color:var(--text-dim); font-size:.9rem; padding:14px 0; }
+    .card { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+    .reel { display:grid; grid-template-columns:220px 1fr; gap:16px; }
+    @media (max-width:640px){ .reel{ grid-template-columns:1fr; } }
+    .reel img, .reel video, .reel .noimg { width:100%; border-radius:10px; background:var(--bg-dark); border:1px solid var(--border); }
+    .reel video { aspect-ratio:9/16; }
+    .reel .noimg { aspect-ratio:3/4; display:flex; align-items:center; justify-content:center; color:var(--text-dim); font-size:.72rem; }
+    .reel .thumb { padding:0; border:0; background:none; cursor:zoom-in; border-radius:10px; }
+    .reel .thumb:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .r-title { font-weight:600; font-size:1.125rem; overflow-wrap:anywhere; }
+    .r-hook { margin:6px 0; font-style:italic; color:var(--text-muted); overflow-wrap:anywhere; }
+    .meta { font-size:.72rem; color:var(--text-dim); overflow-wrap:anywhere; }
+    .pill { display:inline-block; font-size:.72rem; border:1px solid var(--border); border-radius:6px; padding:2px 8px; margin:2px 4px 2px 0; color:var(--text-muted); }
+    .pill.ok { color:var(--ok); border-color:rgba(52,211,153,.4); }
+    .pill.warn { color:var(--warn); border-color:rgba(251,191,36,.4); }
+    .note { margin:8px 0; padding:8px 10px; border-left:3px solid var(--warn); background:var(--bg-dark); border-radius:6px; font-size:.9rem; white-space:pre-wrap; overflow-wrap:anywhere; }
+    .reviews { margin:6px 0; font-size:.9rem; }
+    .reviews div { margin:2px 0; overflow-wrap:anywhere; }
+    .actions-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+    .actions-row .btn, .actions-row a.btn { min-height:44px; min-width:44px; display:inline-flex; align-items:center; }
+    .kv { white-space:pre-wrap; overflow-wrap:anywhere; font-size:.9rem; user-select:all; -webkit-user-select:all; }
+    details summary { min-height:44px; display:flex; align-items:center; cursor:pointer; color:var(--accent-light); font-size:.9rem; }
+    details summary:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+    .platforms { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+    .platforms .btn { min-height:44px; }
+    .platforms .btn[aria-pressed="true"] { border-color:var(--ok); color:var(--ok); }
+    .zoom { width:min(96vw, 1100px); height:min(94vh, 1000px); max-width:none; max-height:none; padding:0; border:1px solid var(--border); border-radius:14px; background:var(--bg-card); color:var(--text); }
+    .zoom::backdrop { background:rgba(0,0,0,.75); }
+    .zoom[open] { display:flex; flex-direction:column; }
+    .zoom-bar { display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:1px solid var(--border); }
+    .zoom-bar b { flex:1; }
+    .zoom-bar .btn { min-height:44px; min-width:44px; }
+    .zoom-stage { flex:1; min-height:0; overflow:auto; display:grid; place-items:center; background:var(--bg-dark); }
+    .zoom-stage img { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+  </style>
+</head>
+<body>
+  <header class="p-top">
+    <a class="p-brand" href="/admin/"><img src="/mark.svg" alt="Lost Pines Creative" width="30" height="26"><span>Lost Pines <small>Reel Studio</small></span></a>
+    <div class="spacer"></div>
+    <span class="who" id="who"></span>
+    <button class="btn btn-ghost btn-sm" id="signout" style="display:none">Sign out</button>
+  </header>
+
+  <div class="wrap wide view active" id="view-loading"><div class="spinner"></div></div>
+
+  <!-- auth (same ids as /admin/ so portal-auth.js works) -->
+  <div class="wrap view" id="view-auth">
+    <div class="auth">
+      <img src="/mark.svg" alt="Lost Pines Creative" style="width:56px">
+      <h1>Reel Studio</h1>
+      <p>Owner sign-in.</p>
+      <form id="auth-form">
+        <input type="email" id="email" placeholder="you@email.com" autocomplete="email" required>
+        <input type="password" id="password" placeholder="Password" autocomplete="current-password" minlength="8" required>
+        <button class="btn btn-primary" type="submit" id="auth-btn">Sign in</button>
+      </form>
+      <div class="error-text" id="auth-error"></div>
+      <p class="muted"><a href="#" id="toggle-mode">Create an account</a> &nbsp;&middot;&nbsp; <a href="#" id="forgot">Forgot password?</a></p>
+    </div>
+  </div>
+  <div class="wrap view" id="view-sent"><div class="auth"><h1>Confirm your email</h1><p>Confirmation link sent to <b id="sent-to"></b>.</p><button class="btn btn-ghost" id="sent-back">Back to sign in</button></div></div>
+  <div class="wrap view" id="view-reset-sent"><div class="auth"><h1>Check your email</h1><p>Password-reset link sent.</p><button class="btn btn-ghost" id="reset-back">Back to sign in</button></div></div>
+  <div class="wrap view" id="view-setpw"><div class="auth"><h1>Set a new password</h1><form id="setpw-form"><input type="password" id="setpw" placeholder="New password" autocomplete="new-password" minlength="8" required><button class="btn btn-primary" type="submit" id="setpw-btn">Save password</button></form><div class="error-text" id="setpw-error"></div></div></div>
+  <div class="wrap view" id="view-denied"><div class="auth"><h1>Not authorized</h1><p>This is an internal Lost Pines Creative area.</p><button class="btn btn-ghost" id="denied-out">Sign out</button></div></div>
+
+  <!-- dashboard -->
+  <div class="wrap wide view" id="view-dash">
+    <a class="back" href="/admin/">← Command Center</a>
+    <div class="tabs" role="tablist" aria-label="Reel Studio">
+      <button role="tab" id="tab-review" aria-controls="panel-review" aria-selected="true">Review <span id="n-review"></span></button>
+      <button role="tab" id="tab-ready" aria-controls="panel-ready" aria-selected="false">Ready to post <span id="n-ready"></span></button>
+      <button role="tab" id="tab-pipeline" aria-controls="panel-pipeline" aria-selected="false">In progress <span id="n-pipeline"></span></button>
+    </div>
+
+    <section class="panel" id="panel-review" role="tabpanel" aria-labelledby="tab-review">
+      <div class="section-label">Concepts: script and storyboard</div>
+      <div id="list-concept"></div>
+      <div class="section-label">Finished reels</div>
+      <div id="list-final"></div>
+    </section>
+    <section class="panel" id="panel-ready" role="tabpanel" aria-labelledby="tab-ready" hidden>
+      <p class="meta">The full-quality files are on the shared drive in Main › NomadCore › Videos › &lt;reel&gt;. Turn on each platform's AI-generated content label when you post.</p>
+      <div id="list-ready"></div>
+    </section>
+    <section class="panel" id="panel-pipeline" role="tabpanel" aria-labelledby="tab-pipeline" hidden>
+      <p class="meta">Reels the nightly run is working on, and decisions it will pick up tonight.</p>
+      <div id="list-pipeline"></div>
+    </section>
+  </div>
+
+  <dialog id="zoom" class="zoom" aria-labelledby="zoom-title">
+    <div class="zoom-bar"><b id="zoom-title">Storyboard</b><button type="button" class="btn btn-ghost btn-sm" id="zoom-close" aria-label="Close">✕</button></div>
+    <div class="zoom-stage" id="zoom-stage"></div>
+  </dialog>
+
+  <div class="modal-back" id="note-modal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="note-title">
+      <h3 id="note-title">What should change?</h3>
+      <div class="field"><label for="note-text" id="note-label">Note for tonight's run</label><textarea id="note-text" style="min-height:90px"></textarea></div>
+      <div class="error-text" id="note-error"></div>
+      <div class="actions">
+        <button type="button" class="btn btn-ghost" id="note-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="note-save">Send back</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="reels.js"></script>
+</body>
+</html>
