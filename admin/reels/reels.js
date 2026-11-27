@@ -120,7 +120,12 @@ function reviewsHtml(r) {
 
 function actions(r) {
   if (r.stage === "ready" || r.stage === "posted") return "";
-  if (r.status !== "review") return `<div class="meta">${esc(WAITING[r.status] || "")}</div>`;
+  if (r.status !== "review") {
+    if (r.status === "working") return `<div class="meta">${esc(WAITING.working)}</div>`;
+    if (r.run_now) return `<div class="meta">Starting on the PC within about 10 minutes</div>`;
+    return `<div class="meta">${esc(WAITING[r.status] || "")}</div>
+      <div class="actions-row"><button class="btn btn-primary btn-sm" data-now="${esc(r.id)}">Do it now</button></div>`;
+  }
   if (r.stage === "concept") {
     return `<div class="actions-row">
       <button class="btn btn-primary" data-id="${esc(r.id)}" data-d="approve">Approve</button>
@@ -170,7 +175,8 @@ function render(boxId, list, urls, emptyText) {
 async function decide(id, decision, note) {
   const { error } = await sb.rpc("reel_decide", { p_id: id, p_decision: decision, p_note: note || null });
   if (error) { toast(error.message, "error"); return false; }
-  toast({ approve: "Approved. Tonight's run takes it from here.", revise: "Sent back with your note.", regenerate: "Tonight's run redoes it." }[decision]);
+  toast({ approve: "Approved. Tonight's run takes it, or tap Do it now.", revise: "Sent back. Tonight's run fixes it, or tap Do it now.",
+    regenerate: "Tonight's run redoes it, or tap Do it now." }[decision]);
   await load();
   return true;
 }
@@ -184,6 +190,12 @@ document.addEventListener("click", async (e) => {
     const { error } = await sb.rpc("reel_mark_posted", { p_id: b.dataset.post, p_platform: b.dataset.platform });
     if (error) { b.disabled = false; toast(error.message, "error"); return; }
     toast("Marked as posted."); await load(); return;
+  }
+  if (b.dataset.now) {
+    b.disabled = true;
+    const { error } = await sb.rpc("reel_run_now", { p_id: b.dataset.now });
+    if (error) { b.disabled = false; toast(error.message, "error"); return; }
+    toast("Queued. The PC starts it within about 10 minutes."); await load(); return;
   }
   if (!b.dataset.d) return;
   if (b.dataset.d === "revise") return openNote(b.dataset.id);

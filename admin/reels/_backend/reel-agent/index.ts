@@ -45,6 +45,7 @@ const HANDLERS: Record<string, (a: any) => Promise<unknown>> = {
     if (!["working", "review"].includes(status)) throw new Error("status must be working or review");
     const row: Record<string, unknown> = Object.fromEntries(Object.entries(item).filter(([k]) => AGENT_COLS.includes(k)));
     row.status = status;
+    row.run_now = false; // a run has the card now, so the owner's "Do it now" is done
     row.updated_at = new Date().toISOString();
     if (status === "review") row.owner_note = null; // the owner's last note was acted on
     must(await sb.from("reel_items").upsert(row));
